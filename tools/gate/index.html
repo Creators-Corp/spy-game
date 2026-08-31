@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+<meta name="referrer" content="no-referrer">
+<!-- This is the only readable page on the host. It deliberately says nothing:
+     no project name, no client, no description. Everything else the site
+     serves is ciphertext. -->
+<title>Restricted preview</title>
+<style>
+  :root{
+    --ground:#0B0E13; --panel:#141A22; --rule:#28313E;
+    --paper:#F5F2EA; --zinc:#8C97A3; --gold:#C9A24B; --red:#C1372E;
+    --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--ground);color:var(--paper);
+    font-family:var(--sans);font-size:16px;line-height:1.55;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .gate{width:100%;max-width:380px;}
+  .lock{
+    width:34px;height:34px;margin-bottom:22px;display:block;
+    stroke:var(--gold);fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
+  }
+  h1{
+    margin:0 0 8px;font-size:13px;font-weight:600;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--paper);
+  }
+  p.sub{margin:0 0 26px;font-size:14px;color:var(--zinc);}
+  label{
+    display:block;font-size:10px;font-weight:600;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--zinc);margin-bottom:8px;
+  }
+  input{
+    width:100%;background:var(--panel);color:var(--paper);
+    border:1px solid var(--rule);border-radius:5px;
+    padding:13px 14px;font-family:var(--mono);font-size:16px;letter-spacing:.08em;
+  }
+  input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,75,.16);}
+  button{
+    margin-top:12px;width:100%;background:var(--gold);color:#14161A;
+    border:0;border-radius:5px;padding:14px;cursor:pointer;
+    font-family:var(--sans);font-size:12px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;
+  }
+  button:hover:not(:disabled){background:#D8B15C;}
+  button:disabled{opacity:.5;cursor:default;}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .msg{margin-top:16px;min-height:20px;font-size:13px;color:var(--zinc);}
+  .msg.bad{color:var(--red);}
+  .bar{
+    margin-top:16px;height:2px;background:var(--rule);border-radius:2px;overflow:hidden;
+    opacity:0;transition:opacity .2s;
+  }
+  .bar.on{opacity:1;}
+  .bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .18s linear;}
+  .foot{margin-top:30px;font-size:12px;color:var(--zinc);line-height:1.6;}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<main class="gate">
+  <svg class="lock" viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M28 48 L72 48 L72 84 L28 84 Z M36 48 L36 34 A14 14 0 0 1 64 34 L64 48"/>
+  </svg>
+
+  <h1>Restricted preview</h1>
+  <p class="sub">This build is held under a non-disclosure agreement. Nothing on
+  this site is readable without the passphrase.</p>
+
+  <form id="f" autocomplete="off">
+    <label for="pw">Passphrase</label>
+    <input id="pw" name="pw" type="password" autocomplete="current-password"
+           autocapitalize="off" autocorrect="off" spellcheck="false" required>
+    <button id="go" type="submit">Unlock</button>
+  </form>
+
+  <div class="bar" id="bar"><i id="fill"></i></div>
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <p class="foot">The passphrase is not stored or checked here — it decrypts the
+  build in your browser. Lose it and there is no recovery, and no reset.</p>
+</main>
+
+<script src="boot.js"></script>
+</body>
+</html>

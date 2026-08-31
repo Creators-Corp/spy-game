@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deux Complices — Prototype</title>
+<link rel="stylesheet" href="styles/fonts.css">
+<link rel="stylesheet" href="styles/app.css">
+<link rel="stylesheet" href="styles/tv.css">
+<link rel="stylesheet" href="styles/phone.css">
+</head>
+<body>
+
+<div id="glyph-sprite" aria-hidden="true"></div>
+
+<div class="stage-fit">
+  <div class="stage" id="stage">
+
+    <!-- ================= TV ================= -->
+    <section class="tv" id="tv" aria-label="Television">
+      <div class="tv__bezel">
+        <div class="tv__screen" id="tv-screen">
+
+          <header class="tvbar tvbar--top">
+            <span class="tvbar__phase" id="tv-phase">LE PLAN</span>
+            <span class="tvbar__venue" id="tv-venue">MAISON DE VENTES · SALLE 9</span>
+            <span class="tvbar__clock" id="tv-clock">00:00</span>
+          </header>
+
+          <div class="tv__body">
+            <!-- Le Plan -->
+            <div class="tvview tvview--plan is-on" id="tv-view-plan">
+              <div class="plan__inner">
+                <p class="plan__eyebrow" id="plan-job">CONTRAT No.1</p>
+                <h1 class="plan__title">DEUX COMPLICES</h1>
+                <p class="plan__target" id="plan-target"></p>
+                <ol class="plan__beats" id="plan-beats"></ol>
+                <div class="plan__ready">
+                  <span class="readylamp" id="lamp-p1"><i></i>P1 ASSANE</span>
+                  <span class="readylamp" id="lamp-p2"><i></i>P2 BENJAMIN</span>
+                </div>
+              </div>
+              <div class="plan__bg" id="plan-bg"></div>
+            </div>
+
+            <!-- The room -->
+            <div class="tvview tvview--room" id="tv-view-room">
+              <svg id="room-svg" viewBox="0 0 600 400" role="img" aria-label="Top-down view of what Assane can see"></svg>
+              <div class="room__vignette"></div>
+              <div class="room__toast" id="room-toast"></div>
+            </div>
+
+            <!-- Module consequence -->
+            <div class="tvview tvview--module" id="tv-view-module">
+              <div class="modstate">
+                <div class="modstate__icon" id="modstate-icon"></div>
+                <h2 class="modstate__name" id="modstate-name">LE COFFRE</h2>
+                <div class="modstate__pips" id="modstate-pips"></div>
+                <p class="modstate__line" id="modstate-line"></p>
+              </div>
+            </div>
+
+            <!-- La Tchatche -->
+            <div class="tvview tvview--tchatche" id="tv-view-tchatche">
+              <div class="tch">
+                <div class="tch__figures">
+                  <div class="artslot artslot--tall" data-slot="assane-standing"></div>
+                  <div class="tch__spark" id="tch-spark"></div>
+                  <div class="artslot artslot--tall" data-slot="guard-standing"></div>
+                </div>
+                <h2 class="tch__name">LA TCHATCHE</h2>
+                <div class="tch__rounds" id="tch-rounds"></div>
+                <p class="tch__line" id="tch-line"></p>
+              </div>
+            </div>
+
+            <!-- Le Twist: the instant the lights go -->
+            <div class="tvcut" id="tv-cut">
+              <div class="artslot artslot--wide" data-slot="blackout-cut"></div>
+              <p class="tvcut__line">COUPURE DE COURANT</p>
+            </div>
+
+            <!-- Rank -->
+            <div class="tvview tvview--rank" id="tv-view-rank">
+              <div class="rankcard">
+                <div class="rankcard__grade" id="rank-grade">S</div>
+                <div class="rankcard__title" id="rank-title">FANTÔME</div>
+                <dl class="rankcard__stats" id="rank-stats"></dl>
+                <p class="rankcard__foot">CONTRAT №1 · MAISON DE VENTES</p>
+              </div>
+            </div>
+
+            <!-- Jail -->
+            <div class="tvview tvview--jail" id="tv-view-jail">
+              <div class="jail">
+                <div class="jail__bars"></div>
+                <div class="artslot artslot--wide jail__art" data-slot="jail-slam"></div>
+                <p class="jail__line">ASSANE IS CAUGHT.</p>
+              </div>
+            </div>
+          </div>
+
+          <footer class="tvbar tvbar--bottom">
+            <span class="tvbar__obj" id="tv-objective">Study the plan.</span>
+            <span class="suspicion" id="suspicion">
+              <b>SUSPICION</b>
+              <span class="suspicion__track"><i id="suspicion-fill"></i></span>
+              <em id="suspicion-num">0</em>
+            </span>
+          </footer>
+
+        </div>
+      </div>
+      <div class="tv__stand"></div>
+    </section>
+
+    <!-- ================= P1 ================= -->
+    <section class="phone phone--p1" id="p1" aria-label="Player 1 phone, Assane">
+      <div class="phone__label"><b>P1</b> ASSANE — THE HANDS</div>
+      <div class="phone__body">
+        <div class="phone__notch"></div>
+        <div class="phone__screen" id="p1-screen"></div>
+      </div>
+    </section>
+
+    <!-- ================= P2 ================= -->
+    <section class="phone phone--p2" id="p2" aria-label="Player 2 phone, Benjamin">
+      <div class="phone__label"><b>P2</b> BENJAMIN — THE BRAIN</div>
+      <div class="phone__body">
+        <div class="phone__notch"></div>
+        <div class="phone__screen" id="p2-screen"></div>
+      </div>
+    </section>
+
+    <div class="stage__chrome">
+      <span class="chip">PROTOTYPE</span>
+      <span class="chip chip--ghost">One TV · Two phones · One heist</span>
+      <button class="chip chip--btn" id="btn-mute" type="button">SOUND: ON</button>
+      <button class="chip chip--btn" id="btn-restart" type="button">RESTART</button>
+      <button class="chip chip--btn" id="btn-art" type="button">SLOTS: ON</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/glyphs.js"></script>
+<script src="js/figures.js"></script>
+<script src="js/content.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/tv.js"></script>
+<script src="js/p1.js"></script>
+<script src="js/p2.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

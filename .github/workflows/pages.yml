@@ -1,0 +1,71 @@
+name: Publish sealed preview
+
+# The repository holds the prototype in the clear; GitHub Pages never does.
+# Every push rebuilds the site as ciphertext, using a passphrase that lives
+# only in repository secrets and is used to encrypt, never shipped.
+#
+# Set the secret first:
+#   Settings -> Secrets and variables -> Actions -> New repository secret
+#   Name: PROTOTYPE_PASSWORD
+# and turn on Settings -> Pages -> Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a queued run should not overtake a running one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install --disable-pip-version-check cryptography
+
+      - name: Fail early if the passphrase is not configured
+        env:
+          PROTOTYPE_PASSWORD: ${{ secrets.PROTOTYPE_PASSWORD }}
+        run: |
+          if [ -z "$PROTOTYPE_PASSWORD" ]; then
+            echo "::error::PROTOTYPE_PASSWORD is not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "passphrase present (${#PROTOTYPE_PASSWORD} characters)"
+
+      - name: Seal the build
+        env:
+          PROTOTYPE_PASSWORD: ${{ secrets.PROTOTYPE_PASSWORD }}
+        run: python tools/pack.py
+
+      # The gate on the whole arrangement. If anything readable has found its
+      # way into dist/, the deploy stops here instead of on the open web.
+      - name: Refuse to publish anything readable
+        run: python tools/verify.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

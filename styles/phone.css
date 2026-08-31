@@ -1,0 +1,533 @@
+/* ===================== THE PHONES =====================
+   P1 = "the hands"  - what Assane can see and touch, up close.
+   P2 = "the brain"  - the dossier. Deliberately too much information.
+   Design law #2: every input is an answer. No skill checks anywhere.
+   ====================================================== */
+
+.phone__label{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--zinc-lt);margin:0 0 8px 4px;
+}
+.phone__label b{color:var(--on-color);}
+.phone__body{
+  position:relative;width:360px;height:720px;
+  background:var(--device);border-radius:34px;padding:12px;
+  box-shadow:0 18px 0 rgba(0,0,0,.18);
+}
+.phone__notch{
+  position:absolute;left:50%;top:14px;transform:translateX(-50%);
+  width:96px;height:16px;background:var(--device);border-radius:999px;z-index:5;
+}
+.phone__screen{
+  width:100%;height:100%;background:var(--paper);
+  border-radius:24px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;
+}
+
+/* ---- shared phone furniture ---- */
+.pscreen{display:flex;flex-direction:column;height:100%;}
+.phead{
+  flex:none;padding:26px 16px 10px;border-bottom:var(--stroke) solid var(--ink);
+  display:flex;align-items:baseline;gap:8px;
+}
+.phead__who{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);}
+.phead__now{font-size:15px;letter-spacing:.12em;text-transform:uppercase;margin-left:auto;}
+.pbody{flex:1;min-height:0;overflow:auto;padding:14px;}
+.pbody::-webkit-scrollbar{width:6px;}
+.pbody::-webkit-scrollbar-thumb{background:var(--stone-dk);border-radius:99px;}
+.pfoot{flex:none;padding:12px 14px 18px;border-top:var(--stroke) solid var(--ink);}
+
+.btn{
+  display:block;width:100%;padding:13px 14px;text-align:center;
+  background:var(--paper);border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+}
+.btn:hover{background:var(--stone);}
+.btn--go{background:var(--gold);}
+.btn--go:hover{background:var(--ochre);}
+.btn--brand{background:var(--orange);color:var(--on-color);}
+.btn+.btn{margin-top:8px;}
+.btn[disabled]{opacity:.4;pointer-events:none;}
+
+.note{font-size:12px;line-height:1.6;color:var(--ink-soft);}
+.rule{height:var(--stroke);background:var(--ink);margin:12px 0;}
+.h{font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 8px;}
+
+/* ---- role card (Le Plan) ---- */
+.role{text-align:center;}
+.role .artslot{width:100%;aspect-ratio:4/3;margin-bottom:12px;}
+.role__name{font-size:26px;letter-spacing:.1em;margin:0;}
+.role__job{font-size:11px;letter-spacing:.22em;color:var(--paper);background:var(--ink);
+  display:inline-block;padding:4px 10px;margin:8px 0 12px;}
+.role__list{margin:0;padding:0;list-style:none;text-align:left;}
+.role__list li{font-size:12px;line-height:1.6;padding-left:16px;position:relative;margin-bottom:5px;}
+.role__list li::before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;
+  background:var(--gold);border:var(--stroke) solid var(--ink);border-radius:999px;}
+
+/* ================= P1: NAVIGATION ================= */
+.nav__sense{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:12px;min-height:88px;
+  display:flex;flex-direction:column;gap:6px;justify-content:center;
+}
+.nav__sense .h{margin:0;color:var(--ink-soft);}
+.nav__senseline{font-size:14px;line-height:1.45;margin:0;}
+.nav__senseline em{font-style:normal;background:var(--gold);padding:0 4px;}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.dpad button{
+  height:58px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);display:grid;place-items:center;
+}
+.dpad button:hover{background:var(--gold);}
+.dpad button svg{width:24px;height:24px;}
+.dpad .dpad__wait{background:var(--stone);font-size:10px;letter-spacing:.14em;}
+.dpad .dpad__wait:hover{background:var(--olive);color:var(--on-color);}
+.dpad .spacer{visibility:hidden;}
+.dpad button.is-blocked{animation:nudge .22s;background:var(--red);}
+
+/* ================= P1: MODULES ================= */
+.mod__head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.mod__head h2{margin:0;font-size:18px;letter-spacing:.1em;}
+
+/* Le Coffre */
+.safe__plate{
+  display:flex;gap:8px;align-items:center;justify-content:space-between;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:10px 12px;margin-bottom:12px;
+}
+.safe__serial{font-family:var(--mono);font-size:19px;letter-spacing:.16em;}
+.safe__ring{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;}
+.safe__ring i{width:20px;height:20px;border:var(--stroke) solid var(--ink);border-radius:999px;display:block;}
+.dial{position:relative;width:100%;aspect-ratio:1/1;}
+.dial svg{width:100%;height:100%;}
+.dial__hit{fill:transparent;cursor:pointer;}
+.dial__cell:hover .dial__disc{fill:var(--gold);}
+.dial__cell.is-used .dial__disc{fill:var(--gold);}
+.entry{display:flex;gap:8px;justify-content:center;margin-top:12px;}
+.entry i{
+  width:52px;height:52px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);display:grid;place-items:center;
+}
+.entry i svg{width:30px;height:30px;}
+.entry i.is-bad{background:var(--red);}
+
+/* Le Bureau */
+.desk{position:relative;border:var(--stroke) solid var(--ink);border-radius:var(--r);overflow:hidden;background:var(--stone);}
+.desk .artslot{border:0;border-radius:0;width:100%;aspect-ratio:4/3;}
+.desk__props{position:absolute;inset:0;}
+/* These sit on top of the daylight desk illustration, so they keep the light
+   treatment in both themes — a dark card on a sunlit desk reads as a hole. */
+.prop{
+  position:absolute;background:var(--prop);color:var(--on-gold);
+  border:var(--stroke) solid var(--on-gold);border-radius:2px;
+  font-size:10px;line-height:1.3;padding:5px;
+}
+.prop--badge,.prop--photo,.prop--postit{border-color:var(--on-gold);}
+.prop--photo .kid{border-color:var(--on-gold);}
+.prop--photo .cap{color:#5A6169;}
+.prop--badge{left:6%;bottom:7%;width:31%;text-align:center;background:var(--zinc-lt);}
+.prop--badge b{display:block;font-family:var(--mono);font-size:15px;letter-spacing:.1em;}
+.prop--badge span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;}
+.prop--photo{right:6%;top:8%;width:38%;padding:4px;background:var(--paper);}
+.prop--photo .kids{display:flex;gap:5px;align-items:flex-end;justify-content:center;height:56px;}
+.prop--photo .kid{background:var(--denim);border:var(--stroke) solid var(--ink);border-radius:999px 999px 2px 2px;width:20px;}
+.prop--photo .kid.b{background:var(--camel);}
+.prop--photo .cap{display:block;text-align:center;font-size:8px;letter-spacing:.14em;margin-top:3px;color:var(--ink-soft);text-transform:uppercase;}
+.prop--postit{left:10%;top:14%;width:31%;background:var(--ochre);transform:rotate(-4deg);text-align:center;}
+.prop--postit svg{width:26px;height:26px;display:block;margin:0 auto 2px;}
+.prop--postit b{font-size:9px;letter-spacing:.1em;text-transform:uppercase;}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px;}
+.keypad button{
+  height:44px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);font-family:var(--mono);font-size:17px;
+}
+.keypad button:hover{background:var(--gold);}
+.keypad .k-clear{background:var(--stone);font-family:var(--font);font-size:11px;letter-spacing:.1em;}
+.keypad .k-ok{background:var(--gold);font-family:var(--font);font-size:11px;letter-spacing:.1em;}
+.readout{
+  font-family:var(--mono);font-size:26px;letter-spacing:.32em;text-align:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--stone);
+  padding:10px;margin-top:12px;min-height:50px;
+}
+.readout.is-bad{background:var(--red);color:var(--on-color);}
+.doorgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px;}
+.doorgrid button{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+  padding:12px;display:grid;place-items:center;gap:5px;
+}
+.doorgrid button:hover{background:var(--gold);}
+.doorgrid svg{width:38px;height:38px;}
+.doorgrid span{font-size:9px;letter-spacing:.16em;color:var(--ink-soft);}
+
+/* La Tchatche - P1 */
+.tchp1__face{width:200px;aspect-ratio:1/1;margin:0 auto 10px;}
+.tchp1__desc{font-size:12px;line-height:1.5;background:var(--stone);
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);padding:10px;margin-bottom:12px;}
+.tchp1__desc b{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+.lines .btn{text-align:left;text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4;}
+.strikes{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+.strikes i{width:30px;height:8px;background:var(--paper);border:var(--stroke) solid var(--ink);border-radius:99px;display:block;}
+.strikes i.is-lost{background:var(--red);}
+
+/* ================= P2: THE DOSSIER ================= */
+.tabs{
+  flex:none;display:flex;border-bottom:var(--stroke) solid var(--ink);background:var(--stone);
+}
+.tabs button{
+  flex:1;padding:11px 4px;background:transparent;border:0;
+  border-right:var(--stroke) solid var(--ink);
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+}
+.tabs button:last-child{border-right:0;}
+.tabs button.is-on{background:var(--paper);color:var(--ink);font-weight:700;}
+.tabs button:hover{background:var(--paper);}
+
+.plan2{border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);overflow:hidden;}
+.plan2 svg{display:block;width:100%;}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.legend span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:5px;color:var(--ink-soft);}
+.legend i{width:11px;height:11px;border:var(--stroke) solid var(--ink);display:block;}
+
+.manual__row{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+  padding:9px 10px;margin-bottom:7px;
+}
+.manual__row:hover{background:var(--stone);}
+.manual__row.is-on{background:var(--gold);}
+.manual__serial{font-family:var(--mono);font-size:14px;letter-spacing:.12em;flex:1;}
+.manual__ring{width:18px;height:18px;border:var(--stroke) solid var(--ink);border-radius:999px;flex:none;}
+.manual__seq{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:12px;margin:4px 0 10px;
+}
+.manual__seq .steps{display:flex;gap:8px;justify-content:center;}
+.manual__seq .steps figure{margin:0;text-align:center;}
+.manual__seq .steps i{
+  width:50px;height:50px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);display:grid;place-items:center;
+}
+.manual__seq .steps i svg{width:32px;height:32px;}
+.manual__seq .steps figcaption{font-size:9px;letter-spacing:.16em;color:var(--ink-soft);margin-top:4px;}
+
+.file{border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);margin-bottom:8px;overflow:hidden;}
+.file__hd{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 10px;background:transparent;border:0;}
+.file__hd:hover{background:var(--stone);}
+.file.is-on .file__hd{background:var(--gold);}
+.file__badge{font-family:var(--mono);font-size:13px;letter-spacing:.1em;}
+.file__name{font-size:12px;letter-spacing:.1em;text-transform:uppercase;flex:1;}
+.file__bd{padding:0 10px 10px;border-top:var(--stroke) solid var(--ink);}
+.file__bd dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:9px 0 0;font-size:11px;}
+.file__bd dt{color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase;font-size:9px;padding-top:2px;}
+.file__bd dd{margin:0;}
+
+.faces{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.faces button{border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);padding:6px;}
+.faces button:hover{background:var(--stone);}
+.faces button.is-on{background:var(--gold);}
+.faces .artslot,.faces__portrait{width:100%;aspect-ratio:1/1;margin-bottom:5px;}
+.faces span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;}
+.dirt{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:11px;margin-top:10px;
+}
+.dirt ul{margin:6px 0 0;padding-left:16px;}
+.dirt li{font-size:12px;line-height:1.55;margin-bottom:4px;}
+.dirt li.is-locked{color:var(--zinc);}
+.dirt li.is-key{background:var(--gold);padding:2px 5px;margin-left:-5px;border-radius:2px;}
+
+.waiting{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:12px;text-align:center;padding:24px;
+}
+.waiting__dot{width:14px;height:14px;border-radius:999px;background:var(--gold);
+  border:var(--stroke) solid var(--ink);animation:blink 1.4s infinite;}
+
+/* ===================== LE BLACKOUT — THE PHONES ===================== */
+
+/* P1's screen has given up. Carries no information, by design. */
+.deadscreen{
+  position:relative;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--night);overflow:hidden;
+}
+.deadscreen svg{display:block;width:100%;}
+.deadscreen__line{
+  position:absolute;left:0;right:0;bottom:8px;text-align:center;
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;
+  color:var(--zinc);text-transform:uppercase;
+}
+
+/* Arming a run is two taps and a decision — never a gesture, never timed. */
+.runtoggle{
+  display:block;width:100%;padding:11px;margin-bottom:8px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+}
+.runtoggle:hover{background:var(--stone);}
+.runtoggle.is-armed{background:var(--orange);color:var(--on-color);}
+
+.dpad__freeze{
+  background:var(--night) !important;color:var(--on-color);
+  display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font-size:9px;letter-spacing:.12em;
+}
+.dpad__freeze:hover{background:var(--night-2) !important;}
+.dpad__freeze i{
+  width:11px;height:11px;border-radius:99px;background:var(--gold);display:block;
+  animation:heartbeat 1.6s infinite;
+}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1);opacity:1}
+  12%{transform:scale(1.5);opacity:.7}
+  24%{transform:scale(1);opacity:1}
+  36%{transform:scale(1.35);opacity:.8}
+  48%{transform:scale(1);opacity:1}
+}
+
+/* the worn keypad */
+.desk--night{background:var(--night);}
+/* shorter than the daylight desk so the keypad's bottom row — EFF, 0, OK —
+   stays above the fold. A submit button you have to scroll to find is a bug. */
+.desk--night .artslot{aspect-ratio:16/9;}
+.readout--night{background:var(--night);color:var(--on-color);border-color:var(--ink);}
+.prop--wear{color:var(--on-color);border-color:var(--zinc);
+  left:50%;top:8%;transform:translateX(-50%);width:60%;
+  text-align:center;background:var(--night-2);color:var(--on-color);border-color:var(--zinc);
+}
+.prop--wear b{display:block;font-family:var(--mono);font-size:19px;letter-spacing:.18em;color:var(--gold);}
+.prop--wear span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--zinc-lt);}
+
+.keypad--night button{background:var(--night-2);color:var(--zinc);border-color:var(--ink);}
+.keypad--night button:hover{background:var(--zinc);color:var(--ink);}
+/* three keys polished smooth by ten thousand hands. P1 can see WHICH.
+   Only Benjamin can work out the ORDER — the flow reverses one last time. */
+.keypad--night button.is-worn{
+  background:var(--stone);color:var(--ink);
+  box-shadow:inset 0 0 0 2px var(--gold);
+}
+.keypad--night .k-clear{background:var(--night);color:var(--zinc-lt);}
+.keypad--night .k-ok{background:var(--gold);color:var(--ink);}
+
+/* P2's camera grid */
+.plan2--night{background:var(--night);border-color:var(--ink);}
+.feeds{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.feed{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--night-2);color:var(--zinc);
+  padding:6px 3px;text-align:center;
+}
+.feed b{display:block;font-size:13px;letter-spacing:.1em;}
+.feed em{display:block;font-style:normal;font-size:7px;letter-spacing:.1em;margin-top:2px;}
+.feed.is-live{background:var(--sky);color:var(--ink);}
+.feed.is-live b{color:var(--ink);}
+.signal{
+  margin:8px 0 0;padding:7px 10px;text-align:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--red);color:var(--on-color);
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+}
+.signal.is-good{background:var(--gold);color:var(--ink);}
+
+/* emergency procedures, filed under the safes where nobody will look */
+.proc{display:grid;grid-template-columns:1fr;gap:2px;margin:0;}
+.proc dt{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px;}
+.proc dd{margin:0;font-size:12px;line-height:1.5;}
+
+/* ============ LE DÉGUISEMENT ============ */
+.mirrorwrap{
+  display:flex;gap:12px;align-items:flex-start;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:12px;
+}
+.mirror{
+  width:64px;flex:none;background:var(--paper);
+  border:var(--stroke) solid var(--ink);border-radius:2px;
+}
+.mirror.is-bad{background:var(--red);animation:nudge .22s;}
+.mirror svg{display:block;width:100%;}
+.rack{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.rack button{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);padding:4px;overflow:hidden;
+}
+.rack button:hover{background:var(--stone);}
+/* gold is the player: a chosen garment is a decision, not a highlight */
+.rack button.is-on{background:var(--gold);}
+.rack button svg{display:block;width:100%;height:52px;}
+
+/* the uniform on Benjamin's roster — same renderer, other side of the table */
+.uniformwrap{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.uniform{
+  width:56px;flex:none;background:var(--paper);
+  border:var(--stroke) solid var(--ink);border-radius:2px;
+}
+.uniform svg{display:block;width:100%;}
+
+/* ============ LE FAUX ============ */
+.canvases{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.canvas{border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--stone);padding:8px;}
+.canvas__art{background:var(--paper);border:var(--stroke) solid var(--ink);border-radius:2px;margin-bottom:8px;}
+.canvas__art svg{display:block;width:100%;}
+.canvas .btn{padding:8px 2px;font-size:10px;letter-spacing:.06em;}
+
+/* Benjamin's authentication notes */
+.notes{margin:0;padding-left:18px;}
+.notes li{font-size:12px;line-height:1.5;margin-bottom:6px;}
+
+/* ============ L'ÉCOUTE ============ */
+/* P1: the pulse train. The symbol is always legible and the lit state is the
+   synchronised visual for the sound — playable with the speaker off. */
+.pulses{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.pulse{
+  height:64px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);display:grid;place-items:center;
+  transition:background .06s linear;
+}
+.pulse b{font-size:22px;line-height:1;color:var(--ink-soft);}
+.pulse.is-on{background:var(--gold);}
+.pulse.is-on b{color:var(--on-gold);}
+.circuits{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.circuits .btn{margin-top:0;font-size:12px;padding:11px 4px;}
+.circuits .btn.is-wrong{background:var(--red);color:var(--on-color);animation:nudge .22s;}
+
+/* P2: the soundboard. Taps a sequence, never a tempo. */
+.board__slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px;}
+.board__slots i{
+  height:40px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);display:grid;place-items:center;
+  font-style:normal;font-size:19px;color:var(--ink);
+}
+.board__keys{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;}
+.board__keys button{
+  padding:11px 6px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);font-size:11px;letter-spacing:.12em;
+}
+.board__keys button:hover{background:var(--gold);color:var(--on-gold);}
+.board__clear{background:var(--stone) !important;}
+.board__result{
+  margin:8px 0 0;padding:9px;text-align:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--gold);color:var(--on-gold);
+  font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+}
+.board__result.is-none{background:var(--stone);color:var(--ink-soft);}
+
+/* ============ THE CONTRACT PICKER (Le Plan, P2) ============ */
+.contracts{margin-bottom:14px;}
+.contract{
+  display:block;width:100%;text-align:left;margin-bottom:7px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--paper);padding:9px 10px;
+}
+.contract:hover{background:var(--stone);}
+.contract.is-on{background:var(--gold);color:var(--on-gold);}
+.contract[disabled]{opacity:.45;pointer-events:none;}
+.contract b{display:block;font-size:10px;letter-spacing:.12em;margin-bottom:3px;line-height:1.35;}
+.contract span{display:block;font-size:9px;letter-spacing:.12em;color:var(--ink-soft);margin-bottom:5px;}
+.contract.is-on span{color:var(--on-gold);}
+.contract em{display:block;font-style:normal;font-size:11px;line-height:1.45;color:var(--ink-soft);}
+.contract.is-on em{color:var(--on-gold);}
+
+/* the safe door behind the dial */
+.dial__plate{position:absolute;inset:0;border:0;border-radius:var(--r);background:var(--night);}
+.dial__plate img{border-radius:var(--r);}
+.dial svg{position:relative;}
+
+/* Only one weight of the mono is embedded, so a <b> here would be SYNTHETIC
+   bold — the browser smearing the 400 outlines. On 15px numerals that Assane
+   has to read out loud, crisp beats heavy. Size and colour carry the emphasis
+   instead. */
+.prop--badge b,.prop--wear b{font-weight:400;}
+
+/* ============ THE MAP KEY (P2) ============ */
+/* Every symbol on the plan, drawn the way it appears on the plan, with a
+   sentence rather than a word. Written for someone who has never played a
+   game with a minimap. */
+.mapkey{margin-top:12px;display:flex;flex-direction:column;gap:7px;}
+.key{display:flex;align-items:center;gap:9px;}
+.key__sw{
+  width:20px;height:20px;flex:none;display:block;
+  border:var(--stroke) solid var(--ink);border-radius:2px;background:var(--map-void);
+  overflow:hidden;
+}
+.key em{font-style:normal;font-size:11px;line-height:1.35;color:var(--ink-soft);}
+
+/* a direction that is a wall says so, instead of waiting to be tried */
+.dpad button.is-shut{opacity:.3;border-style:dashed;}
+.dpad button.is-shut:hover{background:var(--paper);}
+
+/* ---- plain-language furniture ------------------------------------------
+   A numbered instruction strip, a small caption for anything that had a name
+   in the prose but no name on the screen, and an undo for the safe dial. */
+.howto{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:7px;}
+.howto li{display:flex;gap:9px;font-size:12px;line-height:1.45;color:var(--ink-soft);}
+.howto b{
+  flex:none;width:18px;height:18px;border-radius:999px;
+  background:var(--ink);color:var(--paper);font-size:10px;font-weight:600;
+  display:grid;place-items:center;margin-top:1px;
+}
+.howto em{font-style:normal;color:var(--ink);}
+.lbl{
+  display:block;font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 3px;
+}
+.lbl--c{text-align:center;margin:12px 0 0;}
+.safe__plate .lbl{margin-bottom:4px;}
+.safe__ring b{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--ink);text-transform:uppercase;}
+.undo{
+  display:block;margin:10px auto 0;background:var(--paper);
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  padding:8px 16px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
+}
+.undo:hover{background:var(--stone);}
+.undo[disabled]{opacity:.3;pointer-events:none;}
+.tch__verdict{font-size:12px;line-height:1.45;text-align:center;margin:0 0 10px;color:var(--ink);}
+.tch__verdict.is-bad{color:var(--red);}
+.manual__ringname{
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);flex:none;
+}
+.manual__row.is-on .manual__ringname{color:var(--on-gold);}
+.dirt li{margin-bottom:8px;}
+.dirt__tag{
+  display:block;font-style:normal;font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:1px;
+}
+.dirt li.is-key .dirt__tag{color:var(--on-gold);}
+
+/* Le Coffre and La Tchatche both grew instructions, and instructions are only
+   worth their height if the thing you act on is still on screen underneath. */
+.dial{max-width:240px;margin-left:auto;margin-right:auto;}
+.tchp1__top{display:flex;gap:11px;align-items:flex-start;margin-bottom:11px;}
+.tchp1__top .tchp1__face{width:104px;flex:none;margin:0;}
+.tchp1__top .tchp1__desc{flex:1;margin:0;}
+.tch__meter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;}
+.tch__meter .lbl{margin:0;}
+.tch__meter__r{display:flex;align-items:center;gap:8px;}
+.tch__meter .strikes{margin:0;}
+.tch__meter .strikes i{width:22px;}
+
+.entry{align-items:flex-start;}
+.entry figure{margin:0;text-align:center;}
+.entry figcaption{font-size:9px;letter-spacing:.16em;color:var(--ink-soft);margin-top:4px;}
+
+/* The one line both screens say at once. */
+.plan2__where{font-size:12px;line-height:1.5;color:var(--ink-soft);margin:0 0 9px;}
+.plan2__where b{color:var(--ink);font-weight:600;}
+
+/* A rack tile carries artwork when there is artwork and the drawing when there
+   is not. `.is-drawn` restores exactly the old geometry, so an empty art folder
+   changes nothing about this screen — which matters, because nine describable
+   garments ARE the module. */
+.artslot.rack__art{
+  width:100%;height:72px;background:transparent;border:0;border-radius:0;
+}
+.artslot.rack__art img{width:100%;height:100%;object-fit:contain;}
+.artslot.rack__art.is-drawn{height:auto;}
+.artslot.rack__art.is-drawn svg{display:block;width:100%;height:52px;}
+/* The drawn garments had transparent backgrounds, so choosing one flooded the
+   whole tile gold. The delivered artwork is opaque on its own slate, which cut
+   that signal down to a 6px ring — a regression the art caused, not the art's
+   fault. The chosen piece now shrinks slightly instead, the way something
+   lifted off a rack sits away from the rail, and the gold reads all round it. */
+.rack button.is-on .rack__art{transform:scale(.85);}

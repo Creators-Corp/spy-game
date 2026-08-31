@@ -1,0 +1,753 @@
+/* p1.js — PLAYER 1, ASSANE, "THE HANDS".
+   Everything Assane can see and touch up close. Private because it is diegetic:
+   you are the one holding the object.
+   DESIGN LAW #2: every input here is an answer, never a feat of dexterity.
+   No swipes, no timing windows, no gestures — anywhere. */
+(function (L) {
+  'use strict';
+  var U = L.util, C = L.content, E = L.engine, G = L.glyphs;
+  var el = U.el, $ = U.$;
+
+  /* ===================================================================
+     Procedural ligne-claire faces.
+     Faces are DRAWN FROM DATA, not from art files, which is why La Tchatche
+     is playable before a single asset exists — and why one module can hold
+     an endless roster of guards. Art slots sit behind these as an upgrade.
+     =================================================================== */
+  function faceSVG(t, size) {
+    var s = '<svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block">';
+    s += '<rect x="0" y="0" width="100" height="100" fill="var(--sky)"/>';
+    var head =
+      t.head === 'round'  ? '<ellipse cx="50" cy="52" rx="30" ry="32"' :
+      t.head === 'long'   ? '<ellipse cx="50" cy="52" rx="25" ry="37"' :
+                            '<rect x="21" y="18" width="58" height="66" rx="13"';
+    s += head + ' fill="' + t.skin + '" stroke="var(--ink)" stroke-width="3"/>';
+    /* ears */
+    s += '<circle cx="20" cy="54" r="6" fill="' + t.skin + '" stroke="var(--ink)" stroke-width="3"/>';
+    s += '<circle cx="80" cy="54" r="6" fill="' + t.skin + '" stroke="var(--ink)" stroke-width="3"/>';
+    /* hair */
+    if (t.hair === 'short') s += '<path d="M22 40 C28 18 72 18 78 40 C70 30 30 30 22 40 Z" fill="var(--ink)"/>';
+    if (t.hair === 'swept') s += '<path d="M20 42 C24 16 70 12 80 34 C66 26 44 30 34 44 C30 38 24 38 20 42 Z" fill="var(--ink)"/>';
+    if (t.hair === 'cap')   s += '<path d="M20 38 C24 16 76 16 80 38 Z" fill="var(--denim)" stroke="var(--ink)" stroke-width="3"/>' +
+                                 '<path d="M16 38 L84 38 L84 44 L16 44 Z" fill="var(--denim)" stroke="var(--ink)" stroke-width="3"/>';
+    if (t.hair === 'bald')  s += '<path d="M34 30 C40 25 50 24 58 27" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+    /* brows + eyes */
+    s += '<path d="M34 44 L45 44 M55 44 L66 44" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>';
+    s += '<circle cx="39" cy="52" r="3.4" fill="var(--ink)"/><circle cx="61" cy="52" r="3.4" fill="var(--ink)"/>';
+    /* nose + mouth */
+    s += '<path d="M50 54 L50 62 L45 63" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+    if (!t.beard) s += '<path d="M42 72 C46 76 54 76 58 72" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>';
+    if (t.moustache) s += '<path d="M38 67 C44 63 56 63 62 67 C56 71 44 71 38 67 Z" fill="var(--ink)"/>';
+    if (t.beard) s += '<path d="M28 60 C30 84 70 84 72 60 C66 78 34 78 28 60 Z" fill="var(--ink)"/>' +
+                      '<path d="M42 73 C46 76 54 76 58 73" fill="none" stroke="var(--paper)" stroke-width="2.5" stroke-linecap="round"/>';
+    if (t.glasses) s += '<circle cx="39" cy="52" r="10" fill="none" stroke="var(--ink)" stroke-width="3"/>' +
+                        '<circle cx="61" cy="52" r="10" fill="none" stroke="var(--ink)" stroke-width="3"/>' +
+                        '<path d="M49 52 L51 52 M29 50 L21 47 M71 50 L79 47" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>';
+    if (t.scar) s += '<path d="M33 38 L44 58" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>' +
+                     '<path d="M35 43 L40 41 M38 50 L43 48" stroke="var(--red)" stroke-width="2" stroke-linecap="round"/>';
+    s += '</svg>';
+    return s;
+  }
+  /* A portrait is the artwork if it exists and the drawing if it does not.
+     The drawn version was carrying this module on its own and it looked like
+     clip art beside the real illustration — fine as a safety net, not fine as
+     the thing a client sees. It stays as the fallback so La Tchatche is still
+     playable with an empty art folder, and so a missing file degrades quietly
+     instead of leaving a labelled placeholder box where a face should be. */
+  var portraitCache = {};
+  function facePortrait(traits, cls) {
+    var key = (traits.art || 'x') + '|' + (cls || '');
+    if (portraitCache[key]) return portraitCache[key];
+    var box = el('div', { class: 'artslot ' + (cls || '') });
+    if (traits.art) {
+      var img = el('img', { src: U.assetURL('art/' + traits.art + '.png'), alt: '' });
+      img.addEventListener('error', function () { box.innerHTML = faceSVG(traits); });
+      box.appendChild(img);
+    } else {
+      box.innerHTML = faceSVG(traits);
+    }
+    portraitCache[key] = box;
+    return box;
+  }
+
+  L.face = { svg: faceSVG, portrait: facePortrait };
+
+  /* =================================================================== */
+  function head(now) {
+    return el('header', { class: 'phead' }, [
+      el('span', { class: 'phead__who', text: 'P1 · ASSANE' }),
+      el('span', { class: 'phead__now', text: now })
+    ]);
+  }
+  function screen(kids) { return el('div', { class: 'pscreen' }, kids); }
+  function body(kids) { return el('div', { class: 'pbody' }, kids); }
+  function foot(kids) { return el('div', { class: 'pfoot' }, kids); }
+
+  /* ------------------------------------------------------------ LE PLAN */
+  function viewPlan() {
+    var S = E.S;
+    return screen([
+      head('LE PLAN'),
+      body([
+        el('div', { class: 'role' }, [
+          U.artSlot('p1-role-assane'),
+          el('h2', { class: 'role__name', text: 'ASSANE' }),
+          el('div', { class: 'role__job', text: 'THE HANDS' }),
+          el('ul', { class: 'role__list' }, [
+            el('li', { text: 'You are inside the building. You move, you touch, you talk your way out.' }),
+            el('li', { text: 'You see close and you see narrow. You will not see the guard until he is on you.' }),
+            el('li', { text: 'Benjamin has the whole floor. Describe everything. Ask for everything.' })
+          ])
+        ])
+      ]),
+      foot([
+        el('button', {
+          class: 'btn ' + (S.ready.p1 ? '' : 'btn--go'),
+          text: S.ready.p1 ? 'WAITING FOR BENJAMIN…' : 'READY',
+          disabled: S.ready.p1 ? '' : null,
+          onclick: function () { S.ready.p1 = true; U.sfx.tap(); U.emit('ready'); }
+        })
+      ])
+    ]);
+  }
+
+  /* ------------------------------------------------------ L'INFILTRATION */
+  /* His screen has given up. This panel carries no information at all — that
+     is the point of the sequence, and it is why it is generated rather than
+     drawn: it must never accidentally become readable. */
+  function staticPanel() {
+    var S = E.S, ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 56');
+    var bg = document.createElementNS(ns, 'rect');
+    bg.setAttribute('width', '100'); bg.setAttribute('height', '56');
+    bg.setAttribute('fill', 'var(--night)');
+    svg.appendChild(bg);
+    var seed = S.turn * 9301 + 49297;
+    for (var i = 0; i < 44; i++) {
+      seed = (seed * 9301 + 49297) % 233280;
+      var r = seed / 233280;
+      var bar = document.createElementNS(ns, 'rect');
+      bar.setAttribute('x', (r * 100).toFixed(1));
+      bar.setAttribute('y', ((i * 1.27) % 56).toFixed(1));
+      bar.setAttribute('width', (2 + r * 26).toFixed(1));
+      bar.setAttribute('height', '1.4');
+      bar.setAttribute('fill', i % 3 ? 'var(--zinc)' : 'var(--zinc-lt)');
+      bar.setAttribute('opacity', (0.12 + r * 0.4).toFixed(2));
+      svg.appendChild(bar);
+    }
+    var wrap = el('div', { class: 'deadscreen' });
+    wrap.appendChild(svg);
+    wrap.appendChild(el('span', { class: 'deadscreen__line', text: S.sense || '' }));
+    return wrap;
+  }
+
+  var runArmed = false;
+
+  function viewBlackout() {
+    var S = E.S;
+
+    function arrow(id, dx, dy) {
+      var b = el('button', { 'aria-label': id, onclick: function () {
+        var r = E.act(dx, dy, { run: runArmed });
+        runArmed = false;
+        if (r.blocked) { b.classList.add('is-blocked'); setTimeout(function () { b.classList.remove('is-blocked'); }, 240); }
+        U.emit('render');
+      } });
+      var ic = G.icon(id); ic.style.color = 'var(--ink)';
+      b.appendChild(ic);
+      return b;
+    }
+
+    var freeze = el('button', { class: 'dpad__freeze', onclick: function () {
+      E.act(0, 0, { freeze: true }); runArmed = false; U.emit('render');
+    } }, [ el('i'), el('span', { text: 'FREEZE' }) ]);
+
+    var pad = el('div', { class: 'dpad' }, [
+      el('div', { class: 'spacer' }), arrow('aup', 0, -1), el('div', { class: 'spacer' }),
+      arrow('aleft', -1, 0), freeze, arrow('aright', 1, 0),
+      el('div', { class: 'spacer' }), arrow('adown', 0, 1), el('div', { class: 'spacer' })
+    ]);
+
+    /* Arming a run is a decision, not a gesture — two taps, no timing window.
+       It moves two tiles instead of one and rings footsteps that stop the
+       nearest guard and turn him toward the sound. */
+    var runBtn = el('button', {
+      class: 'runtoggle' + (runArmed ? ' is-armed' : ''),
+      text: runArmed ? 'RUN ARMED · 2 TILES, MAKES NOISE' : 'RUN',
+      onclick: function () { runArmed = !runArmed; U.sfx.tap(); U.emit('render'); }
+    });
+
+    return screen([
+      head('LE BLACKOUT'),
+      /* Deliberately bare. No reach panel here: in the dark his phone is
+         static and a d-pad, and the only things left are the shape of the
+         building on the TV and Benjamin's voice. Giving him a second readout
+         would hand back exactly what the sequence is built to take away. */
+      body([
+        staticPanel(),
+        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: 'MANUSCRIPT · ON YOU', style: 'margin-top:12px' }) : null,
+        el('p', { class: 'note', style: 'margin-top:12px', text:
+          'Your phone is dead. You cannot see a single guard. Benjamin can — half the time.' })
+      ]),
+      foot([ runBtn, pad ])
+    ]);
+  }
+
+  /* ---------------------------------------------------------- LE CLAVIER */
+  function viewClavier() {
+    var S = E.S, K = C.CLAVIER;
+
+    var readout = el('div', { class: 'readout readout--night',
+      text: S.clavierEntry ? S.clavierEntry.split('').join(' ') : '· · · ·' });
+
+    var pad = el('div', { class: 'keypad keypad--night' });
+    function key(n) {
+      var worn = K.worn.indexOf(n) >= 0;
+      return el('button', { class: worn ? 'is-worn' : '', text: n, onclick: function () {
+        if (S.clavierEntry.length < 4) { S.clavierEntry += n; U.sfx.tap(); U.emit('render'); }
+      } });
+    }
+    ['1','2','3','4','5','6','7','8','9'].forEach(function (n) { pad.appendChild(key(n)); });
+    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () {
+      S.clavierEntry = ''; U.emit('render');
+    } }));
+    pad.appendChild(key('0'));
+    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
+      if (S.clavierEntry.length !== 4) return;
+      var ok = E.clavierSubmit(S.clavierEntry);
+      if (!ok) { readout.classList.add('is-bad'); S.clavierEntry = ''; setTimeout(function () { U.emit('render'); }, 500); }
+      else U.emit('render');
+    } }));
+
+    var door = el('div', { class: 'desk desk--night' }, [
+      U.artSlot('blackout-door'),
+      el('div', { class: 'desk__props' }, [
+        el('div', { class: 'prop prop--wear', html:
+          '<b>' + K.worn.join(' &nbsp;') + '</b><span>worn keys</span>' })
+      ])
+    ]);
+
+    return screen([
+      head('LE CLAVIER'),
+      body([
+        door,
+        readout,
+        pad
+      ]),
+      foot([ el('p', { class: 'note', text: 'Tell him which keys are worn. He has the procedure — and he has to find who is posted here tonight.' }) ])
+    ]);
+  }
+
+  /* ---------------------------------------------------- LE DÉGUISEMENT */
+  var outfit = { head: null, torso: null, legs: null };
+
+  /* A garment is the artwork if it exists and the drawing if it does not —
+     the same deal the guard portraits struck, and for the same reason: the
+     drawn version is legible but it reads as clip art next to real
+     illustration, and this rack is nine tiles of it at once.
+     The FALLBACK IS LOAD-BEARING here, not decoration. This module is Player 1
+     describing nine garments out loud while Player 2 matches them against a
+     roster, so a missing file has to degrade to a rough garment rather than to
+     a labelled empty box — an empty box is not describable, and the puzzle
+     would simply stop. With no art at all the rack looks exactly as it does
+     today, down to the tile height. */
+  var garmentCache = {};
+  function garmentTile(slot, id) {
+    var key = slot + '|' + id;
+    if (garmentCache[key]) return garmentCache[key];
+    var box = el('div', { class: 'artslot rack__art' });
+    var img = el('img', { src: U.assetURL('art/garment-' + id + '.png'), alt: '' });
+    img.addEventListener('error', function () {
+      img.remove();
+      box.classList.add('is-drawn');
+      box.innerHTML = L.figures.garmentSVG(slot, id);
+    });
+    box.appendChild(img);
+    garmentCache[key] = box;
+    return box;
+  }
+
+  function viewDeguisement() {
+    var S = E.S, F = L.figures;
+
+    var mirror = el('div', { class: 'mirror' });
+    mirror.innerHTML = F.figureSVG(outfit);
+
+    var racks = el('div', {});
+    [['head', 'HEAD'], ['torso', 'TORSO'], ['legs', 'LEGS']].forEach(function (pair) {
+      var slot = pair[0];
+      racks.appendChild(el('p', { class: 'h', style: 'margin:8px 0 4px', text: pair[1] }));
+      var row = el('div', { class: 'rack' });
+      C.RACK[slot].forEach(function (id) {
+        var b = el('button', {
+          class: outfit[slot] === id ? 'is-on' : '',
+          onclick: function () {
+            outfit[slot] = outfit[slot] === id ? null : id;
+            U.sfx.tap(); U.emit('render');
+          }
+        });
+        b.appendChild(garmentTile(slot, id));
+        row.appendChild(b);
+      });
+      racks.appendChild(row);
+    });
+
+    var complete = outfit.head && outfit.torso && outfit.legs;
+    return screen([
+      head('LE DÉGUISEMENT'),
+      body([
+        el('div', { class: 'mirrorwrap' }, [
+          mirror,
+          el('p', { class: 'note', style: 'margin:0', text:
+            'The staff cloakroom. Describe all nine to him — he knows whose is whose, and who is posted where you are going.' })
+        ]),
+        racks
+      ]),
+      foot([
+        el('button', {
+          class: 'btn ' + (complete ? 'btn--go' : ''),
+          text: complete ? 'GET DRESSED' : 'PICK THREE PIECES',
+          disabled: complete ? null : '',
+          onclick: function () {
+            var ok = E.deguisementSubmit(outfit);
+            if (!ok) { mirror.classList.add('is-bad'); setTimeout(function () { U.emit('render'); }, 500); }
+            else U.emit('render');
+          }
+        }),
+        el('button', { class: 'btn', text: 'GO IN AS YOU ARE',
+          onclick: function () { E.declineModule(); U.emit('render'); } })
+      ])
+    ]);
+  }
+
+  /* ---------------------------------------------------------- LE FAUX */
+  function viewFaux() {
+    var S = E.S, F = L.figures;
+
+    function canvas(feat, label, isGenuine) {
+      var wrap = el('div', { class: 'canvas' });
+      var art = el('div', { class: 'canvas__art' });
+      art.innerHTML = F.paintingSVG(feat);
+      wrap.appendChild(art);
+      wrap.appendChild(el('button', {
+        class: 'btn btn--go', text: 'TAKE ' + label,
+        onclick: function () { E.fauxChoose(isGenuine); U.emit('render'); }
+      }));
+      return wrap;
+    }
+
+    var left = S.fauxLeftIsGenuine;
+    return screen([
+      head('LE FAUX'),
+      body([
+        el('p', { class: 'note', style: 'margin:0 0 10px', text:
+          'Two canvases, one crate. Describe them both to him — everything, not just what you think matters. He has the authentication notes.' }),
+        el('div', { class: 'canvases' }, [
+          canvas(left ? C.FAUX.genuine : C.FAUX.forgery, 'A', left),
+          canvas(left ? C.FAUX.forgery : C.FAUX.genuine, 'B', !left)
+        ])
+      ]),
+      foot([
+        el('button', { class: 'btn', text: 'LEAVE BOTH',
+          onclick: function () { E.declineModule(); U.emit('render'); } })
+      ])
+    ]);
+  }
+
+  /* ---------------------------------------------------------- L'ÉCOUTE */
+  var pulsePlaying = false;
+
+  function viewEcoute() {
+    var S = E.S, K = C.ECOUTE;
+
+    var train = el('div', { class: 'pulses' });
+    var cells = K.transmission.map(function (p) {
+      var cell = el('i', { class: 'pulse pulse--' + p });
+      /* The symbol stays on screen after playback. Unlimited replays, nothing
+         to catch, nothing to remember — the work is relaying it, not hearing
+         it, and that keeps the module playable muted and playable slowly. */
+      cell.appendChild(el('b', { text: p === 'l' ? '—' : '·' }));
+      train.appendChild(cell);
+      return cell;
+    });
+
+    function play() {
+      if (pulsePlaying) return;
+      pulsePlaying = true;
+      var i = 0;
+      (function step() {
+        if (i >= K.transmission.length) { pulsePlaying = false; return; }
+        var isLong = K.transmission[i] === 'l', cell = cells[i], ms = isLong ? 330 : 110;
+        cell.classList.add('is-on');
+        U.sfx.pulse(isLong);
+        if (navigator.vibrate) { try { navigator.vibrate(isLong ? 300 : 90); } catch (e) {} }
+        setTimeout(function () {
+          cell.classList.remove('is-on');
+          i++;
+          setTimeout(step, 150);
+        }, ms);
+      })();
+    }
+
+    var circuits = el('div', { class: 'circuits' });
+    K.circuits.forEach(function (c) {
+      var b = el('button', { class: 'btn', text: 'CUT ' + c, onclick: function () {
+        var ok = E.ecouteCut(c);
+        if (!ok) { b.classList.add('is-wrong'); setTimeout(function () { U.emit('render'); }, 450); }
+        else U.emit('render');
+      } });
+      circuits.appendChild(b);
+    });
+
+    return screen([
+      head('L’ÉCOUTE'),
+      body([
+        el('p', { class: 'note', style: 'margin:0 0 10px', text:
+          'Hold it to your ear. The line repeats the same five pulses. Read them to him — short and long, in order.' }),
+        train,
+        el('button', { class: 'btn btn--go', style: 'margin-top:10px',
+          text: 'PLAY THE LINE AGAIN', onclick: play }),
+        el('div', { class: 'rule' }),
+        el('p', { class: 'h', style: 'margin-bottom:6px', text: 'CUT A CIRCUIT' }),
+        el('p', { class: 'note', style: 'margin:0 0 10px', text:
+          'He has the code book, and it will only answer him if he can reproduce the rhythm.' }),
+        circuits
+      ]),
+      foot([
+        el('button', { class: 'btn', text: 'LEAVE THE LINE',
+          onclick: function () { E.declineModule(); U.emit('render'); } })
+      ])
+    ]);
+  }
+
+  function viewPlay() {
+    var S = E.S;
+    /* The pad itself shows which ways are shut. This replaced an abstract
+       four-dot "within reach" diagram that meant nothing unless you already
+       play games — and this audience does not. */
+    function arrow(id, dx, dy) {
+      var shut = E.isWall(S.assane.x + dx, S.assane.y + dy);
+      var b = el('button', {
+        'aria-label': id,
+        class: shut ? 'is-shut' : '',
+        onclick: function () {
+          var r = E.act(dx, dy);
+          if (r.blocked) { b.classList.add('is-blocked'); setTimeout(function () { b.classList.remove('is-blocked'); }, 240); }
+          U.emit('render');
+        }
+      });
+      var ic = G.icon(id); ic.style.color = 'var(--ink)';
+      b.appendChild(ic);
+      return b;
+    }
+    var pad = el('div', { class: 'dpad' }, [
+      el('div', { class: 'spacer' }), arrow('aup', 0, -1), el('div', { class: 'spacer' }),
+      arrow('aleft', -1, 0),
+      el('button', { class: 'dpad__wait', text: 'HOLD STILL', onclick: function () { E.act(0, 0); U.emit('render'); } }),
+      arrow('aright', 1, 0),
+      el('div', { class: 'spacer' }), arrow('adown', 0, 1), el('div', { class: 'spacer' })
+    ]);
+
+    return screen([
+      head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
+      body([
+        el('div', { class: 'nav__sense' }, [
+          el('p', { class: 'h', text: 'WHAT YOU SENSE' }),
+          el('p', { class: 'nav__senseline', html: S.sense || '…' })
+        ]),
+        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: 'MANUSCRIPT · ON YOU', style: 'margin-top:12px' }) : null,
+        el('p', { class: 'note', style: 'margin-top:12px' , text:
+          'One tap is one step, and the guards step when you do. Holding still is a move. A greyed-out arrow is a wall.' })
+      ]),
+      foot([pad])
+    ]);
+  }
+
+  /* ---------------------------------------------------------- LE COFFRE */
+  /* Dial geometry is matched to art/coffre-door.png rather than to the square.
+     That artwork puts its empty recess at about (49%, 44%) of the frame with an
+     inner radius near 26%, so the working dial is built to sit INSIDE it — a
+     dial drawn to fill the whole tile would have sat on top of the rivets and
+     the handle and looked pasted on.
+
+     RING and DISC are also constrained against each other: eight discs around a
+     circle of radius R have their centres 0.765R apart, so DISC has to stay
+     under 0.383 * RING or neighbours overlap. At these values a disc lands at
+     about 42px on a phone, which is still a comfortable tap target.
+     If the safe door art is ever regenerated, these five numbers are the only
+     thing that needs revisiting. */
+  var DIAL = { vb: 200, cx: 98, cy: 89, ring: 38, disc: 12.8, hub: 16, seat: 51 };
+
+  function viewCoffre() {
+    var S = E.S, K = C.COFFRE, D = DIAL;
+    var svgns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + D.vb + ' ' + D.vb);
+
+    /* seats the dial into the recess and keeps the glyphs readable on steel */
+    var seat = document.createElementNS(svgns, 'circle');
+    seat.setAttribute('cx', D.cx); seat.setAttribute('cy', D.cy); seat.setAttribute('r', D.seat);
+    seat.setAttribute('fill', 'rgba(6,9,13,.38)');
+    svg.appendChild(seat);
+
+    /* the ring colour is half the index into P2's manual — it has to be the
+       most obvious thing on this screen after the plate */
+    var hub = document.createElementNS(svgns, 'circle');
+    hub.setAttribute('cx', D.cx); hub.setAttribute('cy', D.cy); hub.setAttribute('r', D.hub);
+    hub.setAttribute('fill', C.RING_COLOUR[K.ring]);
+    hub.setAttribute('stroke', 'var(--ink)'); hub.setAttribute('stroke-width', '2.5');
+    svg.appendChild(hub);
+
+    K.dial.forEach(function (gl, i) {
+      var ang = (i / K.dial.length) * Math.PI * 2 - Math.PI / 2;
+      var gx = D.cx + Math.cos(ang) * D.ring, gy = D.cy + Math.sin(ang) * D.ring;
+      var g = document.createElementNS(svgns, 'g');
+      g.setAttribute('class', 'dial__cell' + (S.coffreEntry.indexOf(gl) >= 0 ? ' is-used' : ''));
+      g.setAttribute('style', 'cursor:pointer');
+      var d = document.createElementNS(svgns, 'circle');
+      d.setAttribute('class', 'dial__disc');
+      d.setAttribute('cx', gx); d.setAttribute('cy', gy); d.setAttribute('r', D.disc);
+      d.setAttribute('fill', 'var(--paper)');
+      d.setAttribute('stroke', 'var(--ink)'); d.setAttribute('stroke-width', '2');
+      g.appendChild(d);
+      var use = document.createElementNS(svgns, 'use');
+      use.setAttribute('href', '#g-' + gl);
+      use.setAttribute('width', '100'); use.setAttribute('height', '100');
+      use.setAttribute('transform', 'translate(' + (gx - 9) + ',' + (gy - 9) + ') scale(0.18)');
+      use.setAttribute('color', 'var(--ink)');
+      g.appendChild(use);
+      g.addEventListener('click', function () { E.coffreTap(gl); U.emit('render'); });
+      svg.appendChild(g);
+    });
+
+    /* The slots are numbered 1-4 the same way Benjamin's manual numbers its
+       four figures, so the two screens read as one instruction. That is also
+       cheaper in height than a caption sentence, and this screen has no height
+       to spare: the entry row is the only feedback a tap produces, and it was
+       sitting under the fold. */
+    var entry = el('div', { class: 'entry' });
+    for (var i = 0; i < 4; i++) {
+      var slot = el('i');
+      if (S.coffreEntry[i]) { var ic = G.icon(S.coffreEntry[i]); ic.style.color = 'var(--ink)'; slot.appendChild(ic); }
+      entry.appendChild(el('figure', {}, [slot, el('figcaption', { text: String(i + 1) })]));
+    }
+    if (S.coffreEntry.length === 4 && !S.coffreEntry.every(function (g, i2) { return g === K.code[i2]; })) {
+      U.$$('i', entry).forEach(function (n) { n.classList.add('is-bad'); });
+    }
+
+    var dial = el('div', { class: 'dial' });
+    dial.appendChild(U.artSlot('coffre-door', 'dial__plate'));
+    dial.appendChild(svg);
+
+    /* The old screen printed DR-1187 with no label beside a note that said
+       "read him the plate" — a word that appeared nowhere on it — and showed the
+       ring as a bare swatch. Benjamin's book lists this same number three times
+       and only the colour tells them apart, so a player who cannot put a WORD to
+       the colour cannot use the book: amber and camel are both tan. The swatch
+       is now captioned. */
+    var undo = el('button', {
+      class: 'undo', text: 'UNDO LAST TAP',
+      disabled: (S.coffreEntry.length === 0 || S.coffreEntry.length >= 4) ? '' : null,
+      onclick: function () { E.coffreUndo(); U.emit('render'); }
+    });
+
+    return screen([
+      head('LE COFFRE'),
+      body([
+        U.howto([
+          'Read Benjamin the number and the colour below. He needs both — his book lists this safe more than once.',
+          'He will describe four symbols. Tap them on the door, in the order he gives them.'
+        ]),
+        el('div', { class: 'safe__plate' }, [
+          el('span', {}, [
+            el('em', { class: 'lbl', text: 'NUMBER ON THE DOOR' }),
+            el('span', { class: 'safe__serial', text: K.serial })
+          ]),
+          el('span', {}, [
+            el('em', { class: 'lbl', text: 'RING AROUND THE DIAL' }),
+            el('span', { class: 'safe__ring' }, [
+              el('i', { style: 'background:' + C.RING_COLOUR[K.ring] }),
+              el('b', { text: K.ring })
+            ])
+          ])
+        ]),
+        dial,
+        entry
+      ]),
+      /* Undo lives in the foot because the foot never scrolls. Put in the body
+         it sat below the fold on a phone pane, which is the exact failure it
+         exists to prevent. */
+      foot([
+        undo,
+        el('p', { class: 'note', style: 'margin-top:10px', text: 'A wrong four is loud. Twice and somebody comes.' })
+      ])
+    ]);
+  }
+
+  /* ---------------------------------------------------------- LE BUREAU */
+  var typed = '';
+  function viewBureau() {
+    var S = E.S;
+
+    if (S.bureauStep === 1) {
+      var grid = el('div', { class: 'doorgrid' });
+      C.DOOR_MARKS.forEach(function (mk) {
+        var b = el('button', { onclick: function () {
+          var ok = E.bureauDoor(mk);
+          if (!ok) { b.style.background = 'var(--red)'; setTimeout(function () { b.style.background = ''; }, 400); }
+          U.emit('render');
+        } });
+        var ic = G.icon(mk); ic.style.color = 'var(--ink)';
+        b.appendChild(ic);
+        b.appendChild(el('span', { text: 'RELEASE' }));
+        grid.appendChild(b);
+      });
+      return screen([
+        head('LE BUREAU'),
+        body([
+          el('div', { class: 'mod__head' }, [ el('span', { class: 'tag tag--gold', text: 'ACCESS OPEN' }) ]),
+          el('p', { class: 'note', text: 'The computer is open. Four doors on the release schedule, four marks. Only one of them is La Réserve — and only Benjamin can see which.' }),
+          grid
+        ]),
+        foot([ el('p', { class: 'note', text: 'Describe the four marks. He has the floor plan.' }) ])
+      ]);
+    }
+
+    var readout = el('div', { class: 'readout', text: typed || '· · · ·' });
+    var pad = el('div', { class: 'keypad' });
+    ['1','2','3','4','5','6','7','8','9'].forEach(function (n) {
+      pad.appendChild(el('button', { text: n, onclick: function () {
+        if (typed.length < 4) { typed += n; U.sfx.tap(); U.emit('render'); }
+      } }));
+    });
+    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () { typed = ''; U.emit('render'); } }));
+    pad.appendChild(el('button', { text: '0', onclick: function () { if (typed.length < 4) { typed += '0'; U.sfx.tap(); U.emit('render'); } } }));
+    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
+      if (typed.length !== 4) return;
+      var ok = E.bureauSubmit(typed);
+      if (!ok) { readout.classList.add('is-bad'); }
+      typed = '';
+      setTimeout(function () { U.emit('render'); }, ok ? 200 : 500);
+    } }));
+
+    /* The desk. The photo, the note and the badge are set live over the art —
+       never generated inside it. No generated text, ever. */
+    var desk = el('div', { class: 'desk' }, [
+      U.artSlot('bureau-desk'),
+      el('div', { class: 'desk__props' }, [
+        el('div', { class: 'prop prop--badge', html: '<b>' + C.BUREAU.badge + '</b><span>post · salle 9</span>' }),
+        el('div', { class: 'prop prop--photo', html:
+          '<div class="kids"><div class="kid" style="height:52px"></div><div class="kid b" style="height:34px"></div></div>' +
+          '<span class="cap">two daughters</span>' }),
+        /* The note is the question, and the question is per-job data. Job 1
+           asks for the eldest child's year, job 2 for the officer's plate —
+           same desk, same screen, a different thing to work out. */
+        el('div', { class: 'prop prop--postit' }, [
+          (function () {
+            var i = G.icon(C.BUREAU.mode === 'plate' ? 'car' : 'cake');
+            i.style.color = 'var(--on-gold)'; return i;
+          })(),
+          el('b', { text: C.BUREAU.mode === 'plate' ? 'his plate no.' : 'birthday — eldest' })
+        ])
+      ])
+    ]);
+
+    return screen([
+      head('LE BUREAU'),
+      body([ desk, readout, pad ]),
+      foot([ el('p', { class: 'note', text: 'Tell him what is on the desk. All of it. He has the staff files.' }) ])
+    ]);
+  }
+
+  /* -------------------------------------------------------- LA TCHATCHE */
+  function viewTchatche() {
+    var S = E.S, t = S.tchatche, tr = C.FACES[t.badge];
+
+    var strikes = el('div', { class: 'strikes' });
+    for (var i = 0; i < 2; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
+
+    var lines = el('div', { class: 'lines' });
+    t.options.forEach(function (topic) {
+      lines.appendChild(el('button', { class: 'btn', text: C.LINES[topic], onclick: function () {
+        E.tchatchePick(topic); U.emit('render');
+      } }));
+    });
+
+    var face = L.face.portrait(tr, 'tchp1__face');
+
+    /* "Describe him" was the whole instruction, and then the screen offered
+       three sentences about football and night classes. Nothing said that
+       describing the face is step one, that Benjamin answers with a fact about
+       the man, or that the buttons are how you say that fact back. A player who
+       does not already know how a co-op game works was being asked to guess the
+       verb. The two dots were unlabelled as well — they read as decoration
+       until the first one turns red, which is exactly too late. */
+    return screen([
+      head('LA TCHATCHE'),
+      body([
+        /* Portrait beside the situation rather than above it, and the count and
+           the strikes on one line. The explanations added here are worth their
+           height only if the three answers are still on screen underneath them,
+           and at full width they were not — all three sat below the fold. */
+        el('div', { class: 'tchp1__top' }, [
+          face,
+          el('div', { class: 'tchp1__desc', html:
+            '<b>He has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
+        ]),
+        U.howto([
+          'Describe this face out loud — head, hair, glasses, any marks. Benjamin has the night shift on file.',
+          'He finds the man and tells you one thing about his life. Tap the line that brings it up.'
+        ]),
+        el('div', { class: 'tch__meter' }, [
+          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
+          el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
+        ]),
+        t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:
+          t.last === 'good' ? 'That landed. He is still talking.'
+                            : 'Wrong man, or wrong subject. He is looking at you harder now.' }) : null,
+        lines
+      ]),
+      foot([ el('p', { class: 'note', text: 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
+    ]);
+  }
+
+  /* --------------------------------------------------------------- ends */
+  function viewEnd() {
+    var S = E.S, done = S.phase === 'rank';
+    return screen([
+      head(done ? 'LA SORTIE' : 'PRIS'),
+      body([
+        el('div', { class: 'waiting' }, [
+          (function () { var i = G.icon(done ? 'manu' : 'lock'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
+          el('p', { class: 'note', text: done
+            ? 'You are on the street. Look at the television.'
+            : 'The door goes. Five seconds, and you go again.' })
+        ])
+      ]),
+      foot([ el('button', { class: 'btn btn--brand', text: done ? 'PLAY AGAIN' : 'BACK OUT OF THE VAN',
+        onclick: function () { U.emit('restart'); } }) ])
+    ]);
+  }
+
+  function render() {
+    var S = E.S, host = $('#p1-screen');
+    U.clear(host);
+    var v;
+    if (S.phase === 'plan') v = viewPlan();
+    else if (S.phase === 'play') v = S.blackout ? viewBlackout() : viewPlay();
+    else if (S.phase === 'module') v = S.moduleId === 'coffre' ? viewCoffre()
+                                    : S.moduleId === 'clavier' ? viewClavier()
+                                    : S.moduleId === 'deguisement' ? viewDeguisement()
+                                    : S.moduleId === 'faux' ? viewFaux()
+                                    : S.moduleId === 'ecoute' ? viewEcoute()
+                                    : viewBureau();
+    else if (S.phase === 'tchatche') v = viewTchatche();
+    else v = viewEnd();
+    host.appendChild(v);
+  }
+
+  L.p1 = { render: render, resetTyped: function () {
+    typed = ''; runArmed = false; outfit = { head: null, torso: null, legs: null };
+  } };
+})(window.DC);

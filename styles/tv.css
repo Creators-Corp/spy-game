@@ -1,0 +1,262 @@
+/* ===================== THE TV — "the room" =====================
+   Design law #1: the TV keeps no secrets, it holds consequences.
+   The room view shows ONLY what Assane can see. Nothing else.
+   ============================================================== */
+
+.tv__bezel{
+  background:var(--device);
+  border-radius:10px;
+  padding:12px;
+  box-shadow:0 18px 0 rgba(0,0,0,.18);
+}
+.tv__screen{
+  position:relative;
+  width:876px;height:506px;
+  background:var(--paper);
+  border-radius:3px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.tv__stand{
+  width:150px;height:16px;margin:0 auto;
+  background:var(--device);border-radius:0 0 6px 6px;
+}
+
+/* --- bars --- */
+.tvbar{
+  flex:none;display:flex;align-items:center;gap:16px;
+  padding:0 18px;height:44px;
+  font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  background:var(--paper);
+}
+.tvbar--top{border-bottom:var(--stroke) solid var(--ink);}
+.tvbar--bottom{border-top:var(--stroke) solid var(--ink);height:50px;}
+.tvbar__phase{
+  background:var(--orange);color:var(--on-color);
+  padding:5px 12px;border-radius:999px;border:var(--stroke) solid var(--ink);
+  font-weight:700;
+}
+.tvbar__venue{color:var(--ink-soft);flex:1;}
+.tvbar__clock{font-family:var(--mono);letter-spacing:.1em;font-size:15px;}
+.tvbar__obj{flex:1;letter-spacing:.08em;text-transform:none;font-size:14px;}
+
+.suspicion{display:flex;align-items:center;gap:10px;}
+.suspicion b{font-size:11px;letter-spacing:.2em;}
+.suspicion__track{
+  width:180px;height:12px;background:var(--stone);
+  border:var(--stroke) solid var(--ink);border-radius:999px;overflow:hidden;
+}
+.suspicion__track i{
+  display:block;height:100%;width:0%;
+  background:var(--red);            /* red is threat only */
+  transition:width .3s steps(8);
+}
+.suspicion em{font-family:var(--mono);font-style:normal;font-size:14px;width:34px;text-align:right;}
+
+/* --- view switching --- */
+.tv__body{position:relative;flex:1;min-height:0;}
+.tvview{position:absolute;inset:0;display:none;}
+.tvview.is-on{display:flex;}
+
+/* --- LE PLAN — a split, not an overlay ---
+   The first version put the copy on top of the establishing shot behind a
+   scrim. It read as clutter: text over architectural detail is never as clean
+   as text on a panel, and the illustration was reduced to murk. So the screen
+   is divided instead — the words get a solid ground and the artwork gets to be
+   artwork. A single gold hairline does the joining.
+
+   Note the view must stay position:absolute. Setting it to relative overrode
+   .tvview{inset:0}, the view collapsed to content height, and the image simply
+   stopped halfway down the screen. */
+.tvview--plan{padding:0;align-items:stretch;background:var(--night);}
+.plan__inner{
+  width:46%;flex:none;position:relative;z-index:2;
+  background:var(--night);
+  border-right:var(--stroke) solid var(--gold);
+  padding:0 30px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.plan__bg{position:relative;flex:1;overflow:hidden;background:var(--night);}
+.plan__bg .artslot{position:absolute;inset:0;border:0;border-radius:0;background:var(--night);}
+/* the illustration is daylight and the frame is night — a light knock-back
+   sits it in the room without dimming it into mud */
+.plan__bg::after{content:"";position:absolute;inset:0;background:rgba(6,9,13,.22);}
+
+.plan__eyebrow{margin:0 0 9px;font-size:10px;letter-spacing:.3em;color:var(--gold);}
+.plan__title{margin:0;font-size:38px;line-height:1;letter-spacing:.02em;color:var(--on-color);}
+.plan__target{
+  margin:9px 0 0;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--zinc-lt);
+}
+.plan__beats{margin:18px 0 20px;padding:0;list-style:none;}
+.plan__beats li{
+  font-size:12.5px;line-height:1.55;margin-bottom:9px;color:var(--on-color);opacity:.88;
+}
+.plan__beats li:last-child{margin-bottom:0;}
+.plan__ready{display:flex;gap:8px;flex-wrap:wrap;}
+.readylamp{
+  display:flex;align-items:center;gap:7px;
+  font-size:9px;letter-spacing:.2em;
+  padding:7px 12px;border:var(--stroke) solid var(--zinc);border-radius:999px;
+  background:transparent;color:var(--zinc-lt);
+}
+.readylamp i{width:8px;height:8px;border-radius:999px;background:transparent;border:var(--stroke) solid var(--zinc);}
+.readylamp.is-ready{background:var(--gold);border-color:var(--gold);color:var(--on-gold);}
+.readylamp.is-ready i{background:var(--on-gold);border-color:var(--on-gold);}
+
+/* --- THE ROOM --- */
+.tvview--room{align-items:center;justify-content:center;background:var(--map-void);}
+#room-svg{width:600px;height:400px;display:block;}
+.room__vignette{position:absolute;inset:0;pointer-events:none;}
+.room__toast{
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  padding:8px 16px;border:var(--stroke) solid var(--ink);border-radius:999px;
+  background:var(--paper);opacity:0;transition:opacity .18s;
+}
+.room__toast.is-on{opacity:1;animation:pop .18s;}
+.room__toast.is-bad{background:var(--red);color:var(--on-color);}
+.room__toast.is-good{background:var(--gold);}
+
+/* --- MODULE consequence --- */
+.tvview--module{align-items:center;justify-content:center;background:var(--stone);}
+.modstate{text-align:center;}
+.modstate__icon{width:96px;height:96px;margin:0 auto 14px;}
+.modstate__icon svg{width:100%;height:100%;}
+.modstate__name{margin:0;font-size:30px;letter-spacing:.14em;}
+.modstate__pips{display:flex;gap:10px;justify-content:center;margin:16px 0 12px;}
+.modstate__pips i{
+  width:26px;height:26px;border:var(--stroke) solid var(--ink);border-radius:999px;
+  background:var(--paper);display:block;
+}
+.modstate__pips i.is-set{background:var(--gold);}
+.modstate__pips i.is-bad{background:var(--red);}
+.modstate__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+
+/* --- LA TCHATCHE --- */
+.tvview--tchatche{align-items:center;justify-content:center;background:var(--stone);}
+.tch{text-align:center;}
+.tch__figures{display:flex;gap:26px;align-items:center;justify-content:center;}
+.tch__figures .artslot{height:180px;}
+.tch__spark{
+  width:60px;height:var(--stroke);background:var(--ink);position:relative;
+}
+.tch__spark::before,.tch__spark::after{
+  content:"";position:absolute;top:-9px;width:20px;height:20px;
+  border:var(--stroke) solid var(--ink);border-radius:999px;background:var(--paper);
+}
+.tch__spark::before{left:-4px;}
+.tch__spark::after{right:-4px;background:var(--gold);}
+.tch__name{margin:12px 0 0;font-size:26px;letter-spacing:.16em;}
+.tch__rounds{display:flex;gap:9px;justify-content:center;margin:12px 0 8px;}
+.tch__rounds i{
+  width:44px;height:9px;background:var(--paper);
+  border:var(--stroke) solid var(--ink);border-radius:999px;display:block;
+}
+.tch__rounds i.is-won{background:var(--gold);}
+.tch__rounds i.is-lost{background:var(--red);}
+.tch__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+
+/* --- RANK --- */
+.tvview--rank{align-items:center;justify-content:center;background:var(--orange);}
+.rankcard{
+  position:relative;width:420px;background:var(--paper);
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  padding:22px 26px;text-align:center;
+  animation:pop .3s;
+  box-shadow:0 0 0 1px var(--gold) inset, 0 0 0 6px var(--paper) inset, 0 0 0 7px var(--ink) inset;
+}
+.rankcard__grade{
+  font-size:92px;line-height:.92;letter-spacing:.02em;
+  color:var(--ink);
+  border-top:1px solid var(--gold);border-bottom:1px solid var(--gold);
+  margin:6px 0 0;padding:4px 0 8px;
+}
+.rankcard__title{
+  font-size:13px;letter-spacing:.34em;margin:10px 0 16px;
+  color:var(--on-gold);background:var(--gold);display:inline-block;padding:6px 16px;
+}
+.rankcard__stats{
+  display:grid;grid-template-columns:1fr auto;gap:6px 14px;
+  margin:0 0 12px;font-size:13px;text-align:left;
+}
+.rankcard__stats dt{color:var(--ink-soft);letter-spacing:.06em;}
+.rankcard__stats dd{margin:0;font-family:var(--mono);text-align:right;}
+.rankcard__foot{margin:0;font-size:10px;letter-spacing:.24em;color:var(--ink-soft);}
+
+/* --- JAIL (night exception) --- */
+.tvview--jail{align-items:center;justify-content:center;background:var(--night);}
+.jail{position:relative;text-align:center;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.jail__art{width:300px;opacity:.9;}
+.jail__bars{
+  position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,
+    transparent 0 54px, var(--on-color) 54px 62px);
+  opacity:.92;
+}
+.jail__line{
+  position:relative;margin:0;color:var(--on-color);
+  font-size:22px;letter-spacing:.3em;
+  background:var(--night);padding:8px 18px;
+  border:var(--stroke) solid var(--paper);
+}
+
+/* ===================== LE BLACKOUT — THE NIGHT EXCEPTION =====================
+   Everything else in this build is daylight. In a bright interface, the lights
+   going out has to read as an EVENT, not a skin. So the room goes near-black
+   while the frame around it stays paper: the HUD stays legible and the darkness
+   stays shocking. Same trick as the deck's module grid — one dark tile among
+   five sunlit ones sells the mechanic before a word is read.
+   ============================================================================ */
+.tvcut{
+  position:absolute;inset:0;z-index:9;background:var(--night);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:26px;
+}
+.tvcut.is-on{display:flex;animation:pop .18s;}
+.tvcut .artslot{width:56%;background:var(--night-2);border-color:var(--on-color);}
+.tvcut .artslot.is-empty::before{border-color:var(--zinc);}
+.tvcut .artslot.is-empty::after{color:var(--zinc-lt);}
+.tvcut__line{
+  margin:0;color:var(--on-color);font-size:20px;letter-spacing:.34em;
+  border:var(--stroke) solid var(--paper);padding:8px 18px;
+}
+
+.tvview--room.is-night{background:var(--night);}
+.tvview--module.is-night{background:var(--night);}
+.tvview--module.is-night .modstate__name{color:var(--on-color);}
+.tvview--module.is-night .modstate__line{color:var(--zinc-lt);}
+.tvview--module.is-night .modstate__icon{color:var(--on-color);}
+.tvview--module.is-night .modstate__pips i{background:var(--night-2);border-color:var(--zinc);}
+.tvview--module.is-night .modstate__pips i.is-set{background:var(--gold);border-color:var(--ink);}
+.tvbar__phase.is-night{background:var(--night);color:var(--on-color);}
+.tvview--room.is-night .room__toast{background:var(--night-2);color:var(--on-color);border-color:var(--zinc);}
+.tvview--room.is-night .room__toast.is-bad{background:var(--red);color:var(--on-color);border-color:var(--ink);}
+
+/* ===================== THE FIELD =====================
+   A barely-visible blueprint grid under everything, and registration marks in
+   the corners. Both are diegetic — this game is played on floor plans, and a
+   technical drawing has exactly these marks — and both are flat line work, so
+   they sit inside the ligne claire rule rather than beside it.
+
+   The brief is "you should not notice it, you should notice its absence": the
+   The grid runs at about 4%: if you can read it from the sofa it is too
+   strong. Corner registration marks were tried here too and cut — over
+   artwork they read as stray brackets rather than as framing.
+   ===================================================== */
+:root{
+  --blueprint:
+    repeating-linear-gradient(0deg,  rgba(233,228,216,.045) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(90deg, rgba(233,228,216,.045) 0 1px, transparent 1px 32px);
+}
+
+.tv__screen{ background-color:var(--paper); background-image:var(--blueprint); }
+
+/* views that are a flat field get the grid; the room and the night keep their
+   own treatment so the map stays the most legible thing on screen */
+.tvview--module,
+.tvview--tchatche{ background-image:var(--blueprint); }
+.tvview--room{ background-image:var(--blueprint); }
+.tvview--room.is-night,
+.tvview--module.is-night{ background-image:none; }
+

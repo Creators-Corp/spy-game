@@ -1,0 +1,228 @@
+/* ============================================================
+   DEUX COMPLICES — prototype
+   V3 DAYLIGHT LIGNE CLAIRE
+   Uniform single-weight ink. Flat unmodulated fills.
+   No gradients, no glow, no grain, no painterly rendering.
+   Semantic colour is law:
+     gold   #C9A24B = the player   (routes, solutions, highlights)
+     red    #C1372E = threat ONLY  (guards, cones, suspicion)
+     orange #F4511E = the brand    (energy, celebration) — never threat
+   ============================================================ */
+
+:root{
+  /* NIGHT GROUND.
+     The palette is inverted for a dark UI — it reads closer to the show and it
+     lets the daylight illustrations sit in the frame like lit panels. The
+     semantic colours below are NOT inverted: gold, red and orange mean exactly
+     what they meant before, in both themes. */
+  --paper:#161B22;      /* primary surface — phone screens, TV screen, cards */
+  --sky:#1C2733;        /* accent panel */
+  --stone:#1F2731;      /* secondary surface */
+  --stone-dk:#2E3743;   /* walls and raised blocks */
+  --zinc:#6F7B88;
+  --zinc-lt:#9EAAB6;
+
+  /* warmth + secondaries */
+  --camel:#C08A52;
+  --ochre:#D8A13A;
+  --olive:#7C8560;
+  --denim:#4A6B87;
+
+  /* ink is now light — it is the linework and the type */
+  --ink:#E9E4D8;
+  --ink-soft:#98A2AE;
+
+  /* semantic — never crossed, never inverted */
+  --gold:#C9A24B;
+  --red:#C1372E;
+  --orange:#F4511E;
+
+  /* the night exception has to stay darker than every surface above,
+     or the blackout stops being an event */
+  --night:#06080B;
+  --night-2:#0E141C;
+
+  /* theme-stable. These do NOT flip:
+     --on-color  text that sits on gold / red / orange / night
+     --on-gold   text that sits on gold or ochre (must stay dark)
+     --device    the phone and TV shells
+     --prop      cards the app draws ON TOP of daylight artwork */
+  /* The top-down map needs its own three values. Reusing the surface tokens
+     left walls and floors within a few points of each other and the room read
+     as a muddy grid — legibility at couch distance is the whole point of it. */
+  --map-void:#0C1118;    /* never walked, never seen */
+  --map-wall:#3B4653;
+  --map-edge:#8FA0B4;    /* the wall line around the floor */
+
+  /* Per-room floor tints. Four hues at the same lightness, so no room reads as
+     brighter or more important than another — they only read as DIFFERENT.
+     That is the whole job: "he is in the gallery" has to be answerable from
+     across the sofa without counting tiles. Each has a lit pair for the tile
+     Assane can see this instant.
+     Kept deliberately close together: strong colour here would fight the two
+     things that must stay loudest, gold for the player and red for threat. */
+  --floor-neutral:#212C39;  --floor-neutral-lit:#36485A;  /* corridors, galleries */
+  --floor-cool:#1B2A3E;     --floor-cool-lit:#2C4467;     /* the vault, the chamber */
+  --floor-olive:#1F2F30;    --floor-olive-lit:#334D49;    /* the security office */
+  --floor-warm:#302B27;     --floor-warm-lit:#4E463C;     /* entrance, cloakroom */
+
+  --map-floor:var(--floor-neutral);
+  --map-floor-lit:var(--floor-neutral-lit);
+
+  --on-color:#F7F3EA;
+  --on-gold:#14161A;
+  --device:#04060A;
+  --prop:#F7F3EA;
+
+  --stroke:2px;
+  --r:3px;
+
+  /* Jost is a geometric sans in the Futura lineage, which is the shape the
+     ligne claire palette wants; IBM Plex Mono carries the serials, codes and
+     the clock. Both are embedded in styles/fonts.css so the prototype looks
+     identical on any machine, including one with no network and no Futura.
+     The stack behind them is the old system fallback, kept in case the
+     embedded faces ever fail to parse. */
+  --font:"Jost","Century Gothic","Futura","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono","Consolas","SF Mono",ui-monospace,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:#0A0D11;
+  font-family:var(--font);
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer;}
+#glyph-sprite{position:absolute;width:0;height:0;overflow:hidden;}
+
+/* ---------- the stage: fixed pixel canvas, scaled to fit the room ---------- */
+.stage-fit{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+}
+/* THREE SCREENS ON ONE AXIS.
+   The sketch had the television raised above the two phones, and the build
+   copied it literally: TV at top:0, phones dropped to top:252. On a real
+   display that left a wide empty band under the television and pushed the
+   stage to 1000px tall for 744px of content — and because the stage is scaled
+   to fit the room, the dead height was making everything SMALLER. It is now a
+   flex row: the three screens sit side by side, centred on one line.
+
+   Laid out rather than positioned, so nothing has to be re-measured by hand if
+   a phone or the bezel changes size. Order is forced because the markup runs
+   TV, P1, P2 while the eye wants P1, TV, P2. */
+.stage{
+  position:relative;
+  width:1680px;height:840px;
+  transform-origin:center center;
+  flex:none;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:64px 14px 0;box-sizing:border-box;
+}
+.tv{order:2;width:900px;flex:none;
+  /* The phone carries a label above its body and the television carries a
+     stand below its bezel, so centring the ELEMENTS leaves the three SCREENS
+     32px out of line. This puts the glass on one axis, which is the only
+     alignment anybody looks at. */
+  margin-top:40px;}
+.phone--p1{order:1;flex:none;}
+.phone--p2{order:3;flex:none;}
+
+/* ---------- art placeholder slots ---------- */
+.artslot{
+  position:relative;
+  background:var(--stone);
+  border:var(--stroke) solid var(--ink);
+  border-radius:var(--r);
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  flex:none;
+}
+.artslot img{width:100%;height:100%;object-fit:cover;display:block;}
+.artslot.is-empty::before{
+  content:"";position:absolute;inset:6px;
+  border:var(--stroke) dashed var(--zinc);
+  border-radius:2px;
+}
+.artslot.is-empty::after{
+  content:attr(data-slot);
+  position:relative;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);
+  text-align:center;padding:0 10px;line-height:1.5;
+  word-break:break-word;
+}
+body.hide-slots .artslot.is-empty::before,
+body.hide-slots .artslot.is-empty::after{opacity:0;}
+.artslot--wide{aspect-ratio:16/9;width:100%;}
+.artslot--tall{aspect-ratio:3/4;}
+.artslot--sq{aspect-ratio:1/1;}
+
+/* ---------- stage chrome ---------- */
+/* Top-left, in the empty corner beside the TV. It used to live at the bottom
+   and sat directly on top of Player 1's phone, covering the READY button. */
+/* One row across the top now, above all three screens, instead of a block
+   stacked in the corner beside a raised television. */
+.stage__chrome{
+  position:absolute;left:16px;top:14px;
+  display:flex;gap:8px;align-items:center;flex-wrap:nowrap;
+}
+.chip{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 12px;border-radius:999px;
+  background:var(--orange);color:var(--on-color);
+  border:var(--stroke) solid var(--ink);
+}
+.chip--ghost{background:transparent;color:var(--zinc-lt);border-color:var(--zinc);}
+.chip--btn{background:var(--paper);color:var(--ink);}
+.chip--btn:hover{background:var(--gold);}
+
+/* ---------- shared bits ---------- */
+.hair{height:var(--stroke);background:var(--ink);border:0;margin:0;}
+.tag{
+  display:inline-block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  padding:3px 8px;border:var(--stroke) solid var(--ink);border-radius:999px;
+  background:var(--paper);
+}
+.tag--gold{background:var(--gold);}
+.tag--red{background:var(--red);color:var(--on-color);border-color:var(--ink);}
+.tag--olive{background:var(--olive);color:var(--on-color);}
+
+@keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ============================================================
+   Gold is the player colour and it never inverts, so anything sitting on it
+   keeps dark text in both themes. Without this every gold button in dark mode
+   is cream-on-gold at about 1.9:1 and effectively unreadable.
+   ============================================================ */
+.btn--go, .btn--go:hover, .tag--gold, .chip--btn:hover,
+.keypad .k-ok, .keypad--night .k-ok, .signal.is-good, .dirt li.is-key,
+.rack button.is-on, .manual__row.is-on, .faces button.is-on,
+.file.is-on .file__hd, .readylamp.is-ready,
+.dpad button:hover, .keypad button:hover, .doorgrid button:hover{
+  color:var(--on-gold);
+}
+.plan__beats li::before{color:var(--on-gold);}
+
+/* ============================================================
+   Uppercase labels carry a lot of letter-spacing in this design, and at 400
+   Jost goes thin and papery once it is tracked out. The 500 weight is what
+   those labels want — it is the difference between "small caps" and "a label".
+   Body copy and long prose stay at 400.
+   ============================================================ */
+.h,.tag,.chip,.tvbar,.phead__who,.phead__now,.role__job,.plan__eyebrow,
+.readylamp,.rankcard__title,.rankcard__stats dt,.tabs button,.file__name,
+.legend span,.feed,.signal,.nav__peekcap,.manual__seq figcaption,
+.btn,.dpad__wait,.runtoggle,.contract b,.board__keys button,
+.tvbar__phase,.modstate__name,.tch__name,.prop--badge span,.prop--wear span{
+  font-weight:500;
+}
+/* the two that want real weight */
+.plan__title,.rankcard__grade{ font-weight:700; }
