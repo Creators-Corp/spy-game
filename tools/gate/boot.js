@@ -123,6 +123,16 @@
 
   /* --------------------------------------------------------------- launch */
   function start(manifest, store) {
+    /* The gate's own stylesheet has to GO, not just be overridden.
+       It styles bare elements — button, input, h1, label — and the game is
+       full of buttons: the d-pad, the garment rack, every row of the manual.
+       button{width:100%} alone was enough to crush the top bar, because three
+       chips each demanding the full width shrank the fourth into a four-line
+       pill. Everything below this line assumes it is the only stylesheet in
+       the document, so make that true first. */
+    var gateCss = document.getElementById('gate-css');
+    if (gateCss) gateCss.remove();
+
     /* Images become blob URLs held only by this tab. The game asks for them by
        their original path through util.assetURL, which reads this map. */
     var assets = {};
