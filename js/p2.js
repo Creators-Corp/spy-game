@@ -363,45 +363,107 @@
   }
 
   /* ------------------------------------------------------------ LA PORTE */
-  /* The code, as symbols, above the ring they belong to — and a line saying
-     the ring's zero is not recorded, because without that sentence a player
-     assumes the top of the ring is zero and reads out four wrong digits with
-     total confidence. The ring is useless until Assane describes the mark on
-     the sign. That is the point of it. */
+  /* The page said RING and drew a table. The whole mechanic is "count round
+     from the zero", and there was nothing round on the screen — the wrap from
+     the last symbol back to the first, which is the step everybody trips on,
+     was invisible.
+
+     It is a real ring now, and Benjamin can TAP the symbol Assane describes.
+     That anchors it: every other symbol labels itself with its digit and the
+     code above reads as four numbers. The lock is untouched — he still cannot
+     tap anything useful until Assane tells him which mark is on the door —
+     but the ten-position count with a wrap in the middle is gone, and that
+     was arithmetic, not conversation. */
+  var porteZero = null;
+
+  function porteDigit(sym) {
+    var ring = C.PORTE.ring, n = ring.length, zi = ring.indexOf(porteZero);
+    if (zi < 0) return null;
+    return ((ring.indexOf(sym) - zi) % n + n) % n;
+  }
+
+  function ringDial() {
+    var ring = C.PORTE.ring, n = ring.length;
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('class', 'ringdial');
+
+    var band = document.createElementNS(ns, 'circle');
+    band.setAttribute('cx', 100); band.setAttribute('cy', 100); band.setAttribute('r', 66);
+    band.setAttribute('fill', 'none');
+    band.setAttribute('stroke', 'var(--ink)');
+    band.setAttribute('stroke-width', '1.5');
+    band.setAttribute('stroke-dasharray', '2 5');
+    band.setAttribute('opacity', '.5');
+    svg.appendChild(band);
+
+    ring.forEach(function (sym, i) {
+      var a = (i / n) * Math.PI * 2 - Math.PI / 2;
+      var x = 100 + Math.cos(a) * 66, y = 100 + Math.sin(a) * 66;
+      var d = porteDigit(sym);
+
+      var g = document.createElementNS(ns, 'g');
+      g.setAttribute('class', 'ringdial__cell' + (porteZero === sym ? ' is-zero' : ''));
+      var box = document.createElementNS(ns, 'rect');
+      box.setAttribute('x', x - 16); box.setAttribute('y', y - 16);
+      box.setAttribute('width', 32); box.setAttribute('height', 32); box.setAttribute('rx', 4);
+      g.appendChild(box);
+      var use = document.createElementNS(ns, 'use');
+      use.setAttribute('href', '#g-' + sym);
+      use.setAttribute('width', '100'); use.setAttribute('height', '100');
+      use.setAttribute('transform', 'translate(' + (x - 11) + ',' + (y - 11) + ') scale(0.22)');
+      g.appendChild(use);
+      g.addEventListener('click', function () {
+        porteZero = (porteZero === sym) ? null : sym;
+        U.sfx.tap(); U.emit('render');
+      });
+      svg.appendChild(g);
+
+      if (d !== null) {
+        var t = document.createElementNS(ns, 'text');
+        t.setAttribute('x', 100 + Math.cos(a) * 92);
+        t.setAttribute('y', 100 + Math.sin(a) * 92 + 4);
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('class', 'ringdial__n' + (d === 0 ? ' is-zero' : ''));
+        t.textContent = d;
+        svg.appendChild(t);
+      }
+    });
+    return svg;
+  }
+
   function viewPorteTab() {
     var K = C.PORTE;
     var wrap = el('div', {}, [
-      el('p', { class: 'h', text: 'DOOR CODES · CHAMBRE 302' }),
+      el('p', { class: 'h', text: 'DOOR CODES · ' + K.sign }),
       U.howto([
-        'Ask Assane what is engraved under the 0 of the room number. It is small, and it is the only thing that makes this page work.',
-        'Find that mark on the ring below — it is the zero. Count round from it to read the four symbols as digits, and give him the number.'
+        'Ask Assane what is engraved under the 0 on the door.',
+        'Tap that symbol on the ring. Then read him the four digits.'
       ])
     ]);
 
-    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:14px 0 6px', text: 'THE CODE FOR THIS DOOR' }));
+    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:14px 0 6px', text: 'THIS DOOR' }));
     var code = el('div', { class: 'symrow' });
     E.porteCodeSymbols().forEach(function (sym) {
-      var cell = el('div', { class: 'symrow__cell' });
+      var d = porteDigit(sym);
+      var cell = el('div', { class: 'symrow__cell' + (d !== null ? ' is-read' : '') });
       var ic = G.icon(sym); ic.style.color = 'var(--ink)';
       cell.appendChild(ic);
+      if (d !== null) cell.appendChild(el('b', { text: String(d) }));
       code.appendChild(cell);
     });
     wrap.appendChild(code);
 
-    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:16px 0 6px', text: 'THE RING · IN ORDER' }));
-    var ring = el('div', { class: 'symring' });
-    K.ring.forEach(function (sym) {
-      var cell = el('div', { class: 'symring__cell' });
-      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
-      cell.appendChild(ic);
-      ring.appendChild(cell);
-    });
-    wrap.appendChild(ring);
+    wrap.appendChild(el('p', { class: 'lbl lbl--c', style: 'margin:16px 0 0',
+      text: porteZero ? 'ZERO SET · COUNTING CLOCKWISE' : 'TAP THE MARK HE DESCRIBES' }));
+    wrap.appendChild(ringDial());
 
-    wrap.appendChild(el('p', { class: 'warn', html:
-      '<b>The zero is not recorded.</b> This ring is in the right order, but the ' +
-      'file does not say which symbol is 0 — and every symbol is a different digit ' +
-      'depending on where you start. Assane has that, on the door.' }));
+    if (!porteZero) {
+      wrap.appendChild(el('p', { class: 'warn', html:
+        '<b>The zero is not recorded.</b> The order is right, but the file does not ' +
+        'say where to start counting. Assane has that, on the door.' }));
+    }
     return wrap;
   }
 
@@ -464,7 +526,7 @@
       if (tapped.length < 5) { tapped.push('l'); U.sfx.pulse(true); queryResult = null; U.emit('render'); }
     } }));
     keys.appendChild(el('button', { class: 'board__clear', text: 'CLEAR', onclick: function () {
-      tapped = []; queryResult = null; U.emit('render');
+      tapped = []; queryResult = null; porteZero = null; U.emit('render');
     } }));
     wrap.appendChild(keys);
 

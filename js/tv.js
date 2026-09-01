@@ -304,7 +304,10 @@
            : 'A fire door. Three keys worn smooth.';
     } else {
       for (var j = 0; j < 2; j++) pips.appendChild(U.el('i', { class: j < S.bureauStep ? 'is-set' : '' }));
-      line = S.solved.bureau ? 'Somewhere, a lock gives.'
+      line = S.moduleId === 'porte'
+             ? (S.solved.porte ? 'The lock gives.' : 'A keypad, and a room number beside it.')
+           : S.moduleId === 'prize' ? 'The desk. Whatever is on it is what they came for.'
+           : S.solved.bureau ? 'Somewhere, a lock gives.'
            : S.bureauStep ? 'The computer is open. One door to release.'
            : 'A security post. It wants a code.';
     }

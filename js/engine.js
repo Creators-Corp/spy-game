@@ -416,6 +416,8 @@
       : id === 'deguisement' ? 'P1 can see the rack. P2 knows whose is whose.'
       : id === 'faux' ? 'P1 has both canvases. P2 has Benjamin\u2019s notes.'
       : id === 'ecoute' ? 'P1 has the line. P2 has to reproduce it before the book will answer.'
+      : id === 'porte' ? 'P1 has the keypad. P2 has the code, but not where the ring starts.'
+      : id === 'prize' ? 'It is on the desk.'
       : 'P1 reads the desk. P2 digs the staff files.';
   }
   function closeModule(solvedIt) {

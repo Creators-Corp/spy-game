@@ -290,8 +290,8 @@
       head('LA PORTE'),
       body([
         U.howto([
-          'Read Benjamin the room number, then describe the little mark under the 0. It is the only thing on this door he cannot see.',
-          'He has the code as four symbols. He will read you four digits. Tap them.'
+          'Describe the mark under the 0 to Benjamin.',
+          'He will read you four digits. Tap them.'
         ]),
         plate,
         readout,

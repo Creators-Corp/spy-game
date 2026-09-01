@@ -570,3 +570,22 @@
   background:var(--stone);padding:11px 12px;
 }
 .warn b{display:block;margin-bottom:3px;}
+
+/* LA PORTE — an actual ring, because "count round" has to look round. */
+.ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:290px;}
+.ringdial__cell rect{fill:var(--paper);stroke:var(--ink);stroke-width:2;}
+.ringdial__cell{cursor:pointer;}
+.ringdial__cell:hover rect{fill:var(--stone);}
+.ringdial__cell.is-zero rect{fill:var(--gold);stroke-width:2.5;}
+.ringdial__cell use{color:var(--ink);}
+.ringdial__n{
+  font-family:var(--mono);font-size:13px;font-weight:500;fill:var(--ink-soft);
+}
+.ringdial__n.is-zero{fill:var(--gold);font-size:15px;font-weight:600;}
+/* the four code tiles read as digits the moment the ring is anchored */
+.symrow__cell{position:relative;}
+.symrow__cell b{
+  position:absolute;right:3px;bottom:1px;
+  font-family:var(--mono);font-size:15px;font-weight:600;color:var(--on-gold);
+}
+.symrow__cell.is-read{background:var(--gold);}
