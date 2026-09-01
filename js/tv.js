@@ -113,7 +113,25 @@
                 ' fill="var(--map-edge)" fill-opacity="' + (night ? 0.02 : 0.04) + '"' +
                 ' stroke="' + EDGE + '" stroke-opacity="' + (night ? 0.14 : 0.26) + '" stroke-width="2"/>';
 
-    var svg = shell + floors + dots + edges;
+    /* Assane finds the lasers by walking up to them. They are never on his
+       screen from across the building — he is told, or he gets close enough
+       for the hum. Drawn when he has stood next to one. */
+    var lasers = '';
+    for (var ly = 0; ly < C.MAP.length; ly++) {
+      for (var lx = 0; lx < C.MAP[ly].length; lx++) {
+        if (C.MAP[ly][lx] !== 'L') continue;
+        var near = [[1,0],[-1,0],[0,1],[0,-1]].some(function (v) {
+          return !!S.seen[(lx + v[0]) + ',' + (ly + v[1])];
+        });
+        if (!near) continue;
+        lasers += '<rect x="' + (lx * T) + '" y="' + (ly * T) + '" width="' + T + '" height="' + T +
+                  '" fill="var(--red)" opacity="' + (night ? 0.18 : 0.26) + '"/>' +
+                  '<line x1="' + (lx * T) + '" y1="' + (ly * T + T / 2) + '" x2="' + (lx * T + T) +
+                  '" y2="' + (ly * T + T / 2) + '" stroke="var(--red)" stroke-width="3"/>';
+      }
+    }
+
+    var svg = shell + floors + dots + edges + lasers;
 
     /* doors: a locked one is a bar across the gap, an open one a swing arc */
     S.doors.forEach(function (d) {

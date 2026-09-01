@@ -518,7 +518,7 @@
       '#.....................#',
       '#..#######...#######..#',
       '#..#######LLL#######..#',
-      '#...#####.....#####...#',
+      '#....####.....####....#',
       '#..#######LLL#######..#',
       '#..#######...#######..#',
       '#.....................#',
@@ -533,9 +533,9 @@
     ROOMS: [
       { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 3, tint: 'cool' },
       { name: 'GALERIE NORD',    x: 1,  y: 4,  w: 21, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 3,  h: 5, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 4,  h: 5, tint: 'neutral' },
       { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 5,  h: 5, tint: 'olive' },
-      { name: 'AILE EST',        x: 19, y: 6,  w: 3,  h: 5, tint: 'neutral' },
+      { name: 'AILE EST',        x: 18, y: 6,  w: 4,  h: 5, tint: 'neutral' },
       { name: 'GALERIE SUD',     x: 1,  y: 11, w: 21, h: 2, tint: 'neutral' },
       { name: 'LE VESTIAIRE',    x: 3,  y: 14, w: 17, h: 2, tint: 'warm' },
       { name: 'ESCALIER',        x: 10, y: 16, w: 3,  h: 2, tint: 'warm' }
@@ -565,7 +565,7 @@
       { x: 15, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
     ],
     MODULES: [
-      { id: 'deguisement', x: 10, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'deguisement', x: 12, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
       { id: 'porte',       x: 15, y: 14, name: 'LA PORTE',       icon: 'lock' },
       /* The desk. For now it hands over the dossier and nothing more —
          the full Bureau puzzle is the stretch goal, and a placeholder that

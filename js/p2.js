@@ -147,6 +147,21 @@
     }
     s += floors + cones + edges;
 
+    /* THE LASERS. Solid to anything that walks, and the only reason the middle
+       of this floor is not a shortcut — so they have to be the most obvious
+       thing on the plan after the guards. Benjamin sees all of them: he has the
+       building's procedures, and knowing where they are is not the puzzle. */
+    for (var ly = 0; ly < C.MAP.length; ly++) {
+      for (var lx = 0; lx < C.MAP[ly].length; lx++) {
+        if (C.MAP[ly][lx] !== 'L') continue;
+        var px2 = lx * TT, py2 = ly * TT;
+        s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
+             '" fill="var(--red)" opacity=".22"/>';
+        s += '<line x1="' + px2 + '" y1="' + (py2 + TT / 2) + '" x2="' + (px2 + TT) +
+             '" y2="' + (py2 + TT / 2) + '" stroke="var(--red)" stroke-width="2.5"/>';
+      }
+    }
+
     /* doors carry the release mark Benjamin has to name */
     S.doors.forEach(function (d) {
       if (!feed(d.x, d.y)) return;
