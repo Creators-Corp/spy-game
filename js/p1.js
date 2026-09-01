@@ -334,27 +334,10 @@
      a labelled empty box — an empty box is not describable, and the puzzle
      would simply stop. With no art at all the rack looks exactly as it does
      today, down to the tile height. */
-  var garmentCache = {};
-  function garmentTile(slot, id) {
-    var key = slot + '|' + id;
-    if (garmentCache[key]) return garmentCache[key];
-    var box = el('div', { class: 'artslot rack__art' });
-    var img = el('img', { src: U.assetURL('art/garment-' + id + '.png'), alt: '' });
-    img.addEventListener('error', function () {
-      img.remove();
-      box.classList.add('is-drawn');
-      box.innerHTML = L.figures.garmentSVG(slot, id);
-    });
-    box.appendChild(img);
-    garmentCache[key] = box;
-    return box;
-  }
-
   function viewDeguisement() {
     var S = E.S, F = L.figures;
 
-    var mirror = el('div', { class: 'mirror' });
-    mirror.innerHTML = F.figureSVG(outfit);
+    var mirror = F.uniformStack(outfit, 'mirror');
 
     var racks = el('div', {});
     [['head', 'HEAD'], ['torso', 'TORSO'], ['legs', 'LEGS']].forEach(function (pair) {
@@ -369,7 +352,7 @@
             U.sfx.tap(); U.emit('render');
           }
         });
-        b.appendChild(garmentTile(slot, id));
+        b.appendChild(L.figures.garmentTile(slot, id, 'gtile--rack'));
         row.appendChild(b);
       });
       racks.appendChild(row);

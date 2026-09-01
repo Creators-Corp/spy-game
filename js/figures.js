@@ -155,5 +155,41 @@
     return s;
   }
 
-  L.figures = { figureSVG: figureSVG, garmentSVG: garmentSVG, paintingSVG: paintingSVG };
+  /* A GARMENT AS IT ACTUALLY LOOKS — the artwork if it is there, the drawing
+     if it is not. Both phones call this: Player 1's rack and mirror, and
+     Player 2's roster.
+
+     Player 2 used to get a stick figure while Player 1 had a rack of real
+     illustration, which was not a style choice — and it cost more than it
+     looked. The module is Player 1 describing garments and Player 2 matching
+     them, and matching "a green peaked cap" against a drawn figure's hat is
+     guesswork. Same picture on both sides makes the description land. It does
+     not give the puzzle away: Player 2 still has no idea which nine of the
+     twelve are actually on the rack tonight, and only Player 1 can tell him. */
+  function garmentTile(slot, id, cls) {
+    var U = L.util;
+    var box = U.el('div', { class: 'artslot gtile ' + (cls || '') });
+    if (!id) { box.classList.add('is-blank'); return box; }
+    var img = U.el('img', { src: U.assetURL('art/garment-' + id + '.png'), alt: '' });
+    img.addEventListener('error', function () {
+      img.remove();
+      box.classList.add('is-drawn');
+      box.innerHTML = garmentSVG(slot, id);
+    });
+    box.appendChild(img);
+    return box;
+  }
+
+  /* head, torso, legs, stacked — a uniform read top to bottom */
+  function uniformStack(outfit, cls) {
+    var U = L.util;
+    return U.el('div', { class: 'ustack ' + (cls || '') }, [
+      garmentTile('head', outfit && outfit.head),
+      garmentTile('torso', outfit && outfit.torso),
+      garmentTile('legs', outfit && outfit.legs)
+    ]);
+  }
+
+  L.figures = { figureSVG: figureSVG, garmentSVG: garmentSVG, paintingSVG: paintingSVG,
+                garmentTile: garmentTile, uniformStack: uniformStack };
 })(window.DC);

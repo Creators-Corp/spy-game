@@ -589,3 +589,23 @@
   font-family:var(--mono);font-size:15px;font-weight:600;color:var(--on-gold);
 }
 .symrow__cell.is-read{background:var(--gold);}
+
+/* One garment renderer, two phones. The rack, the mirror and the roster all
+   draw the same picture at different sizes. */
+.artslot.gtile{background:transparent;border:0;border-radius:0;width:100%;}
+.artslot.gtile img{width:100%;height:100%;object-fit:contain;display:block;}
+.artslot.gtile.is-blank{
+  border:var(--stroke) dashed var(--zinc);border-radius:3px;opacity:.5;
+}
+.artslot.gtile--rack{height:64px;}
+.artslot.gtile--rack.is-drawn{height:auto;}
+.artslot.gtile--rack.is-drawn svg{display:block;width:100%;height:52px;}
+
+/* three pieces read top to bottom, the way a uniform hangs */
+.ustack{display:flex;flex-direction:column;gap:3px;}
+.ustack .gtile{height:38px;}
+.ustack .gtile.is-drawn{height:38px;}
+.ustack .gtile.is-drawn svg{width:100%;height:100%;}
+.mirror{width:58px;flex:none;background:transparent;border:0;padding:0;}
+.mirror.is-bad{background:transparent;animation:nudge .22s;}
+.ustack--roster{width:64px;flex:none;}

@@ -604,7 +604,7 @@
            see which of these are actually hanging in the cloakroom. */
         if (C.UNIFORMS[p.badge]) {
           var uni = el('div', { class: 'uniform' });
-          uni.innerHTML = L.figures.figureSVG(C.UNIFORMS[p.badge]);
+          uni.appendChild(L.figures.uniformStack(C.UNIFORMS[p.badge], 'ustack--roster'));
           bd.appendChild(el('div', { class: 'uniformwrap' }, [
             el('span', { class: 'h', style: 'margin:0', text: 'UNIFORM' }), uni
           ]));
