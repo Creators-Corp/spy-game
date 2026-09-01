@@ -513,11 +513,12 @@
       '#######################',
       '#########.....#########',
       '#########.....#########',
+      '#########.....#########',
       '#.....................#',
       '#.....................#',
       '#..#######...#######..#',
       '#..#######LLL#######..#',
-      '#..#######...#######..#',
+      '#...#####.....#####...#',
       '#..#######LLL#######..#',
       '#..#######...#######..#',
       '#.....................#',
@@ -525,17 +526,19 @@
       '###############+#######',
       '###.................###',
       '###.................###',
-      '###........E........###',
+      '##########...##########',
+      '##########.E.##########',
       '#######################'
     ],
     ROOMS: [
-      { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 2, tint: 'cool' },
-      { name: 'GALERIE NORD',    x: 1,  y: 3,  w: 21, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 1,  y: 5,  w: 2,  h: 5, tint: 'neutral' },
-      { name: 'COULOIR CENTRAL', x: 10, y: 5,  w: 3,  h: 5, tint: 'olive' },
-      { name: 'AILE EST',        x: 20, y: 5,  w: 2,  h: 5, tint: 'neutral' },
-      { name: 'GALERIE SUD',     x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LE VESTIAIRE',    x: 3,  y: 13, w: 17, h: 3, tint: 'warm' }
+      { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 3, tint: 'cool' },
+      { name: 'GALERIE NORD',    x: 1,  y: 4,  w: 21, h: 2, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 3,  h: 5, tint: 'neutral' },
+      { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 5,  h: 5, tint: 'olive' },
+      { name: 'AILE EST',        x: 19, y: 6,  w: 3,  h: 5, tint: 'neutral' },
+      { name: 'GALERIE SUD',     x: 1,  y: 11, w: 21, h: 2, tint: 'neutral' },
+      { name: 'LE VESTIAIRE',    x: 3,  y: 14, w: 17, h: 2, tint: 'warm' },
+      { name: 'ESCALIER',        x: 10, y: 16, w: 3,  h: 2, tint: 'warm' }
     ],
 
     /* One guard south of the door, two north of it. The first exists to be
@@ -544,32 +547,30 @@
        opposite directions and never enter the middle, so they cannot be
        waited out — only timed. */
     GUARDS: [
-      /* The tutorial guard. Depth 1, one row, out in the open, and crucially
-         NOT on the row the keypad sits on — a cone widens as it goes, so a
-         patrol sharing a lane with a module leaves Assane standing at the door
-         with nowhere safe to step once it closes. */
-      { id: 'g1', badge: '4412', from: { x: 5, y: 14 }, to: { x: 17, y: 14 }, at: 0, dir: 1, depth: 1 },
+      /* The tutorial guard. One row of the vestiaire, thirteen tiles, so his
+         cycle is 24 and divides the ring's 48 — that keeps the combined patrol
+         period at 48 and the whole map small enough to prove safe. */
+      { id: 'g1', badge: '4412', from: { x: 4, y: 14 }, to: { x: 16, y: 14 }, at: 0, dir: 1, depth: 1 },
+      /* Both ring guards turn the same way — counter-clockwise: down the west
+         arm, east along the south, up the east arm, west along the north. Same
+         circuit, started half a lap apart, so they are always opposite each
+         other and Benjamin only ever has to track one of them. */
       { id: 'g2', badge: '2071', at: 0,  dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 2, y: 4 }, { x: 20, y: 4 }, { x: 20, y: 10 }, { x: 2, y: 10 }] },
-      /* The same ring the other way round, and started half a lap along, so
-         the two of them sit opposite each other for the whole patrol. Equal
-         loop lengths also keep the combined patrol period at 48 rather than
-         624, which is the difference between a map that can be proved free of
-         dead states and one that can only be hoped about. */
+        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] },
       { id: 'g3', badge: '3308', at: 24, dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 2, y: 4 }, { x: 2, y: 10 }, { x: 20, y: 10 }, { x: 20, y: 4 }] }
+        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] }
     ],
     CAMERAS: [],
     DOORS: [
-      { x: 15, y: 12, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
+      { x: 15, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
     ],
     MODULES: [
-      { id: 'deguisement', x: 5,  y: 15, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
-      { id: 'porte',       x: 15, y: 13, name: 'LA PORTE',       icon: 'lock' },
+      { id: 'deguisement', x: 10, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'porte',       x: 15, y: 14, name: 'LA PORTE',       icon: 'lock' },
       /* The desk. For now it hands over the dossier and nothing more —
          the full Bureau puzzle is the stretch goal, and a placeholder that
          works beats a half-built module that does not. */
-      { id: 'prize',       x: 11, y: 1,  name: 'LE BUREAU',      icon: 'desk' }
+      { id: 'prize',       x: 11, y: 2,  name: 'LE BUREAU',      icon: 'desk' }
     ],
 
     /* LA PORTE.

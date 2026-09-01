@@ -261,8 +261,6 @@
         text: E.cameraDir(c) ? 'WATCHING' : 'BLIND' }));
       wrap.appendChild(row);
     });
-    wrap.appendChild(el('p', { class: 'note', style: 'margin:6px 0 0;font-size:11px', text:
-      'Each camera repeats these four beats. The ringed one is this turn; a filled dot means it can see. Count ahead.' }));
     return wrap;
   }
 
@@ -344,9 +342,8 @@
       el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
       night ? feedStrip() : camCycles(),
       mapKey(night),
-      el('p', { class: 'note', style: 'margin-top:10px', text: night
-        ? 'Two feeds at a time. Call the route for where the torches will be, not where they are — and tell him to hold still when you lose him.'
-        : 'Every square has a name — letters across the top, numbers down the side. Guards step when he steps: read where they will be, not where they are.' })
+      night ? el('p', { class: 'note', style: 'margin-top:10px', text:
+        'Two feeds at a time. Call the route for where the torches will be, not where they are.' }) : null
     ]);
   }
 

@@ -144,17 +144,30 @@
   }
 
   /* ---------------------------------------------------------------- vision */
+  /* WHAT A GUARD SEES: everything within arm's reach, whichever way he is
+     facing, plus a straight line ahead of him.
+
+     It used to be a fan that widened by one tile a side per step, so a guard
+     four squares away covered nine of them. That is why a corridor could seal
+     itself and why solving a module left Assane with nowhere to stand — the
+     fan reached round corners it had no business reaching round. A body and a
+     sightline is both easier to draw and far easier to read across a room:
+     "he is looking north, so do not be north of him, and do not be next to
+     him." */
   function cone(x, y, dir, depth) {
-    var out = [];
-    if (!dir) return out;
-    var v = DIRV[dir], p = PERP[dir];
-    for (var d = 1; d <= depth; d++) {
-      var cx = x + v.x * d, cy = y + v.y * d;
-      if (isWall(cx, cy)) break;
-      for (var s = -(d - 1); s <= (d - 1); s++) {
-        var tx = cx + p.x * s, ty = cy + p.y * s;
-        if (!isWall(tx, ty)) out.push(tx + ',' + ty);
+    var out = [], ax, ay;
+    for (ax = -1; ax <= 1; ax++) {
+      for (ay = -1; ay <= 1; ay++) {
+        if (!ax && !ay) continue;
+        if (!isWall(x + ax, y + ay)) out.push((x + ax) + ',' + (y + ay));
       }
+    }
+    if (!dir) return out;
+    var v = DIRV[dir];
+    for (var d = 2; d <= depth + 1; d++) {
+      var cx = x + v.x * d, cy = y + v.y * d;
+      if (isWall(cx, cy)) break;          /* a wall stops the line dead */
+      out.push(cx + ',' + cy);
     }
     return out;
   }
