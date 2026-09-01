@@ -579,6 +579,16 @@
     var wrap = el('div', {}, [
       el('p', { class: 'h', text: 'STAFF · NIGHT SHIFT' })
     ]);
+    /* Where he is going. The POST line on each file is only useful next to
+       this — without it Benjamin is reading postings with nothing to compare
+       them against, and the disguise comes down to a coin toss. Shown only
+       while the cloakroom is open, because that is the only time it decides
+       anything. */
+    if (E.S.moduleId === 'deguisement' && C.DEGUISEMENT) {
+      wrap.appendChild(el('p', { class: 'warn', style: 'margin:0 0 12px', html:
+        'He is heading for <b>' + C.DEGUISEMENT.targetPost + '</b>. Find the one uniform ' +
+        'he can actually build from that rack whose owner is posted there.' }));
+    }
     C.PERSONNEL.forEach(function (p) {
       var open = openBadge === p.badge;
       var file = el('div', { class: 'file' + (open ? ' is-on' : '') });
@@ -586,6 +596,7 @@
         class: 'file__hd',
         onclick: function () { openBadge = open ? null : p.badge; U.sfx.tap(); U.emit('render'); }
       }, [
+        C.FACES && C.FACES[p.badge] ? L.face.portrait(C.FACES[p.badge], 'file__face') : null,
         el('span', { class: 'file__badge', text: p.badge }),
         el('span', { class: 'file__name', text: p.name })
       ]));

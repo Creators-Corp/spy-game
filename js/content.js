@@ -142,10 +142,10 @@
     PERSONNEL: [
       { badge: '4412', name: 'MOREAU, Serge',     post: 'SALLE 9',   plate: '8021', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
       { badge: '2071', name: 'DELACROIX, Yann',   post: 'GALERIE',   plate: '5530', kids: [] },
-      { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU',    plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
+      { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU DE SÉCURITÉ', plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
       { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE',   plate: '9083', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'VESTIBULE', plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
-      { badge: '1184', name: 'KOFFI, Émile',      post: 'RÉSERVE',   plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
+      { badge: '1184', name: 'KOFFI, Émile',      post: 'LA RÉSERVE', plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
     /* mode 'eldest': the note is a cake, the code is the eldest child's year.
        5195 has twins and 1184's eldest is listed second — position is not the
@@ -596,10 +596,20 @@
       fails: 3
     },
 
+    /* THE RACK HAS TO NARROW IT. Nine pieces are hanging up and three officers
+       are on tonight, but the rack is deliberately missing VIDAL's dungarees,
+       so only two of the three uniforms can be assembled at all. Of those two,
+       MOREAU is posted to the cloakroom Assane is standing in — no use to a man
+       heading north. DELACROIX walks the north gallery, which is where he is
+       going. One buildable uniform, one correct post, one answer.
+
+       Built the other way round it does not work: with every piece present the
+       rack narrows nothing, and two officers sharing a post leaves two answers
+       that both look right. */
     RACK: {
       head:  ['casquette', 'nu', 'calot'],
       torso: ['tablier', 'gilet', 'blouse'],
-      legs:  ['noir', 'salopette', 'jean']
+      legs:  ['noir', 'raye', 'jean']
     },
     UNIFORMS: {
       '4412': { head: 'casquette', torso: 'blouse',  legs: 'noir' },
@@ -609,9 +619,9 @@
     DEGUISEMENT: { answerBadge: '2071', targetPost: 'GALERIE NORD', conePenalty: 1 },
 
     PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',   post: 'VESTIAIRE', plate: '8021', kids: [] },
-      { badge: '2071', name: 'DELACROIX, Yann', post: 'GALERIE',   plate: '5530', kids: [] },
-      { badge: '3308', name: 'VIDAL, Nadia',    post: 'GALERIE',   plate: '1147', kids: [] }
+      { badge: '4412', name: 'MOREAU, Serge',   post: 'LE VESTIAIRE', plate: '8021', kids: [] },
+      { badge: '2071', name: 'DELACROIX, Yann', post: 'GALERIE NORD', plate: '5530', kids: [] },
+      { badge: '3308', name: 'VIDAL, Nadia',    post: 'GALERIE SUD',  plate: '1147', kids: [] }
     ],
     FACES: {
       '4412': { art: 'face-4412', head: 'square', hair: 'short', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },

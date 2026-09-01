@@ -609,3 +609,12 @@
 .mirror{width:58px;flex:none;background:transparent;border:0;padding:0;}
 .mirror.is-bad{background:transparent;animation:nudge .22s;}
 .ustack--roster{width:64px;flex:none;}
+
+/* The face on the staff file, so a roster row and LES VISAGES are obviously
+   the same person seen from two directions. */
+.file__hd .artslot.file__face{
+  width:30px;height:30px;flex:none;border-radius:3px;margin-right:2px;
+  border:var(--stroke) solid var(--ink);background:var(--stone);overflow:hidden;
+}
+.file__hd .artslot.file__face img{width:100%;height:100%;object-fit:cover;display:block;}
+.warn b{display:inline;}
