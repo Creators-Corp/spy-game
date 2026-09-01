@@ -398,10 +398,23 @@
      of reference for a player who has not yet been asked a question. */
   function unlock(k) { S.unlocked[k] = true; }
 
+  /* Which page of the dossier each module needs open.
+     A table, not a run of ifs — the run of ifs is exactly how LE DEGUISEMENT,
+     L'ECOUTE and LE FAUX each came to open with nothing on Benjamin's phone
+     that could answer them. If a module is added and forgotten here, it is
+     visible as a blank line rather than as a player staring at one tab. */
+  var MODULE_PAGE = {
+    deguisement: 'personnel',   /* whose uniform is whose, and who is posted where */
+    bureau:      'personnel',   /* the staff files */
+    clavier:     'personnel',   /* badge numbers, for the release code */
+    coffre:      'manuel',      /* the safe manual */
+    ecoute:      'manuel',      /* the line-code board lives on that page */
+    faux:        'manuel',      /* the notes on the genuine canvas */
+    porte:       'porte'        /* the ring */
+  };
+
   function openModule(id) {
-    if (id === 'porte') unlock('porte');
-    if (id === 'coffre') unlock('manuel');
-    if (id === 'bureau' || id === 'clavier') unlock('personnel');
+    if (MODULE_PAGE[id]) unlock(MODULE_PAGE[id]);
     S.moduleId = id;
     S.phase = 'module';
     S.coffreEntry = [];
@@ -619,7 +632,12 @@
     var g = S.guards.filter(function (x) { return x.id === byId; })[0];
     if (g) badge = g.badge;
     if (byId === 'c1' || byId === 'c2') badge = '6620';   /* the desk answers the camera */
-    if (!C.DIRT[badge]) badge = '5195';
+    /* ...if this contract employs them. Falling back to a hard-coded badge was
+       safe only while every contract shared one roster. Contract three has
+       neither 6620 nor 5195 on staff, and looking up a badge that is not there
+       throws inside rollOptions and takes the whole module out. Land on
+       somebody who actually works here. */
+    if (!C.DIRT[badge]) badge = Object.keys(C.DIRT)[0];
 
     S.spotted++;
     S.suspicion = U.clamp(S.suspicion + 20, 0, 100);
