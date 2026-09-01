@@ -239,6 +239,88 @@
     ]);
   }
 
+  /* ------------------------------------------------------------ LA PORTE */
+  /* Assane has the keypad and the sign. He does NOT have the code, and no
+     amount of staring at this screen produces it — the four digits live on
+     Benjamin's phone as symbols. What Assane has that Benjamin needs is the
+     little mark under the 0 of the room number, which reads as decoration and
+     is the entire key. So the sign is the loudest thing here, not the pad. */
+  function viewPorte() {
+    var S = E.S, K = C.PORTE;
+
+    var readout = el('div', { class: 'readout',
+      text: S.porteEntry ? S.porteEntry.split('').join(' ') : '· · · ·' });
+    if (S.porteFails > 0 && !S.porteEntry) readout.classList.add('is-bad');
+
+    var pad = el('div', { class: 'keypad' });
+    function key(n) {
+      return el('button', { text: n, onclick: function () { E.porteTap(n); U.emit('render'); } });
+    }
+    ['1','2','3','4','5','6','7','8','9'].forEach(function (n) { pad.appendChild(key(n)); });
+    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR',
+      onclick: function () { S.porteEntry = ''; U.emit('render'); } }));
+    pad.appendChild(key('0'));
+    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
+      if (S.porteEntry.length < K.code.length) return;
+      E.porteSubmit(); U.emit('render');
+    } }));
+
+    /* The plate. The zero carries a mark under it, drawn at the size a real
+       engraver would have put it: small enough to ignore, big enough to
+       describe. Everything Benjamin needs is in that one shape. */
+    var digits = K.sign.replace(/[^0-9]/g, '');
+    var zeroAt = digits.indexOf('0');
+    var plate = el('div', { class: 'plate' }, [
+      el('span', { class: 'plate__word', text: K.sign.replace(/[0-9].*$/, '').trim() })
+    ]);
+    var row = el('span', { class: 'plate__digits' });
+    digits.split('').forEach(function (d, i) {
+      var cell = el('span', { class: 'plate__d' }, [el('b', { text: d })]);
+      if (i === zeroAt) {
+        var g = G.icon(K.zero);
+        g.style.color = 'var(--ink)';
+        cell.appendChild(el('i', { class: 'plate__mark' }, [g]));
+      }
+      row.appendChild(cell);
+    });
+    plate.appendChild(row);
+
+    var left = (K.fails || 3) - S.porteFails;
+    return screen([
+      head('LA PORTE'),
+      body([
+        U.howto([
+          'Read Benjamin the room number, then describe the little mark under the 0. It is the only thing on this door he cannot see.',
+          'He has the code as four symbols. He will read you four digits. Tap them.'
+        ]),
+        plate,
+        readout,
+        pad
+      ]),
+      foot([
+        el('p', { class: 'note', text: left > 1
+          ? 'A wrong code is loud. ' + left + ' tries before somebody comes.'
+          : 'One try left. The next wrong code brings somebody to the door.' })
+      ])
+    ]);
+  }
+
+  /* ------------------------------------------------------------ LE DOSSIER */
+  function viewPrize() {
+    var S = E.S;
+    return screen([
+      head('LE DOSSIER'),
+      body([
+        el('div', { class: 'waiting' }, [
+          (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
+          el('p', { class: 'note', text: 'It is on the desk, exactly where he said it would be. Take it and get back to the stairs.' })
+        ])
+      ]),
+      foot([ el('button', { class: 'btn btn--go', text: 'TAKE IT',
+        onclick: function () { E.takePrize(); U.emit('render'); } }) ])
+    ]);
+  }
+
   /* ---------------------------------------------------- LE DÉGUISEMENT */
   var outfit = { head: null, torso: null, legs: null };
 
@@ -737,6 +819,8 @@
     if (S.phase === 'plan') v = viewPlan();
     else if (S.phase === 'play') v = S.blackout ? viewBlackout() : viewPlay();
     else if (S.phase === 'module') v = S.moduleId === 'coffre' ? viewCoffre()
+                                    : S.moduleId === 'porte' ? viewPorte()
+                                    : S.moduleId === 'prize' ? viewPrize()
                                     : S.moduleId === 'clavier' ? viewClavier()
                                     : S.moduleId === 'deguisement' ? viewDeguisement()
                                     : S.moduleId === 'faux' ? viewFaux()

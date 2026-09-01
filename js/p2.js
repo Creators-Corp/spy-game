@@ -68,9 +68,21 @@
   }
 
   /* ------------------------------------------------------------- tabs */
+  /* Only the pages this job has, and only once the job has asked for them.
+     The plan is always there because it is the conversation; everything else
+     arrives the first time it is needed. Note that nothing here ever SWITCHES
+     the tab for him — finding the right page is still his job. */
+  function availableTabs() {
+    var S = E.S, u = S.unlocked || {}, list = [['plan', 'PLAN']];
+    if (C.PORTE && u.porte) list.push(['porte', 'DOOR']);
+    if (C.COFFRE && u.manuel) list.push(['manuel', 'MANUAL']);
+    if (u.personnel) list.push(['personnel', 'STAFF']);
+    if (u.visages) list.push(['visages', 'FACES']);
+    return list;
+  }
   function tabBar() {
     var bar = el('div', { class: 'tabs' });
-    [['plan', 'PLAN'], ['manuel', 'MANUAL'], ['personnel', 'STAFF'], ['visages', 'FACES']].forEach(function (t) {
+    availableTabs().forEach(function (t) {
       bar.appendChild(el('button', {
         class: tab === t[0] ? 'is-on' : '', text: t[1],
         onclick: function () { tab = t[0]; U.sfx.tap(); U.emit('render'); }
@@ -101,7 +113,8 @@
     }
 
     function open(x, y) {
-      if (E.charAt(x, y) === '#') return false;
+      var ch = E.charAt(x, y);
+      if (ch === '#' || ch === 'L') return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -266,30 +279,51 @@
     return i;
   }
   function keyRow(inner, label) {
-    return el('span', { class: 'key' }, [swatch(inner), el('em', { text: label })]);
+    return el('span', { class: 'key' }, [swatch(inner), el('em', { html: label })]);
+  }
+  /* THE KEY, cut down to what this contract actually contains.
+     It used to explain six symbols on every map whether or not the map had
+     them — a camera row on a contract with no cameras is pure reading. Each
+     row below is gated on the thing existing, and the wording is a label and
+     a short line rather than a sentence to parse. */
+  function hasChar(ch) {
+    for (var y = 0; y < C.MAP.length; y++) if (C.MAP[y].indexOf(ch) >= 0) return true;
+    return false;
   }
   function mapKey(night) {
     var rows = [
       keyRow('<circle cx="10" cy="10" r="7" fill="var(--gold)" stroke="var(--map-void)" stroke-width="2"/>',
-             night ? 'Assane — only while a feed holds him' : 'Assane. This is the man you are talking to.'),
-      keyRow('<rect x="3" y="3" width="14" height="14" rx="2" fill="var(--map-void)" stroke="var(--gold)" stroke-width="2"/>' +
-             '<circle cx="10" cy="10" r="3" fill="var(--gold)"/>',
-             'Something he needs to reach.'),
-      keyRow('<path d="M10 10 L19 10" stroke="var(--red)" stroke-width="3"/>' +
-             '<circle cx="9" cy="10" r="7" fill="var(--red)"/>',
-             night ? 'A guard with a torch. The line is the way he faces.'
-                   : 'A guard. The number is his badge; the line is the way he faces.'),
-      keyRow('<rect width="20" height="20" fill="var(--map-floor)"/><rect width="20" height="20" fill="var(--red)" opacity=".55"/>',
-             'Someone can see this square right now.')
+             '<b>Assane</b> Your partner. Tell him where to go.')
     ];
+    if (C.MODULES && C.MODULES.length) {
+      rows.push(keyRow('<rect x="3" y="3" width="14" height="14" rx="2" fill="var(--map-void)" stroke="var(--gold)" stroke-width="2"/>' +
+                       '<circle cx="10" cy="10" r="3" fill="var(--gold)"/>',
+                       '<b>Objective</b> Something he has to reach.'));
+    }
+    if (E.S.guards.length) {
+      rows.push(keyRow('<path d="M10 10 L19 10" stroke="var(--red)" stroke-width="3"/>' +
+                       '<circle cx="9" cy="10" r="7" fill="var(--red)"/>',
+                       night ? '<b>Torch</b> A guard. The line is the way he faces.'
+                             : '<b>Guard</b> Steps when Assane steps. The line is the way he faces.'));
+    }
+    rows.push(keyRow('<rect width="20" height="20" fill="var(--map-floor)"/><rect width="20" height="20" fill="var(--red)" opacity=".55"/>',
+                     '<b>Sightline</b> Somebody can see this square now.'));
+    if (hasChar('L')) {
+      rows.push(keyRow('<rect x="0" y="7" width="20" height="6" fill="var(--red)" opacity=".9"/>',
+                       '<b>Lasers</b> Sealed. There is no way through — go around.'));
+    }
     if (night) {
       rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)" opacity=".45"/>',
-                       'Off the feed. You are blind here.'));
+                       '<b>No feed</b> You are blind here.'));
     } else {
-      rows.push(keyRow('<rect x="4" y="4" width="12" height="12" rx="1.5" fill="var(--red)" stroke="var(--map-edge)" stroke-width="2"/>',
-                       'A camera. Filled means it is watching.'));
-      rows.push(keyRow('<rect x="2" y="8" width="16" height="5" rx="1.5" fill="var(--map-edge)"/>',
-                       'A locked door, with the mark that releases it.'));
+      if (C.CAMERAS && C.CAMERAS.length) {
+        rows.push(keyRow('<rect x="4" y="4" width="12" height="12" rx="1.5" fill="var(--red)" stroke="var(--map-edge)" stroke-width="2"/>',
+                         '<b>Camera</b> Filled means it is watching.'));
+      }
+      if (E.S.doors.some(function (d) { return d.locked; })) {
+        rows.push(keyRow('<rect x="2" y="8" width="16" height="5" rx="1.5" fill="var(--map-edge)"/>',
+                         '<b>Locked door</b> It needs a code or a mark.'));
+      }
     }
     return el('div', { class: 'mapkey' }, rows);
   }
@@ -314,6 +348,49 @@
         ? 'Two feeds at a time. Call the route for where the torches will be, not where they are — and tell him to hold still when you lose him.'
         : 'Every square has a name — letters across the top, numbers down the side. Guards step when he steps: read where they will be, not where they are.' })
     ]);
+  }
+
+  /* ------------------------------------------------------------ LA PORTE */
+  /* The code, as symbols, above the ring they belong to — and a line saying
+     the ring's zero is not recorded, because without that sentence a player
+     assumes the top of the ring is zero and reads out four wrong digits with
+     total confidence. The ring is useless until Assane describes the mark on
+     the sign. That is the point of it. */
+  function viewPorteTab() {
+    var K = C.PORTE;
+    var wrap = el('div', {}, [
+      el('p', { class: 'h', text: 'DOOR CODES · CHAMBRE 302' }),
+      U.howto([
+        'Ask Assane what is engraved under the 0 of the room number. It is small, and it is the only thing that makes this page work.',
+        'Find that mark on the ring below — it is the zero. Count round from it to read the four symbols as digits, and give him the number.'
+      ])
+    ]);
+
+    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:14px 0 6px', text: 'THE CODE FOR THIS DOOR' }));
+    var code = el('div', { class: 'symrow' });
+    E.porteCodeSymbols().forEach(function (sym) {
+      var cell = el('div', { class: 'symrow__cell' });
+      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
+      cell.appendChild(ic);
+      code.appendChild(cell);
+    });
+    wrap.appendChild(code);
+
+    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:16px 0 6px', text: 'THE RING · IN ORDER' }));
+    var ring = el('div', { class: 'symring' });
+    K.ring.forEach(function (sym) {
+      var cell = el('div', { class: 'symring__cell' });
+      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
+      cell.appendChild(ic);
+      ring.appendChild(cell);
+    });
+    wrap.appendChild(ring);
+
+    wrap.appendChild(el('p', { class: 'warn', html:
+      '<b>The zero is not recorded.</b> This ring is in the right order, but the ' +
+      'file does not say which symbol is 0 — and every symbol is a different digit ' +
+      'depending on where you start. Assane has that, on the door.' }));
+    return wrap;
   }
 
   /* ---------------------------------------------------------- LE MANUEL */
@@ -542,7 +619,11 @@
     if (S.phase === 'plan') { host.appendChild(viewRole()); return; }
     if (S.phase === 'rank' || S.phase === 'jail') { host.appendChild(viewEnd()); return; }
 
+    var avail = availableTabs().map(function (t) { return t[0]; });
+    if (avail.indexOf(tab) < 0) tab = 'plan';
+
     var inner = tab === 'plan' ? viewPlanTab()
+              : tab === 'porte' ? viewPorteTab()
               : tab === 'manuel' ? viewManuel()
               : tab === 'personnel' ? viewPersonnel()
               : viewVisages();

@@ -531,3 +531,42 @@
    fault. The chosen piece now shrinks slightly instead, the way something
    lifted off a rack sits away from the rail, and the gold reads all round it. */
 .rack button.is-on .rack__art{transform:scale(.85);}
+
+/* LA PORTE — the sign beside the door. The mark under the zero is deliberately
+   understated: at a glance it is an engraver's flourish, and it is the only
+   half of the code that lives on this phone. */
+.plate{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:14px 12px 10px;margin-bottom:12px;
+}
+.plate__word{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft);}
+.plate__digits{display:flex;gap:10px;}
+.plate__d{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.plate__d b{font-family:var(--mono);font-size:34px;font-weight:500;letter-spacing:.06em;color:var(--ink);}
+.plate__mark{display:block;width:19px;height:19px;opacity:.85;}
+.plate__mark svg{width:100%;height:100%;display:block;}
+
+/* The key's label now leads with the name of the thing, so the eye can match
+   symbol to word without reading the sentence after it. */
+.key em b{display:block;color:var(--ink);font-weight:600;font-size:11.5px;letter-spacing:.02em;}
+
+/* LA PORTE, on Benjamin's side: the four code symbols, and the ring of ten. */
+.symrow{display:flex;gap:8px;}
+.symrow__cell{
+  flex:1;aspect-ratio:1/1;display:grid;place-items:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--gold);
+}
+.symrow__cell svg{width:74%;height:74%;}
+.symring{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.symring__cell{
+  aspect-ratio:1/1;display:grid;place-items:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+}
+.symring__cell svg{width:70%;height:70%;}
+.warn{
+  margin:14px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink);
+  border:var(--stroke) solid var(--ink);border-left-width:3px;border-radius:var(--r);
+  background:var(--stone);padding:11px 12px;
+}
+.warn b{display:block;margin-bottom:3px;}

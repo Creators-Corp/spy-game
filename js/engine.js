@@ -68,6 +68,8 @@
       moduleId: null,
       solved: { bureau: false, coffre: false, clavier: false, deguisement: false, faux: false, ecoute: false },
       cutCameras: {},          /* circuits Benjamin talked him through cutting */
+      porteEntry: '', porteFails: 0,
+      unlocked: {},            /* which dossier tabs Benjamin has earned */
       declined: {},            /* optional modules he has chosen to walk past */
       disguised: false,        /* out of uniform every cone reaches further */
       loot: { manuscrit: false, tableau: false },
@@ -111,7 +113,7 @@
   /* a locked door is a wall — for walking AND for line of sight */
   function isWall(x, y) {
     var c = charAt(x, y);
-    if (c === '#') return true;
+    if (c === '#' || c === 'L') return true;   /* L is a laser line: solid, and never opens */
     var d = doorAt(x, y);
     if (d) return d.locked;
     return false;
@@ -378,7 +380,15 @@
   function toast(text, kind) { S.toast = { text: text, kind: kind, at: Date.now() }; }
 
   /* ---------------------------------------------------------------- modules */
+  /* A page of the dossier opens when the job needs it and not before.
+     Benjamin used to start with every tab in the book, which is four screens
+     of reference for a player who has not yet been asked a question. */
+  function unlock(k) { S.unlocked[k] = true; }
+
   function openModule(id) {
+    if (id === 'porte') unlock('porte');
+    if (id === 'coffre') unlock('manuel');
+    if (id === 'bureau' || id === 'clavier') unlock('personnel');
     S.moduleId = id;
     S.phase = 'module';
     S.coffreEntry = [];
@@ -512,6 +522,63 @@
     return pickedGenuine;
   }
 
+  /* LA PORTE.
+     The ring is a cipher with ten rotations and Benjamin holds nine wrong
+     ones. Assane holds the tenth without knowing it, as a mark under the 0 of
+     a room number. Everything below is derived from PORTE.zero rather than
+     stored, so the puzzle cannot drift out of agreement with itself. */
+  function porteRingIndex(sym) { return C.PORTE.ring.indexOf(sym); }
+  function porteDigitOf(sym) {
+    var n = C.PORTE.ring.length;
+    return ((porteRingIndex(sym) - porteRingIndex(C.PORTE.zero)) % n + n) % n;
+  }
+  function porteSymbolFor(digit) {
+    var n = C.PORTE.ring.length;
+    return C.PORTE.ring[(porteRingIndex(C.PORTE.zero) + Number(digit)) % n];
+  }
+  /* what Benjamin's dossier prints: the code, as symbols, in order */
+  function porteCodeSymbols() {
+    return C.PORTE.code.split('').map(porteSymbolFor);
+  }
+  function porteTap(d) {
+    if (S.porteEntry.length >= C.PORTE.code.length) return;
+    S.porteEntry += d;
+    U.sfx.tap();
+  }
+  function porteUndo() {
+    if (!S.porteEntry.length) return;
+    S.porteEntry = S.porteEntry.slice(0, -1);
+    U.sfx.tap();
+  }
+  function porteSubmit() {
+    if (S.porteEntry.length < C.PORTE.code.length) return false;
+    if (S.porteEntry === C.PORTE.code) {
+      U.sfx.unlock();
+      S.doors.forEach(function (d) { if (d.y === 12 || d.mark === 'dbar') d.locked = false; });
+      setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
+      return true;
+    }
+    U.sfx.bad();
+    S.porteFails++;
+    S.suspicion = U.clamp(S.suspicion + 8, 0, 100);
+    /* three wrong codes and somebody comes to see who is standing at the door */
+    if (S.porteFails >= (C.PORTE.fails || 3)) {
+      setTimeout(function () { getSpotted('g1'); U.emit('render'); }, 700);
+    } else {
+      setTimeout(function () { S.porteEntry = ''; U.emit('render'); }, 900);
+    }
+    return false;
+  }
+
+  /* The object of the whole contract. One confirmation, no puzzle: the lock
+     was the door, and the walk back out is the rest of the job. */
+  function takePrize() {
+    U.sfx.unlock();
+    S.hasManuscript = true;
+    S.loot.dossier = true;
+    setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
+  }
+
   function bureauSubmit(code) {
     if (code === C.BUREAU.answer) { U.sfx.unlock(); S.bureauStep = 1; return true; }
     U.sfx.bad();
@@ -532,6 +599,7 @@
 
   /* ---------------------------------------------------------------- spotted */
   function getSpotted(byId) {
+    unlock('visages'); unlock('personnel');   /* a face to find means the roster matters now */
     var badge = byId;
     var g = S.guards.filter(function (x) { return x.id === byId; })[0];
     if (g) badge = g.badge;
@@ -613,6 +681,9 @@
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
     coffreTap: coffreTap, bureauSubmit: bureauSubmit, bureauDoor: bureauDoor,
+    porteTap: porteTap, porteUndo: porteUndo, porteSubmit: porteSubmit,
+    porteDigitOf: porteDigitOf, porteSymbolFor: porteSymbolFor,
+    porteCodeSymbols: porteCodeSymbols, takePrize: takePrize,
     tchatchePick: tchatchePick, rank: rank, setObjective: setObjective
   };
 })(window.DC);

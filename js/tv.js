@@ -72,7 +72,8 @@
     /* part of the walkable shape he knows about. A locked door is wall. */
     function open(x, y) {
       if (!S.seen[x + ',' + y]) return false;
-      if (E.charAt(x, y) === '#') return false;
+      var ch = E.charAt(x, y);
+      if (ch === '#' || ch === 'L') return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }

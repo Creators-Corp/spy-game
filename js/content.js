@@ -483,7 +483,163 @@
     ]
   };
 
-  var JOBS = [JOB1, JOB2];
+
+  /* =======================================================================
+     CONTRAT No.3 — LA CHAMBRE 302
+     Three guards, three modules, and a map built to teach rather than to
+     test. The shape is a RING around two blocks with one corridor cutting
+     through the middle — and that corridor is sealed. Every route is the
+     long way round, which is the whole reason Player 2 exists.
+
+     It is deliberately the simplest of the three contracts. One guard in the
+     south room demonstrates the rule that guards step when Assane steps. The
+     door is the first real lock. Only past it do two guards start looping in
+     opposite directions, and only there does the map stop being obvious.
+     ======================================================================= */
+  var JOB3 = {
+    id: 'chambre',
+    venue: 'RÉSIDENCE · TROISIÈME ÉTAGE',
+    contract: 'CONTRAT No.3 — LA CHAMBRE 302',
+    target: 'Chambre 302 · le dossier',
+    venueArt: 'venue-particulier',
+    blurb: 'One locked door, one sealed corridor, and two guards who never stop walking. Everything here is the long way round.',
+
+    /* 'L' is a laser. It reads as wall to everything that moves, but it is
+       drawn as its own thing, and Assane cannot know it is there until he is
+       standing next to it. The central corridor is the short way from the
+       south to the north and it is never open — the map is a ring, and the
+       shortcut through the middle is a promise it does not keep. */
+    MAP: [
+      '#######################',
+      '#########.....#########',
+      '#########.....#########',
+      '#.....................#',
+      '#.....................#',
+      '#..#######...#######..#',
+      '#..#######...#######..#',
+      '#..#######LLL#######..#',
+      '#..#######...#######..#',
+      '#..#######...#######..#',
+      '#.....................#',
+      '#.....................#',
+      '###########+###########',
+      '###.................###',
+      '###.................###',
+      '###........E........###',
+      '#######################'
+    ],
+    ROOMS: [
+      { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 2, tint: 'cool' },
+      { name: 'GALERIE NORD',    x: 1,  y: 3,  w: 21, h: 2, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 1,  y: 5,  w: 2,  h: 5, tint: 'neutral' },
+      { name: 'COULOIR CENTRAL', x: 10, y: 5,  w: 3,  h: 5, tint: 'olive' },
+      { name: 'AILE EST',        x: 20, y: 5,  w: 2,  h: 5, tint: 'neutral' },
+      { name: 'GALERIE SUD',     x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
+      { name: 'LE VESTIAIRE',    x: 3,  y: 13, w: 17, h: 3, tint: 'warm' }
+    ],
+
+    /* One guard south of the door, two north of it. The first exists to be
+       beaten: he walks one row, in the open, and Assane can simply wait him
+       out. That is the tutorial. The pair past the door loop the ring in
+       opposite directions and never enter the middle, so they cannot be
+       waited out — only timed. */
+    GUARDS: [
+      /* The tutorial guard. Depth 1, one row, out in the open, and crucially
+         NOT on the row the keypad sits on — a cone widens as it goes, so a
+         patrol sharing a lane with a module leaves Assane standing at the door
+         with nowhere safe to step once it closes. */
+      { id: 'g1', badge: '4412', from: { x: 5, y: 14 }, to: { x: 17, y: 14 }, at: 0, dir: 1, depth: 1 },
+      { id: 'g2', badge: '2071', at: 0,  dir: 1, depth: 1, loop: true,
+        waypoints: [{ x: 2, y: 4 }, { x: 20, y: 4 }, { x: 20, y: 10 }, { x: 2, y: 10 }] },
+      /* The same ring the other way round, and started half a lap along, so
+         the two of them sit opposite each other for the whole patrol. Equal
+         loop lengths also keep the combined patrol period at 48 rather than
+         624, which is the difference between a map that can be proved free of
+         dead states and one that can only be hoped about. */
+      { id: 'g3', badge: '3308', at: 24, dir: 1, depth: 1, loop: true,
+        waypoints: [{ x: 2, y: 4 }, { x: 2, y: 10 }, { x: 20, y: 10 }, { x: 20, y: 4 }] }
+    ],
+    CAMERAS: [],
+    DOORS: [
+      { x: 11, y: 12, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
+    ],
+    MODULES: [
+      { id: 'deguisement', x: 6,  y: 14, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
+      { id: 'prize',       x: 11, y: 1,  name: 'LE DOSSIER',     icon: 'manu' }
+    ],
+
+    /* LA PORTE.
+       The keypad is numeric and Assane can see it. The code is in Benjamin's
+       dossier as four SYMBOLS, above a ring of ten in a fixed order — and the
+       dossier says plainly that it does not record which one is zero. Without
+       that, the ring is a cipher with ten possible rotations and Benjamin can
+       read out nothing at all.
+
+       Assane holds the missing rotation and does not know it: the sign beside
+       the door says CHAMBRE 302, and there is a small mark under the 0 that
+       looks like decoration. He has to describe it; Benjamin has to find it on
+       the ring; and only then does either of them have a number.
+
+       This is the cleanest lock in the build. Neither half is a hint. Half the
+       key is on each phone and the puzzle does not exist until they talk. */
+    PORTE: {
+      code: '2549',
+      sign: 'CHAMBRE 302',
+      zero: 'hook',
+      ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
+             'trident', 'star4', 'chevrons', 'backz', 'bisect'],
+      fails: 3
+    },
+
+    RACK: {
+      head:  ['casquette', 'nu', 'calot'],
+      torso: ['tablier', 'gilet', 'blouse'],
+      legs:  ['noir', 'salopette', 'jean']
+    },
+    UNIFORMS: {
+      '4412': { head: 'casquette', torso: 'blouse',  legs: 'noir' },
+      '2071': { head: 'calot',     torso: 'gilet',   legs: 'jean' },
+      '3308': { head: 'nu',        torso: 'tablier', legs: 'salopette' }
+    },
+    DEGUISEMENT: { answerBadge: '2071', targetPost: 'GALERIE NORD', conePenalty: 1 },
+
+    PERSONNEL: [
+      { badge: '4412', name: 'MOREAU, Serge',   post: 'VESTIAIRE', plate: '8021', kids: [] },
+      { badge: '2071', name: 'DELACROIX, Yann', post: 'GALERIE',   plate: '5530', kids: [] },
+      { badge: '3308', name: 'VIDAL, Nadia',    post: 'GALERIE',   plate: '1147', kids: [] }
+    ],
+    FACES: {
+      '4412': { art: 'face-4412', head: 'square', hair: 'short', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
+      '2071': { art: 'face-2071', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
+      '3308': { art: 'face-3308', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone)' }
+    },
+    DIRT: {
+      '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },
+               { t: 'coffee', s: 'Fights with the machine on level three, daily.' },
+               { t: 'boss', s: 'Loathes the floor manager. Openly.' }],
+      '2071': [{ t: 'study', s: 'Night classes. Law. Second year.' },
+               { t: 'car', s: 'Parks in the loading bay. Gets ticketed.' },
+               { t: 'promotion', s: 'Applied for shift lead. Waiting to hear.' }],
+      '3308': [{ t: 'football', s: 'Saint-Étienne. Home and away.' },
+               { t: 'boss', s: 'Covers for the floor manager. Constantly.' },
+               { t: 'coffee', s: 'Brings her own flask. Refuses the machine.' }]
+    },
+
+    PROCEDURES: [
+      { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked.' },
+      { k: 'LASER LINES',  v: 'Central corridors are protected between rounds. Do not cross. Go around.' },
+      { k: 'PATROLS',      v: 'Two officers, opposite directions, outer halls only.' }
+    ],
+
+    BEATS: [
+      'One of you is inside. One of you has the plans. Neither of you can finish alone.',
+      'The guards move when Assane moves. Nothing happens between your inputs.',
+      'The way through the middle is sealed. Everything here is the long way round.'
+    ]
+  };
+
+  var JOBS = [JOB3, JOB1, JOB2];
 
   /* Swap the data under the engine. Every other file reads L.content.<FIELD>
      and holds a reference to this same object, so assigning the fields here is
@@ -491,7 +647,7 @@
      that knows a venue. This function IS the "modules are grammars" argument. */
   var JOB_FIELDS = ['venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
-    'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER',
+    'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER', 'PORTE',
     'PROCEDURES', 'BEATS'];
 
   function loadJob(i) {
