@@ -20,6 +20,14 @@
     }
     return { x: 1, y: 1 };
   }
+  /* the escape hatch, if this floor has one — then it is the only way out */
+  function hatchTile() {
+    for (var y = 0; y < C.MAP.length; y++) {
+      var x = C.MAP[y].indexOf('X');
+      if (x >= 0) return { x: x, y: y };
+    }
+    return null;
+  }
 
   /* Two patrol shapes. from/to is a straight beat walked back and forth —
      job 1's corridor guards. waypoints + loop is a closed circuit walked one
@@ -43,6 +51,12 @@
     pts.push({ x: x, y: y });
     while (x !== g.to.x || y !== g.to.y) { x += dx; y += dy; pts.push({ x: x, y: y }); }
     return pts;
+  }
+
+  function leverUses() {
+    var u = {};
+    (C.LEVIERS || []).forEach(function (l) { u[l.id] = l.uses; });
+    return u;
   }
 
   function reset() {
@@ -69,6 +83,17 @@
       solved: { bureau: false, coffre: false, clavier: false, deguisement: false, faux: false, ecoute: false },
       cutCameras: {},          /* circuits Benjamin talked him through cutting */
       porteEntry: '', porteFails: 0,
+      grille: { tried: {} },
+      /* Benjamin's levers: how many pulls each has left, and how many of
+         Assane's moves the lights and the lasers stay down for */
+      levers: { uses: leverUses(), lights: 0, laser: 0, cams: {}, last: null },
+      lastActionAt: Date.now(),  /* the pressure clock */
+      pressure: 0,             /* suspicion the clock has added and a walk can earn back */
+      pressureAdded: 0,
+      dark: false,             /* the monitors are dead: TV shows nothing, phones carry it all */
+      alert: 0,                /* the building's alert level, 0-2. Only ever rises. */
+      alertNote: null,
+      jailLine: null,
       unlocked: {},            /* which dossier tabs Benjamin has earned */
       declined: {},            /* optional modules he has chosen to walk past */
       disguised: false,        /* out of uniform every cone reaches further */
@@ -113,7 +138,8 @@
   /* a locked door is a wall — for walking AND for line of sight */
   function isWall(x, y) {
     var c = charAt(x, y);
-    if (c === '#' || c === 'L') return true;   /* L is a laser line: solid, and never opens */
+    if (c === '#') return true;
+    if (c === 'L') return !(S && S.levers.laser > 0);   /* a laser line is a wall until Benjamin drops it */
     var d = doorAt(x, y);
     if (d) return d.locked;
     return false;
@@ -139,7 +165,7 @@
   /* A cut camera is dead everywhere at once — it stops watching AND it shows
      as dark on Player 2's plan, because both read through this one function. */
   function cameraDir(cam) {
-    if (S.cutCameras[cam.id]) return null;
+    if (S.cutCameras[cam.id] || S.levers.cams[cam.id] > 0) return null;
     return cam.cycle[S.camPhase % cam.cycle.length];
   }
 
@@ -172,29 +198,77 @@
     return out;
   }
 
+  /* WHAT A CAMERA SEES: a straight line, and nothing beside it. A guard has a
+     body and glances sideways; a box on a wall looks where it points. Same
+     reach as the guard's line — the square in front of it counts — but no
+     ring, because a ring under a camera that switches on every other beat
+     made the three squares beneath it a trap: nowhere to step the turn before
+     it woke. The scan found sixteen dead states there; a line has none. */
+  function sightline(x, y, dir, depth) {
+    var out = [], v = DIRV[dir];
+    for (var d = 1; d <= depth + 1; d++) {
+      var cx = x + v.x * d, cy = y + v.y * d;
+      if (isWall(cx, cy)) break;
+      out.push(cx + ',' + cy);
+    }
+    return out;
+  }
+
   /* In the dark a guard carries a torch: it reaches further than an idle
      glance, and further still when he has heard something. */
   /* Out of uniform, every guard looks one tile further — you read as someone
      who should not be here. Wearing the right thing does not make the building
      easier than normal, it stops you making it harder. */
+  /* ...and the building's alert level adds a square per step. With the lights
+     down nobody sees past arm's length, whatever the alert. */
   function coneDepth(g) {
+    if (S.levers.lights > 0) return 0;
     var base = S.blackout ? C.BLACKOUT.torchDepth + (g.alert > 0 ? 1 : 0) : g.depth;
-    return base + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
+    return base + S.alert + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
+  }
+
+  /* EVERY point of suspicion goes through here, so the building's alert level
+     can never drift out of step with the number on the bar. */
+  function alertOf(v) {
+    var lv = 0;
+    C.ALERT.forEach(function (a, i) { if (v >= a.at) lv = i + 1; });
+    return lv;
+  }
+  function raise(n) {
+    S.suspicion = U.clamp(S.suspicion + n, 0, 100);
+    var lv = alertOf(S.suspicion);
+    if (lv > S.alert) {
+      S.alert = lv;
+      var a = C.ALERT[lv - 1];
+      toast('ALERT · ' + a.name, 'bad');
+      S.sense = a.line;
+      S.alertNote = a.line;   /* read out by the next sense line, whatever else is happening */
+      U.sfx.spot();
+    }
   }
 
   /* every tile currently watched, and by whom — this is what P2's phone draws
      and what the TV must never show */
-  function threat() {
+  /* `kind` picks a layer: 'guards' or 'cameras'. Benjamin's plan draws one
+     at a time; the engine always checks both. */
+  function threat(kind) {
     var map = {};
-    S.guards.forEach(function (g) {
+    if (kind !== 'cameras') S.guards.forEach(function (g) {
       var p = g.path[g.at];
       cone(p.x, p.y, g.facing, coneDepth(g)).forEach(function (k) { (map[k] = map[k] || []).push(g.id); });
     });
     /* the cameras are down in a blackout — emergency power runs the feeds on
        P2's phone for looking, not for catching */
-    if (!S.blackout) {
+    if (!S.blackout && kind !== 'guards') {
       S.cameras.forEach(function (c) {
-        cone(c.x, c.y, cameraDir(c), c.depth).forEach(function (k) { (map[k] = map[k] || []).push(c.id); });
+        /* A camera that is off, looped or cut sees NOTHING — not even the
+           squares under it. cone() always returns the ring round its origin,
+           which is a guard's body and has no meaning for a box on a wall; left
+           in, every camera watched three tiles permanently whatever its cycle
+           said, and the scan flagged them as tiles no phase ever cleared. */
+        var d = cameraDir(c);
+        if (!d) return;
+        sightline(c.x, c.y, d, c.depth).forEach(function (k) { (map[k] = map[k] || []).push(c.id); });
       });
     }
     return map;
@@ -282,10 +356,79 @@
     if (best && bd <= 8) best.alert = 2;
   }
 
+  function nearestGuard() {
+    var best = null, bd = 99;
+    S.guards.forEach(function (g) {
+      var p = g.path[g.at], d = Math.abs(p.x - S.assane.x) + Math.abs(p.y - S.assane.y);
+      if (d < bd) { bd = d; best = g; }
+    });
+    return best;
+  }
+
+  /* ---------------------------------------------------------------- levers */
+  /* Benjamin's verbs. Each is a state change that lands on the board at once
+     and then wears off on Assane's moves. Only live during the infiltration:
+     with a module open the world is stopped, and a lever pulled into a stopped
+     world would be a wasted use with no way to know it. */
+  function leverDef(id) {
+    return (C.LEVIERS || []).filter(function (l) { return l.id === id; })[0];
+  }
+  function roomCentre(r) {
+    return { x: r.x + Math.floor((r.w - 1) / 2), y: r.y + Math.floor((r.h - 1) / 2) };
+  }
+  function pullLever(id, roomName) {
+    var L = leverDef(id);
+    if (!L || S.phase !== 'play' || !(S.levers.uses[id] > 0)) return false;
+    var note = L.name;
+    if (id === 'phone') {
+      var r = C.ROOMS.filter(function (x) { return x.name === roomName; })[0];
+      if (!r) return false;
+      /* the nearest guard to the ringing phone stops and turns to look at it
+         — the same reflex a run triggers, pointed where Benjamin chooses.
+         Which way he ends up facing is Benjamin's problem. */
+      var p = roomCentre(r), best = null, bd = 99;
+      S.guards.forEach(function (g) {
+        var q = g.path[g.at], d = Math.abs(q.x - p.x) + Math.abs(q.y - p.y);
+        if (d < bd) { bd = d; best = g; }
+      });
+      S.noise = p;
+      if (best && bd <= (L.reach || 8)) {
+        best.alert = L.turns;
+        best.facing = dirToward(best.path[best.at], p);
+        note = 'PHONE · ' + r.name;
+      } else {
+        note = 'PHONE · NOBODY NEAR IT';
+      }
+      S.sense = 'A telephone, ringing and ringing. <em>' + bearing(p, S.assane) + ' of you.</em>';
+    } else if (id === 'lights') {
+      S.levers.lights = L.turns;
+      note = 'LIGHTS OUT';
+      S.sense = 'The corridor lights die. <em>Everything is arm’s length now.</em>';
+    } else if (id === 'laser') {
+      S.levers.laser = L.turns;
+      note = 'LASERS DOWN';
+      S.sense = 'A hum in the walls stops. <em>Somewhere, a corridor just opened.</em>';
+      markSeen();
+    } else if (id === 'camera') {
+      var cam = S.cameras.filter(function (c) { return c.id === roomName; })[0];
+      if (!cam) return false;
+      S.levers.cams[cam.id] = L.turns;
+      note = 'LOOPED · ' + cam.label;
+      S.sense = 'Somewhere above you a servo stops turning. <em>A camera has gone quiet.</em>';
+    }
+    S.levers.uses[id]--;
+    S.levers.last = { id: id, note: note, at: Date.now() };
+    toast(note, 'good');
+    U.sfx.good();
+    raise(L.cost);
+    return true;
+  }
+
   function senseLine() {
     /* In the blackout his phone has stopped telling him anything at all.
        These lines are flavour, never information — that is the sequence. */
     if (S.blackout) return C.STATIC_LINES[S.turn % C.STATIC_LINES.length];
+    if (S.alertNote) { var note = S.alertNote; S.alertNote = null; return note; }
     var a = S.assane, best = null, bestD = 99;
     S.guards.forEach(function (g) {
       var p = g.path[g.at], d = Math.abs(p.x - a.x) + Math.abs(p.y - a.y);
@@ -296,6 +439,7 @@
       if (t[(a.x + dx) + ',' + (a.y + dy)]) adjacent = true;
     }
     if (adjacent) return 'The hair goes up on the back of your neck. <em>Something is looking this way.</em>';
+    if (S.levers.lights > 0) return 'The corridor lights are still down. <em>Nobody sees past arm’s length.</em>';
     if (best && bestD <= 3) return 'Footsteps. <em>Close.</em> ' + bearing(best.p, a) + ' of you.';
     if (best && bestD <= 6) return 'Footsteps somewhere ' + bearing(best.p, a).toLowerCase() + '. Unhurried.';
     var near = S.cameras.some(function (c) {
@@ -318,6 +462,7 @@
   function act(dx, dy, opts) {
     opts = opts || {};
     if (S.phase !== 'play') return { ok: false };
+    touch();
 
     var crossed = [];
     if (dx || dy) {
@@ -347,6 +492,19 @@
     if (S.grace > 0) S.grace--;
     if (opts.run) makeNoise();
 
+    /* Benjamin's levers run on Assane's clock. The lasers coming back on with
+       him standing in the beam is the one way a lever can hurt him — and it is
+       the reason the countdown on Benjamin's phone has to be said out loud. */
+    if (S.levers.lights > 0) S.levers.lights--;
+    if (S.levers.laser > 0) {
+      S.levers.laser--;
+      if (S.levers.laser === 0) {
+        toast('LASERS BACK ON', 'bad');
+        if (charAt(S.assane.x, S.assane.y) === 'L') { getSpotted(nearestGuard().id); return { ok: true, spotted: true }; }
+      }
+    }
+    for (var cid in S.levers.cams) if (S.levers.cams[cid] > 0) S.levers.cams[cid]--;
+
     var t = threat();
 
     /* a run crosses two tiles, and both of them count — that is the risk */
@@ -357,7 +515,7 @@
 
     if (caught && S.grace === 0 && !opts.freeze) { getSpotted(caught); return { ok: true, spotted: true }; }
     /* frozen, with the beam going straight over him. Not caught. Not nothing. */
-    if (caught && opts.freeze) S.suspicion = U.clamp(S.suspicion + 3, 0, 100);
+    if (caught && opts.freeze) raise(3);
 
     /* Near miss: a cone passed within arm's reach. Orthogonal only, and only
        +1 — in a two-tile corridor a diagonal test fires nearly every turn, which
@@ -367,7 +525,13 @@
     var brush = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) {
       return !!t[(S.assane.x + v[0]) + ',' + (S.assane.y + v[1])];
     });
-    if (brush) S.suspicion = U.clamp(S.suspicion + 1, 0, 100);
+    if (brush) raise(1);
+
+    /* a step nobody saw earns back a point the clock added — never more */
+    if (crossed.length && S.pressure > 0) {
+      S.pressure--;
+      S.suspicion = Math.max(0, S.suspicion - 1);
+    }
 
     S.sense = senseLine();
 
@@ -380,7 +544,9 @@
     var m = moduleAt(S.assane.x, S.assane.y);
     if (m && !S.solved[m.id] && !S.declined[m.id]) { openModule(m.id); return { ok: true, module: m.id }; }
 
-    if (charAt(S.assane.x, S.assane.y) === 'E' && S.hasManuscript) {
+    /* the way out: the hatch if this floor has one, otherwise the way he came */
+    var here = charAt(S.assane.x, S.assane.y), hatch = hatchTile();
+    if (S.hasManuscript && (hatch ? here === 'X' : here === 'E')) {
       /* the way out locked itself when the power went */
       if (S.blackout && !S.solved.clavier) { openModule('clavier'); return { ok: true, module: 'clavier' }; }
       finish();
@@ -391,6 +557,21 @@
   }
 
   function toast(text, kind) { S.toast = { text: text, kind: kind, at: Date.now() }; }
+
+  /* ---------------------------------------------------------------- pressure */
+  /* any input restarts the clock */
+  function touch() { S.lastActionAt = Date.now(); S.pressureAdded = 0; }
+  /* called once a second from the clock. Returns what the displays need:
+     how long he has stood still, and whether the building has started to
+     charge for it. Only during the infiltration. */
+  function tick(now) {
+    if (!S.running || S.phase !== 'play') return null;
+    var P = C.PRESSURE, idle = (now - S.lastActionAt) / 1000;
+    if (idle < P.grace) return { idle: idle, grace: P.grace, ticking: false };
+    var due = Math.floor((idle - P.grace) / P.every);
+    while (S.pressureAdded < due) { S.pressureAdded++; S.pressure++; raise(1); }
+    return { idle: idle, grace: P.grace, ticking: true };
+  }
 
   /* ---------------------------------------------------------------- modules */
   /* A page of the dossier opens when the job needs it and not before.
@@ -424,7 +605,8 @@
        again on the next mistake. Grade, don't fail — the cost is in suspicion
        and the spotted count, which is what the rank card reads. */
     S.coffreFails = 0;
-    S.objective = id === 'coffre' ? 'P1 has the dial. P2 has the manual.'
+    S.objective = id === 'grille' ? 'P1 has a padlock and three keys. P2 knows which key is which.'
+      : id === 'coffre' ? 'P1 has the dial. P2 has the manual.'
       : id === 'clavier' ? 'P1 can see the worn keys. P2 has the procedure.'
       : id === 'deguisement' ? 'P1 can see the rack. P2 knows whose is whose.'
       : id === 'faux' ? 'P1 has both canvases. P2 has Benjamin\u2019s notes.'
@@ -437,6 +619,7 @@
     if (solvedIt) S.solved[S.moduleId] = true;
     S.moduleId = null;
     S.phase = 'play';
+    touch();
     setObjective();
   }
 
@@ -445,6 +628,7 @@
     S.declined[S.moduleId] = true;
     S.moduleId = null;
     S.phase = 'play';
+    touch();
     setObjective();
   }
 
@@ -472,7 +656,7 @@
     } else {
       U.sfx.bad();
       S.coffreFails++;
-      S.suspicion = U.clamp(S.suspicion + 15, 0, 100);
+      raise(15);
       if (S.coffreFails >= 2) {
         setTimeout(function () { getSpotted('1184'); U.emit('render'); }, 700);
       } else {
@@ -503,7 +687,7 @@
       return true;
     }
     U.sfx.bad();
-    S.suspicion = U.clamp(S.suspicion + 10, 0, 100);
+    raise(10);
     return false;
   }
 
@@ -518,7 +702,7 @@
       return true;
     }
     U.sfx.bad();
-    S.suspicion = U.clamp(S.suspicion + 10, 0, 100);
+    raise(10);
     return false;
   }
 
@@ -532,7 +716,7 @@
       return true;
     }
     U.sfx.bad();
-    S.suspicion = U.clamp(S.suspicion + 8, 0, 100);
+    raise(8);
     return false;
   }
 
@@ -544,10 +728,35 @@
       S.loot.tableau = true;
     } else {
       U.sfx.bad();
-      S.suspicion = U.clamp(S.suspicion + 15, 0, 100);
+      raise(15);
     }
     setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
     return pickedGenuine;
+  }
+
+  /* LA GRILLE. One symbol, one lookup, one tap. A wrong key is not a fail —
+     the gate rattles and the building notices a little — and there is no
+     limit, so the pair can get it wrong and still be taught the shape. */
+  function grilleTry(key) {
+    var K = C.GRILLE, hit = K.board.filter(function (b) { return b.key === key; })[0];
+    if (!hit || S.grille.tried[key]) return false;
+    if (hit.sym === K.lock) {
+      U.sfx.unlock();
+      unlockDoorAt(K.door);
+      setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
+      return true;
+    }
+    U.sfx.block();
+    S.grille.tried[key] = true;
+    raise(K.rattle || 3);
+    return false;
+  }
+  /* a lock releases its own door. Without an address it releases every door
+     on the floor, which is what the single-door contracts always did. */
+  function unlockDoorAt(p) {
+    if (!p) { S.doors.forEach(function (d) { d.locked = false; }); return; }
+    var d = doorAt(p.x, p.y);
+    if (d) d.locked = false;
   }
 
   /* LA PORTE.
@@ -582,13 +791,13 @@
     if (S.porteEntry.length < C.PORTE.code.length) return false;
     if (S.porteEntry === C.PORTE.code) {
       U.sfx.unlock();
-      S.doors.forEach(function (d) { d.locked = false; });   /* this contract has one door */
+      unlockDoorAt(C.PORTE.door);
       setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
       return true;
     }
     U.sfx.bad();
     S.porteFails++;
-    S.suspicion = U.clamp(S.suspicion + 8, 0, 100);
+    raise(8);
     /* three wrong codes and somebody comes to see who is standing at the door */
     if (S.porteFails >= (C.PORTE.fails || 3)) {
       setTimeout(function () { getSpotted('g1'); U.emit('render'); }, 700);
@@ -604,13 +813,16 @@
     U.sfx.unlock();
     S.hasManuscript = true;
     S.loot.dossier = true;
+    /* the monitors die with it. The room on the television goes black and the
+       run out is played on the two phones alone. */
+    if (C.PRIZE && C.PRIZE.dark) { S.dark = true; toast('MONITORS DEAD', 'bad'); }
     setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
   }
 
   function bureauSubmit(code) {
     if (code === C.BUREAU.answer) { U.sfx.unlock(); S.bureauStep = 1; return true; }
     U.sfx.bad();
-    S.suspicion = U.clamp(S.suspicion + 10, 0, 100);
+    raise(10);
     return false;
   }
   function bureauDoor(mark) {
@@ -621,7 +833,7 @@
       return true;
     }
     U.sfx.bad();
-    S.suspicion = U.clamp(S.suspicion + 10, 0, 100);
+    raise(10);
     return false;
   }
 
@@ -640,7 +852,11 @@
     if (!C.DIRT[badge]) badge = Object.keys(C.DIRT)[0];
 
     S.spotted++;
-    S.suspicion = U.clamp(S.suspicion + 20, 0, 100);
+    raise(20);
+    /* Twice, a guard can be talked round. The third time the building knows
+       his face, and there is nothing left to say. It is the one rule about
+       being seen that both players can hold in their heads: three and out. */
+    if (S.spotted >= 3) { S.jailLine = 'THIRD TIME. THEY KNOW HIS FACE.'; jail(); return; }
     S.phase = 'tchatche';
     S.tchatche = { badge: badge, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
@@ -663,6 +879,7 @@
       if (t.round >= 3) {
         S.phase = 'play';
         S.grace = 3;                 /* he backs away — two clean beats */
+        touch();
         S.tchatche = null;
         setObjective();
         return { win: true, done: true };
@@ -673,19 +890,30 @@
     U.sfx.bad();
     t.last = 'bad';
     t.strikes++;
-    S.suspicion = U.clamp(S.suspicion + 10, 0, 100);
-    if (t.strikes >= 2) { jail(); return { win: false, jail: true }; }
+    raise(10);
+    if (t.strikes >= maxStrikes()) { S.jailLine = maxStrikes() === 1 ? 'ON ALERT. ONE SLIP WAS ENOUGH.' : null; jail(); return { win: false, jail: true }; }
     return { win: false };
   }
+
+  /* on full alert a stopped man is searched, not chatted to */
+  function maxStrikes() { return S.alert >= 2 ? 1 : 2; }
 
   function jail() { S.phase = 'jail'; S.running = false; U.sfx.jail(); }
 
   /* ---------------------------------------------------------------- end */
+  /* Written against what the contract HAS, not against contract one. The old
+     version told a pair in contract three to find a security desk it does not
+     contain. */
   function setObjective() {
+    var hasCloak = C.MODULES.some(function (m) { return m.id === 'deguisement'; });
     if (S.blackout) S.objective = 'Lights out. His phone is dead. Talk him to the vestibule.';
-    else if (S.hasManuscript) S.objective = 'La Sortie. He has the manuscript. Get him out through the vestibule.';
+    else if (S.hasManuscript) S.objective = hatchTile() ? 'He has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
+                                         : C.PORTE ? 'He has it. Back round the ring and down the stairs.'
+                                                     : 'La Sortie. He has the manuscript. Get him out through the vestibule.';
+    else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = 'The cloakroom first — or go in as you are, and be seen from further away.';
+    else if (C.PORTE && !S.solved.porte) S.objective = 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
+    else if (C.PORTE) S.objective = 'Through the door and round the ring. The desk is in the room at the top.';
     else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
-    else if (!S.disguised && !S.solved.deguisement) S.objective = 'The cloakroom first — or go in as you are, and be seen from further away.';
     else S.objective = 'Find the security desk. Open La Réserve.';
   }
   function finish() { S.phase = 'rank'; S.running = false; U.sfx.good(); }
@@ -699,7 +927,12 @@
     S.phase = 'play';
     S.running = true;
     S.sense = senseLine();
+    touch();
     setObjective();
+    /* a module on the starting square opens the moment the job starts — the
+       gate in contract three, so the first thing anyone does is talk */
+    var m = moduleAt(S.assane.x, S.assane.y);
+    if (m && !S.solved[m.id]) openModule(m.id);
   }
 
   L.engine = {
@@ -708,7 +941,7 @@
     charAt: charAt, isWall: isWall, doorAt: doorAt, moduleAt: moduleAt, roomAt: roomAt,
     coordOf: coordOf,
     coffreUndo: coffreUndo,
-    cone: cone, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
+    cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
@@ -717,6 +950,8 @@
     porteTap: porteTap, porteUndo: porteUndo, porteSubmit: porteSubmit,
     porteDigitOf: porteDigitOf, porteSymbolFor: porteSymbolFor,
     porteCodeSymbols: porteCodeSymbols, takePrize: takePrize,
-    tchatchePick: tchatchePick, rank: rank, setObjective: setObjective
+    tchatchePick: tchatchePick, rank: rank, setObjective: setObjective,
+    grilleTry: grilleTry, pullLever: pullLever, maxStrikes: maxStrikes,
+    tick: tick, hatchTile: hatchTile
   };
 })(window.DC);

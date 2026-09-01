@@ -80,6 +80,13 @@
       E.S.elapsed++;
       var c = U.$('#tv-clock');
       if (c) c.textContent = U.mmss(E.S.elapsed);
+      /* THE PRESSURE. The one thing that moves between inputs. The television
+         redraws so the ring round Assane fills; Player 1's strip is updated in
+         place rather than re-rendered, because swapping the d-pad out from
+         under a finger once a second would eat taps. Player 2 is never
+         redrawn by the clock — he is reading. */
+      var p = E.tick(Date.now());
+      if (E.S.phase === 'play') { L.tv.render(); L.p1.pressure(p); }
     }, 1000);
 
     /* keyboard is a convenience for testing alone; the real input is the pad */

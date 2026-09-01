@@ -47,6 +47,11 @@
             <div class="tvview tvview--room" id="tv-view-room">
               <svg id="room-svg" viewBox="0 0 600 400" role="img" aria-label="Top-down view of what Assane can see"></svg>
               <div class="room__vignette"></div>
+              <!-- the monitors are dead: nothing on this screen until he is out -->
+              <div class="room__dead" id="room-dead">
+                <p class="room__dead__big">SIGNAL LOST</p>
+                <p class="room__dead__line">The monitors are dead. Everything either of you knows is on the two phones.</p>
+              </div>
               <div class="room__toast" id="room-toast"></div>
             </div>
 
@@ -95,7 +100,7 @@
               <div class="jail">
                 <div class="jail__bars"></div>
                 <div class="artslot artslot--wide jail__art" data-slot="jail-slam"></div>
-                <p class="jail__line">ASSANE IS CAUGHT.</p>
+                <p class="jail__line" id="jail-line">ASSANE IS CAUGHT.</p>
               </div>
             </div>
           </div>
@@ -103,7 +108,7 @@
           <footer class="tvbar tvbar--bottom">
             <span class="tvbar__obj" id="tv-objective">Study the plan.</span>
             <span class="suspicion" id="suspicion">
-              <b>SUSPICION</b>
+              <b id="suspicion-state">SUSPICION</b>
               <span class="suspicion__track"><i id="suspicion-fill"></i></span>
               <em id="suspicion-num">0</em>
             </span>

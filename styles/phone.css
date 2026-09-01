@@ -618,3 +618,121 @@
 }
 .file__hd .artslot.file__face img{width:100%;height:100%;object-fit:cover;display:block;}
 .warn b{display:inline;}
+
+/* ============ LA GRILLE ============ */
+/* P1: the padlock, its tag, three numbered keys. The tag is the loudest thing
+   on the screen because it is the only thing Benjamin cannot see. */
+.padlock{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:16px;margin-bottom:14px;
+}
+.padlock__body{width:92px;height:92px;flex:none;}
+.padlock__body svg{width:100%;height:100%;display:block;}
+.padlock__tag{
+  width:88px;flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:var(--gold);border:var(--stroke) solid var(--ink);
+  border-radius:6px 6px 16px 16px;padding:10px 8px 8px;
+}
+.padlock__tag svg{width:50px;height:50px;color:var(--on-gold);display:block;}
+.padlock__tag .lbl{color:var(--on-gold);margin:0;}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.keys button{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+  padding:12px 4px 10px;display:grid;place-items:center;gap:4px;
+}
+.keys button:hover{background:var(--gold);}
+.keys button svg{width:40px;height:40px;}
+.keys button b{font-family:var(--mono);font-size:24px;font-weight:500;}
+.keys button.is-tried{opacity:.35;pointer-events:none;border-style:dashed;}
+.keys button.is-bad{animation:nudge .22s;background:var(--red);}
+
+/* P2: which symbol is which key */
+.keyboard{
+  border:var(--stroke) solid var(--ink);border-left-width:4px;border-radius:var(--r);
+  background:var(--stone);padding:11px 12px 6px;margin-bottom:12px;
+}
+.keyrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--stone-dk);}
+.keyrow:first-child{border-top:0;}
+.keyrow i{
+  width:36px;height:36px;flex:none;display:grid;place-items:center;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+}
+.keyrow i svg{width:26px;height:26px;}
+.keyrow__arrow{color:var(--ink-soft);}
+.keyrow b{font-family:var(--mono);font-size:15px;letter-spacing:.1em;font-weight:500;}
+
+/* ============ LES LEVIERS ============ */
+/* Benjamin's three verbs, under his map. A row is a button; gold means it is
+   either open (asking which room) or live (counting down). */
+.levers{
+  margin-top:12px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);padding:10px 10px 6px;
+}
+.lever{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+  padding:7px 9px;margin-bottom:6px;
+}
+.lever:hover{background:var(--gold);color:var(--on-gold);}
+.lever[disabled]{opacity:.4;pointer-events:none;}
+.lever.is-open,.lever.is-live{background:var(--gold);color:var(--on-gold);}
+.lever__ic{width:22px;height:22px;flex:none;display:block;}
+.lever__ic svg{width:100%;height:100%;display:block;}
+.lever__txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.lever__txt b{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;}
+.lever__txt em{font-style:normal;font-size:10px;line-height:1.35;color:var(--ink-soft);}
+.lever:hover .lever__txt em,.lever.is-open .lever__txt em,.lever.is-live .lever__txt em{color:var(--on-gold);}
+.lever__side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.lever__uses{display:flex;gap:3px;}
+.lever__uses i{width:8px;height:8px;border-radius:99px;border:1.5px solid currentColor;display:block;}
+.lever__uses i.is-on{background:currentColor;}
+.lever__cost{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--red);}
+.lever:hover .lever__cost,.lever.is-open .lever__cost,.lever.is-live .lever__cost{color:var(--on-gold);}
+.lever__rooms{display:flex;flex-wrap:wrap;gap:5px;margin:-2px 0 10px;}
+.chip2{
+  border:var(--stroke) solid var(--ink);border-radius:999px;background:var(--paper);
+  padding:5px 9px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+}
+.chip2:hover{background:var(--gold);color:var(--on-gold);}
+.lever__last{margin:2px 0 4px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+
+/* ============ THE LAYERS (P2) ============ */
+/* Two pages of the same plan. The one that is on is paper; the other is a
+   tab waiting to be turned. */
+.layers{display:flex;gap:6px;margin:0 0 8px;}
+.layers button{
+  flex:1;display:flex;align-items:baseline;justify-content:center;gap:6px;
+  padding:8px 6px;border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);color:var(--ink-soft);
+}
+.layers button b{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;}
+.layers button span{font-size:9px;letter-spacing:.08em;}
+.layers button:hover{background:var(--paper);}
+.layers button.is-on{background:var(--paper);color:var(--ink);}
+.chip2.is-live{background:var(--gold);color:var(--on-gold);}
+.chip2[disabled]{pointer-events:none;}
+
+/* ============ THE PRESSURE (P1) ============ */
+/* A strip under WHAT YOU SENSE. Fills gold over the thirty seconds he may
+   stand still; goes red and starts talking when the building starts charging. */
+.pressure{
+  display:none;position:relative;height:22px;margin-top:8px;overflow:hidden;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
+}
+.pressure.is-on{display:block;}
+.pressure i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gold);transition:width .9s linear;}
+.pressure span{
+  position:relative;display:block;line-height:18px;text-align:center;
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);
+}
+.pressure.is-hot i{background:var(--red);width:100% !important;animation:blink 1s infinite;}
+.pressure.is-hot span{color:var(--on-color);font-weight:600;}
+
+/* ============ THE DARK RUN (P1) ============ */
+/* the seven squares around him, when the television has nothing to show */
+.p1map{
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);overflow:hidden;
+  background:var(--map-void);margin:0 auto 10px;max-width:218px;
+}
+.p1map svg{display:block;width:100%;}

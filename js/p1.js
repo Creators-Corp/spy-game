@@ -239,6 +239,48 @@
     ]);
   }
 
+  /* ------------------------------------------------------------ LA GRILLE */
+  /* The handshake. A padlock with a tag, three numbered keys, and one line of
+     copy. Everything Assane can see is here; nothing that says which key is
+     right is anywhere on this phone. */
+  function viewGrille() {
+    var S = E.S, K = C.GRILLE;
+
+    var tag = G.icon(K.lock);
+    var lock = G.icon('lock'); lock.style.color = 'var(--ink)';
+    var padlock = el('div', { class: 'padlock' }, [
+      el('div', { class: 'padlock__body' }, [lock]),
+      el('div', { class: 'padlock__tag' }, [tag, el('span', { class: 'lbl', text: 'ON THE TAG' })])
+    ]);
+
+    var keys = el('div', { class: 'keys' });
+    K.board.slice().sort(function (a, b) { return a.key - b.key; }).forEach(function (b) {
+      var btn = el('button', {
+        class: S.grille.tried[b.key] ? 'is-tried' : '',
+        onclick: function () {
+          var ok = E.grilleTry(b.key);
+          if (!ok) { btn.classList.add('is-bad'); setTimeout(function () { U.emit('render'); }, 300); }
+          else U.emit('render');
+        }
+      });
+      var ic = G.icon('key'); ic.style.color = 'var(--ink)';
+      btn.appendChild(ic);
+      btn.appendChild(el('b', { text: String(b.key) }));
+      keys.appendChild(btn);
+    });
+
+    return screen([
+      head('LA GRILLE'),
+      body([
+        el('p', { class: 'note', style: 'margin:0 0 12px', text: 'A service gate. Tell Benjamin what is stamped on the tag.' }),
+        padlock,
+        el('p', { class: 'lbl lbl--c', style: 'margin:0 0 8px', text: 'TAP THE KEY HE NAMES' }),
+        keys
+      ]),
+      foot([ el('p', { class: 'note', text: 'The wrong key rattles the gate. Nothing worse.' }) ])
+    ]);
+  }
+
   /* ------------------------------------------------------------ LA PORTE */
   /* Assane has the keypad and the sign. He does NOT have the code, and no
      amount of staring at this screen produces it — the four digits live on
@@ -486,6 +528,64 @@
     ]);
   }
 
+  /* THE DARK RUN. With the monitors dead the television shows nothing, so the
+     seven squares around him move onto his phone: floor he can see, walls that
+     bound it, a guard if one is in view, the hatch if he has found it. Drawn
+     from the same visibleSet the television used, so it can never show more
+     than the room did. */
+  function localMap() {
+    var S = E.S, vis = E.visibleSet(), Rn = 3, T = 36, N = Rn * 2 + 1;
+    var ax = S.assane.x, ay = S.assane.y, s = '';
+    s += '<svg viewBox="0 0 ' + (N * T) + ' ' + (N * T) + '">';
+    s += '<rect width="' + (N * T) + '" height="' + (N * T) + '" fill="var(--map-void)"/>';
+    for (var dy = -Rn; dy <= Rn; dy++) {
+      for (var dx = -Rn; dx <= Rn; dx++) {
+        var x = ax + dx, y = ay + dy, k = x + ',' + y, px = (dx + Rn) * T, py = (dy + Rn) * T;
+        if (!vis[k]) continue;
+        var ch = E.charAt(x, y), d = E.doorAt(x, y);
+        if (E.isWall(x, y)) {
+          s += '<rect x="' + px + '" y="' + py + '" width="' + T + '" height="' + T + '" fill="var(--stone-dk)"/>';
+          if (ch === 'L') s += '<line x1="' + px + '" y1="' + (py + T / 2) + '" x2="' + (px + T) + '" y2="' + (py + T / 2) + '" stroke="var(--red)" stroke-width="3"/>';
+          if (d) s += '<rect x="' + (px + 4) + '" y="' + (py + T / 2 - 3) + '" width="' + (T - 8) + '" height="6" rx="1.5" fill="var(--map-edge)"/>';
+          continue;
+        }
+        s += '<rect x="' + px + '" y="' + py + '" width="' + (T + 0.5) + '" height="' + (T + 0.5) + '" fill="var(--floor-neutral-lit)"/>';
+        if (ch === 'X') s += '<g color="var(--gold)" transform="translate(' + (px + 5) + ',' + (py + 5) + ') scale(' + ((T - 10) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
+        var m = E.moduleAt(x, y);
+        if (m) s += '<rect x="' + (px + 7) + '" y="' + (py + 7) + '" width="' + (T - 14) + '" height="' + (T - 14) + '" rx="2" fill="none" stroke="var(--gold)" stroke-width="2"/>';
+      }
+    }
+    S.guards.forEach(function (g) {
+      var p = g.path[g.at];
+      if (!vis[p.x + ',' + p.y]) return;
+      var cx = (p.x - ax + Rn) * T + T / 2, cy = (p.y - ay + Rn) * T + T / 2;
+      var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
+      s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + v[0] * 16) + '" y2="' + (cy + v[1] * 16) + '" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="var(--red)" stroke="var(--ink)" stroke-width="2"/>';
+    });
+    s += '<circle cx="' + (Rn * T + T / 2) + '" cy="' + (Rn * T + T / 2) + '" r="10" fill="var(--gold)" stroke="var(--ink)" stroke-width="2"/>';
+    s += '</svg>';
+    var box = el('div', { class: 'p1map' });
+    box.innerHTML = s;
+    return box;
+  }
+
+  /* the strip under WHAT YOU SENSE that fills while he stands still. Updated
+     in place by the clock — see pressure() below — never by a re-render. */
+  function pressureStrip() {
+    return el('div', { class: 'pressure', id: 'p1-pressure' }, [el('i'), el('span')]);
+  }
+  function pressure(p) {
+    var box = $('#p1-pressure');
+    if (!box) return;
+    if (!p || p.idle < 3) { box.className = 'pressure'; return; }
+    box.className = 'pressure is-on' + (p.ticking ? ' is-hot' : '');
+    box.firstChild.style.width = Math.min(p.idle / p.grace, 1) * 100 + '%';
+    box.lastChild.textContent = p.ticking
+      ? 'STILL · +1 SUSPICION EVERY ' + C.PRESSURE.every + 'S — MOVE'
+      : 'STILL FOR ' + Math.floor(p.idle) + 'S';
+  }
+
   function viewPlay() {
     var S = E.S;
     /* The pad itself shows which ways are shut. This replaced an abstract
@@ -517,13 +617,18 @@
     return screen([
       head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
       body([
+        S.dark ? localMap() : null,
         el('div', { class: 'nav__sense' }, [
           el('p', { class: 'h', text: 'WHAT YOU SENSE' }),
           el('p', { class: 'nav__senseline', html: S.sense || '…' })
         ]),
-        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: 'MANUSCRIPT · ON YOU', style: 'margin-top:12px' }) : null,
-        el('p', { class: 'note', style: 'margin-top:12px' , text:
-          'One tap is one step, and the guards step when you do. Holding still is a move. A greyed-out arrow is a wall.' })
+        pressureStrip(),
+        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: (S.dark ? 'DOSSIER' : 'MANUSCRIPT') + ' · ON YOU', style: 'margin-top:12px' }) : null,
+        /* the lights he can see for himself; the laser count is Benjamin's to say */
+        S.levers.lights > 0 ? el('div', { class: 'tag tag--gold', text: 'LIGHTS DOWN · ' + S.levers.lights + ' MORE MOVE' + (S.levers.lights > 1 ? 'S' : ''), style: 'margin-top:12px' }) : null,
+        el('p', { class: 'note', style: 'margin-top:12px' , text: S.dark
+          ? 'The monitors are dead. This is everything you can see. Benjamin still has the plan.'
+          : 'One tap is one step, and the guards step when you do. Holding still is a move. A greyed-out arrow is a wall.' })
       ]),
       foot([pad])
     ]);
@@ -729,8 +834,9 @@
   function viewTchatche() {
     var S = E.S, t = S.tchatche, tr = C.FACES[t.badge];
 
+    var max = E.maxStrikes();
     var strikes = el('div', { class: 'strikes' });
-    for (var i = 0; i < 2; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
+    for (var i = 0; i < max; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
 
     var lines = el('div', { class: 'lines' });
     t.options.forEach(function (topic) {
@@ -773,7 +879,9 @@
                             : 'Wrong man, or wrong subject. He is looking at you harder now.' }) : null,
         lines
       ]),
-      foot([ el('p', { class: 'note', text: 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
+      foot([ el('p', { class: 'note', text: max === 1
+        ? 'The building is on alert. One mistake and he searches you. Nothing here is timed.'
+        : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
     ]);
   }
 
@@ -802,6 +910,7 @@
     if (S.phase === 'plan') v = viewPlan();
     else if (S.phase === 'play') v = S.blackout ? viewBlackout() : viewPlay();
     else if (S.phase === 'module') v = S.moduleId === 'coffre' ? viewCoffre()
+                                    : S.moduleId === 'grille' ? viewGrille()
                                     : S.moduleId === 'porte' ? viewPorte()
                                     : S.moduleId === 'prize' ? viewPrize()
                                     : S.moduleId === 'clavier' ? viewClavier()
@@ -814,7 +923,7 @@
     host.appendChild(v);
   }
 
-  L.p1 = { render: render, resetTyped: function () {
+  L.p1 = { render: render, pressure: pressure, resetTyped: function () {
     typed = ''; runArmed = false; outfit = { head: null, torso: null, legs: null };
   } };
 })(window.DC);

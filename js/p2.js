@@ -12,6 +12,12 @@
   var tab = 'plan';
   var openSerial = -1, openBadge = null, pickedFace = null;
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
+  var leverOpen = null;                      /* which lever is asking for a room */
+  /* THE LAYERS. The plan shows the people or the wiring, never both. Two
+     things Benjamin has to hold in his head at once become two pages he has
+     to flip between while Assane waits — which is exactly the load the
+     dossier is supposed to put on him. */
+  var layer = 'patrols';
 
   function head(now) {
     return el('header', { class: 'phead' }, [
@@ -98,7 +104,7 @@
      every cone, every camera, every patrol — so the architecture underneath has
      to be quiet or the threat on top of it cannot be read at a glance. */
   function planSVG() {
-    var S = E.S, t = E.threat(), s = '';
+    var S = E.S, t = E.threat(layer === 'patrols' ? 'guards' : 'cameras'), s = '';
     var W = C.MAP[0].length * TT, H = C.MAP.length * TT;
 
     var night = S.blackout;
@@ -114,7 +120,8 @@
 
     function open(x, y) {
       var ch = E.charAt(x, y);
-      if (ch === '#' || ch === 'L') return false;
+      if (ch === '#') return false;
+      if (ch === 'L' && !(S.levers.laser > 0)) return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -153,12 +160,13 @@
        building's procedures, and knowing where they are is not the puzzle. */
     for (var ly = 0; ly < C.MAP.length; ly++) {
       for (var lx = 0; lx < C.MAP[ly].length; lx++) {
-        if (C.MAP[ly][lx] !== 'L') continue;
-        var px2 = lx * TT, py2 = ly * TT;
-        s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
+        if (C.MAP[ly][lx] !== 'L' || layer !== 'electronics') continue;
+        var px2 = lx * TT, py2 = ly * TT, off = S.levers.laser > 0;
+        if (!off) s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
              '" fill="var(--red)" opacity=".22"/>';
         s += '<line x1="' + px2 + '" y1="' + (py2 + TT / 2) + '" x2="' + (px2 + TT) +
-             '" y2="' + (py2 + TT / 2) + '" stroke="var(--red)" stroke-width="2.5"/>';
+             '" y2="' + (py2 + TT / 2) + '" stroke="var(--red)" stroke-width="2.5"' +
+             (off ? ' stroke-dasharray="3 4" opacity=".4"' : '') + '/>';
       }
     }
 
@@ -184,19 +192,33 @@
     });
 
     S.cameras.forEach(function (c) {
-      if (night) return;
+      if (night || layer !== 'electronics') return;
       var on = !!E.cameraDir(c);
       s += '<rect x="' + (c.x * TT + 4) + '" y="' + (c.y * TT + 4) + '" width="' + (TT - 8) + '" height="' + (TT - 8) +
            '" rx="1.5" fill="' + (on ? 'var(--red)' : 'var(--map-void)') + '" stroke="' + EDGE + '" stroke-width="1.5"/>';
+      s += '<text x="' + (c.x * TT + TT / 2) + '" y="' + (c.y * TT + TT / 2 + 2.4) + '" font-size="6" font-weight="500" text-anchor="middle"' +
+           ' font-family="var(--font)" fill="' + (on ? 'var(--on-color)' : EDGE) + '">' + c.id.replace('c', '') + '</text>';
     });
 
+    /* the hatch: on both layers, because it is the way out */
+    (function () {
+      var h = E.hatchTile();
+      if (!h || !feed(h.x, h.y)) return;
+      s += '<g color="var(--gold)" transform="translate(' + (h.x * TT + 2.5) + ',' + (h.y * TT + 2.5) +
+           ') scale(' + ((TT - 5) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
+    })();
+
     S.guards.forEach(function (g) {
+      if (layer !== 'patrols') return;
       var p = g.path[g.at];
       if (!feed(p.x, p.y)) return;
       var cx = p.x * TT + TT / 2, cy = p.y * TT + TT / 2;
       var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
       s += '<path d="M' + cx + ' ' + cy + ' L' + (cx + v[0] * 13) + ' ' + (cy + v[1] * 13) +
            '" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>';
+      /* a guard who has stopped to look at something wears a dashed ring, so
+         Benjamin can see his phone call landed */
+      if (g.alert > 0) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="var(--red)" stroke="var(--map-void)" stroke-width="1.5"/>';
       s += '<text x="' + cx + '" y="' + (cy + 2.6) + '" font-size="7" font-weight="500" text-anchor="middle"' +
            ' font-family="var(--font)" fill="var(--on-color)">' + g.badge + '</text>';
@@ -313,30 +335,36 @@
                        '<circle cx="10" cy="10" r="3" fill="var(--gold)"/>',
                        '<b>Objective</b> Something he has to reach.'));
     }
-    if (E.S.guards.length) {
+    var people = layer === 'patrols';
+    if (people && E.S.guards.length) {
       rows.push(keyRow('<path d="M10 10 L19 10" stroke="var(--red)" stroke-width="3"/>' +
                        '<circle cx="9" cy="10" r="7" fill="var(--red)"/>',
                        night ? '<b>Torch</b> A guard. The line is the way he faces.'
                              : '<b>Guard</b> Steps when Assane steps. The line is the way he faces.'));
     }
     rows.push(keyRow('<rect width="20" height="20" fill="var(--map-floor)"/><rect width="20" height="20" fill="var(--red)" opacity=".55"/>',
-                     '<b>Sightline</b> Somebody can see this square now.'));
-    if (hasChar('L')) {
+                     people ? '<b>Sightline</b> A guard can see this square now.'
+                            : '<b>Sightline</b> A camera can see this square now.'));
+    if (!people && hasChar('L')) {
       rows.push(keyRow('<rect x="0" y="7" width="20" height="6" fill="var(--red)" opacity=".9"/>',
-                       '<b>Lasers</b> Sealed. There is no way through — go around.'));
+                       '<b>Lasers</b> Sealed. Go around — unless you drop them from the van.'));
     }
     if (night) {
       rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)" opacity=".45"/>',
                        '<b>No feed</b> You are blind here.'));
     } else {
-      if (C.CAMERAS && C.CAMERAS.length) {
+      if (!people && C.CAMERAS && C.CAMERAS.length) {
         rows.push(keyRow('<rect x="4" y="4" width="12" height="12" rx="1.5" fill="var(--red)" stroke="var(--map-edge)" stroke-width="2"/>',
-                         '<b>Camera</b> Filled means it is watching.'));
+                         '<b>Camera</b> Filled means it is watching. You can loop one from the van — for a while.'));
       }
-      if (E.S.doors.some(function (d) { return d.locked; })) {
+      if (!people && E.S.doors.some(function (d) { return d.locked; })) {
         rows.push(keyRow('<rect x="2" y="8" width="16" height="5" rx="1.5" fill="var(--map-edge)"/>',
                          '<b>Locked door</b> It needs a code or a mark.'));
       }
+    }
+    if (hasChar('X')) {
+      rows.push(keyRow('<g color="var(--gold)" transform="translate(2,2) scale(0.16)">' + G.iconMarkup('hatch') + '</g>',
+                       '<b>Hatch</b> The way out, once he has it.'));
     }
     return el('div', { class: 'mapkey' }, rows);
   }
@@ -352,14 +380,132 @@
       ? 'The lights are out. He is only where a live feed shows him.'
       : 'Assane is in <b>' + (room ? room.name : 'an unmarked square') +
         '</b>, square <b>' + E.coordOf(S.assane.x, S.assane.y) + '</b>. The television is showing him the same two words.';
+    /* the building's state, said once, where the cones it changes are drawn */
+    if (!night && S.alert) {
+      where += ' The building is <b>' + C.ALERT[S.alert - 1].name + '</b>: every guard sees ' +
+               (S.alert === 1 ? 'one square' : S.alert + ' squares') + ' further' +
+               (S.alert >= 2 ? ', and a man who stops him will search him.' : '.');
+    }
     return el('div', { class: night ? 'is-night' : '' }, [
+      S.moduleId === 'grille' && C.GRILLE ? keyBoard() : null,
       el('p', { class: 'plan2__where', html: where }),
+      layerBar(),
       el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
-      night ? feedStrip() : camCycles(),
+      night ? feedStrip() : (layer === 'electronics' ? camCycles() : null),
+      night ? null : leversPanel(),
       mapKey(night),
       night ? el('p', { class: 'note', style: 'margin-top:10px', text:
         'Two feeds at a time. Call the route for where the torches will be, not where they are.' }) : null
     ]);
+  }
+
+  /* one layer at a time. Not a filter — a page turn. */
+  function layerBar() {
+    var bar = el('div', { class: 'layers' });
+    [['patrols', 'PATROLS', 'people'], ['electronics', 'ELECTRONICS', 'wiring']].forEach(function (L) {
+      bar.appendChild(el('button', {
+        class: layer === L[0] ? 'is-on' : '',
+        onclick: function () { layer = L[0]; U.sfx.tap(); U.emit('render'); }
+      }, [el('b', { text: L[1] }), el('span', { text: L[2] })]));
+    });
+    return bar;
+  }
+
+  /* ------------------------------------------------------------ LA GRILLE */
+  /* Benjamin's half of the handshake: which symbol is which key. It sits on the
+     plan, not on a tab of its own, because at this moment he has never seen a
+     tab appear and the first exchange should cost him nothing to find. */
+  function keyBoard() {
+    var wrap = el('div', { class: 'keyboard' }, [
+      el('p', { class: 'h', text: 'SERVICE GATE · KEYS' }),
+      el('p', { class: 'note', style: 'margin:0 0 6px', text: 'Assane has the keys. Ask him what is on the padlock’s tag.' })
+    ]);
+    var rows = el('div', { class: 'keyboard__rows' });
+    C.GRILLE.board.forEach(function (b) {
+      var ic = G.icon(b.sym); ic.style.color = 'var(--ink)';
+      rows.appendChild(el('div', { class: 'keyrow' }, [
+        el('i', {}, [ic]),
+        el('span', { class: 'keyrow__arrow', text: '→' }),
+        el('b', { text: 'KEY ' + b.key })
+      ]));
+    });
+    wrap.appendChild(rows);
+    return wrap;
+  }
+
+  /* ---------------------------------------------------------- LES LEVIERS */
+  /* What Benjamin can DO. Until now his phone was a book: he looked things up
+     and read them out. These are decisions — when to spend a thing that does
+     not come back, knowing the building will notice — and Assane has to ask
+     for them, which is the other half of a conversation. */
+  function usePips(left, total) {
+    var out = [];
+    for (var i = 0; i < total; i++) out.push(el('i', { class: i < left ? 'is-on' : '' }));
+    return out;
+  }
+  function leversPanel() {
+    var S = E.S, list = C.LEVIERS || [];
+    if (!list.length) return null;
+    var live = S.phase === 'play';
+    var wrap = el('div', { class: 'levers' }, [
+      el('p', { class: 'h', style: 'margin:0 0 8px', text: 'FROM THE VAN' })
+    ]);
+    list.forEach(function (L) {
+      var left = S.levers.uses[L.id] || 0;
+      var active = L.id === 'lights' ? S.levers.lights : L.id === 'laser' ? S.levers.laser : 0;
+      var isOpen = leverOpen === L.id;
+      var ic = G.icon(L.icon);
+      var b = el('button', {
+        class: 'lever' + (isOpen ? ' is-open' : '') + (active ? ' is-live' : ''),
+        disabled: (!live || left <= 0) && !active ? '' : null,
+        onclick: function () {
+          if (active) return;
+          if (L.id === 'phone' || L.id === 'camera') { leverOpen = isOpen ? null : L.id; U.sfx.tap(); U.emit('render'); return; }
+          if (E.pullLever(L.id)) U.emit('render');
+        }
+      }, [
+        el('i', { class: 'lever__ic' }, [ic]),
+        el('span', { class: 'lever__txt' }, [
+          el('b', { text: L.name }),
+          el('em', { text: active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT' : L.blurb })
+        ]),
+        el('span', { class: 'lever__side' }, [
+          el('span', { class: 'lever__uses' }, usePips(left, L.uses)),
+          el('span', { class: 'lever__cost', text: '+' + L.cost })
+        ])
+      ]);
+      wrap.appendChild(b);
+      if (L.id === 'phone' && isOpen) {
+        var chips = el('div', { class: 'lever__rooms' }, [
+          el('span', { class: 'lbl', style: 'width:100%', text: 'WHICH ROOM RINGS' })
+        ]);
+        C.ROOMS.forEach(function (r) {
+          chips.appendChild(el('button', { class: 'chip2', text: r.name, onclick: function () {
+            if (E.pullLever('phone', r.name)) { leverOpen = null; U.emit('render'); }
+          } }));
+        });
+        wrap.appendChild(chips);
+      }
+      if (L.id === 'camera' && isOpen) {
+        var cams = el('div', { class: 'lever__rooms' }, [
+          el('span', { class: 'lbl', style: 'width:100%', text: 'WHICH CAMERA' })
+        ]);
+        S.cameras.forEach(function (c) {
+          var looped = S.levers.cams[c.id] > 0;
+          cams.appendChild(el('button', {
+            class: 'chip2' + (looped ? ' is-live' : ''),
+            disabled: looped ? '' : null,
+            text: c.label + (looped ? ' · ' + S.levers.cams[c.id] + ' LEFT' : ''),
+            onclick: function () { if (E.pullLever('camera', c.id)) { leverOpen = null; U.emit('render'); } }
+          }));
+        });
+        wrap.appendChild(cams);
+      }
+    });
+    if (S.levers.last) {
+      wrap.appendChild(el('p', { class: 'lever__last', text: 'LAST · ' + S.levers.last.note }));
+    }
+    return wrap;
   }
 
   /* ------------------------------------------------------------ LA PORTE */
@@ -722,6 +868,6 @@
 
   L.p2 = { render: render, reset: function () {
     tab = 'plan'; openSerial = -1; openBadge = null; pickedFace = null;
-    tapped = []; queryResult = null;
+    tapped = []; queryResult = null; leverOpen = null; layer = 'patrols';
   } };
 })(window.DC);

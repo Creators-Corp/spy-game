@@ -260,3 +260,26 @@
 .tvview--room.is-night,
 .tvview--module.is-night{ background-image:none; }
 
+
+/* The suspicion bar now carries the two lines the building changes its
+   behaviour at, and the label names the side it is on. Red is threat: the
+   label goes red only once the building has become one. */
+.suspicion__track{position:relative;}
+.suspicion__tick{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.6;}
+.suspicion b.is-alert{color:var(--red);}
+
+/* THE MONITORS ARE DEAD. The frame stays; the room is gone. A flat field, one
+   line — and no grid, because the grid says "floor plan" and there is none. */
+.room__dead{
+  position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;background:var(--night);z-index:3;text-align:center;padding:30px;
+}
+.room__dead.is-on{display:flex;}
+.room__dead__big{margin:0;color:var(--on-color);font-size:26px;letter-spacing:.4em;
+  border:var(--stroke) solid var(--paper);padding:10px 22px;animation:blink 2.4s infinite;}
+.room__dead__line{margin:0;color:var(--zinc-lt);font-size:13px;max-width:380px;line-height:1.5;}
+.tvview--room.is-dead{background:var(--night);}
+
+/* the pressure ring on Assane: fills gold, then throbs red */
+.pring.is-hot{animation:throb 1s infinite;transform-origin:center;transform-box:fill-box;}
+@keyframes throb{0%,100%{opacity:1}50%{opacity:.35}}

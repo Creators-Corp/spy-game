@@ -54,9 +54,23 @@
 
      Three tones carry the fog: unseen is the bare field, walked-and-remembered
      is a flat mid, and what he can see this instant is clearly brighter. */
+  function roomToast() {
+    var S = E.S, t = $('#room-toast');
+    if (S.toast && Date.now() - S.toast.at < 1100) {
+      t.textContent = S.toast.text;
+      t.className = 'room__toast is-on' + (S.toast.kind === 'bad' ? ' is-bad' : S.toast.kind === 'good' ? ' is-good' : '');
+    } else {
+      t.className = 'room__toast';
+    }
+  }
+
   function renderRoom() {
     var S = E.S, vis = E.visibleSet(), M = metrics();
     T = M.t;
+    /* the monitors are dead. The frame stays — clock, objective, suspicion —
+       and the room itself is gone until he is out. */
+    $('#room-dead').classList.toggle('is-on', !!S.dark);
+    if (S.dark) { $('#room-svg').innerHTML = ''; roomToast(); return; }
     var night = S.blackout;
     var EDGE = night ? 'var(--zinc)' : 'var(--map-edge)';
     /* Rooms carry their own floor tone. In the blackout they do not — the night
@@ -73,7 +87,8 @@
     function open(x, y) {
       if (!S.seen[x + ',' + y]) return false;
       var ch = E.charAt(x, y);
-      if (ch === '#' || ch === 'L') return false;
+      if (ch === '#') return false;
+      if (ch === 'L' && !(S.levers.laser > 0)) return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -124,10 +139,14 @@
           return !!S.seen[(lx + v[0]) + ',' + (ly + v[1])];
         });
         if (!near) continue;
-        lasers += '<rect x="' + (lx * T) + '" y="' + (ly * T) + '" width="' + T + '" height="' + T +
-                  '" fill="var(--red)" opacity="' + (night ? 0.18 : 0.26) + '"/>' +
+        /* down: a dashed ghost of where the beam was, so he knows what he is
+           walking through and what comes back */
+        var off = S.levers.laser > 0;
+        lasers += (off ? '' : '<rect x="' + (lx * T) + '" y="' + (ly * T) + '" width="' + T + '" height="' + T +
+                  '" fill="var(--red)" opacity="' + (night ? 0.18 : 0.26) + '"/>') +
                   '<line x1="' + (lx * T) + '" y1="' + (ly * T + T / 2) + '" x2="' + (lx * T + T) +
-                  '" y2="' + (ly * T + T / 2) + '" stroke="var(--red)" stroke-width="3"/>';
+                  '" y2="' + (ly * T + T / 2) + '" stroke="var(--red)" stroke-width="3"' +
+                  (off ? ' stroke-dasharray="4 5" opacity=".4"' : '') + '/>';
       }
     }
 
@@ -174,6 +193,15 @@
       }
     })();
 
+    /* the hatch, once he has stood where he can see it */
+    (function () {
+      var h = E.hatchTile();
+      if (!h || !S.seen[h.x + ',' + h.y]) return;
+      var lit = !!vis[h.x + ',' + h.y];
+      svg += '<g opacity="' + (lit ? 1 : 0.55) + '" color="var(--gold)" transform="translate(' + (h.x * T + 5) + ',' + (h.y * T + 5) +
+             ') scale(' + ((T - 10) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
+    })();
+
     /* Cameras and guards appear ONLY where Assane can see them, and never in
        the dark. Their cones never appear here at all — those are P2's. */
     S.cameras.forEach(function (c) {
@@ -191,6 +219,21 @@
     });
 
     svg += figure(S.assane.x, S.assane.y, 'var(--gold)', null);
+
+    /* THE PRESSURE, drawn on him. A ring fills over the thirty seconds he is
+       allowed to stand still; when it closes it goes red and throbs, and the
+       number on the bar starts climbing. It is on the television because the
+       television is where the room looks when nothing is happening. */
+    if (S.running && S.phase === 'play') {
+      var idle = (Date.now() - S.lastActionAt) / 1000, P = C.PRESSURE;
+      if (idle >= 3) {
+        var frac = Math.min(idle / P.grace, 1), r = 19, circ = 2 * Math.PI * r, hot = idle >= P.grace;
+        svg += '<circle class="pring' + (hot ? ' is-hot' : '') + '" cx="' + (S.assane.x * T + T / 2) + '" cy="' + (S.assane.y * T + T / 2) +
+               '" r="' + r + '" fill="none" stroke="' + (hot ? 'var(--red)' : 'var(--gold)') + '" stroke-width="3"' +
+               ' stroke-dasharray="' + (frac * circ).toFixed(1) + ' ' + circ.toFixed(1) + '"' +
+               ' transform="rotate(-90 ' + (S.assane.x * T + T / 2) + ' ' + (S.assane.y * T + T / 2) + ')"/>';
+      }
+    }
     if (S.grace > 0) {
       svg += '<circle cx="' + (S.assane.x * T + T / 2) + '" cy="' + (S.assane.y * T + T / 2) +
              '" r="17" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 4"/>';
@@ -228,13 +271,7 @@
     $('#room-svg').innerHTML =
       '<g transform="translate(' + M.ox + ',' + M.oy + ')">' + svg + label + '</g>';
 
-    var t = $('#room-toast');
-    if (S.toast && Date.now() - S.toast.at < 1100) {
-      t.textContent = S.toast.text;
-      t.className = 'room__toast is-on' + (S.toast.kind === 'bad' ? ' is-bad' : S.toast.kind === 'good' ? ' is-good' : '');
-    } else {
-      t.className = 'room__toast';
-    }
+    roomToast();
   }
 
   /* ------------------------------------------------------------ other views */
@@ -296,6 +333,10 @@
       line = !S.solved.faux ? 'Two canvases. One crate. Only one leaves.'
            : S.loot.tableau ? 'The real one goes with him.'
            : 'He takes the forgery. He does not know it yet.';
+    } else if (S.moduleId === 'grille') {
+      pips.appendChild(U.el('i', { class: S.solved.grille ? 'is-set' : '' }));
+      line = S.solved.grille ? 'The gate swings open.'
+           : 'A service gate, padlocked. Three keys on a ring.';
     } else if (S.moduleId === 'clavier') {
       for (var d = 0; d < 4; d++) {
         pips.appendChild(U.el('i', { class: d < S.clavierEntry.length ? 'is-set' : '' }));
@@ -343,6 +384,7 @@
      ['SUSPICION', S.suspicion + ' / 100'],
      ['SPOTTED', S.spotted + '×'],
      ['DISGUISED', S.disguised ? 'YES' : 'NO'],
+     ['ALERT REACHED', S.alert ? C.ALERT[S.alert - 1].name : 'NEVER'],
      ['TAKE', butin + ' / 2' + (S.solved.faux && !S.loot.tableau ? '  (the forgery)' : '')]
     ].forEach(function (row) {
       dl.appendChild(U.el('dt', { text: row[0] }));
@@ -366,6 +408,20 @@
     $('#tv-objective').textContent = S.objective;
     $('#suspicion-fill').style.width = S.suspicion + '%';
     $('#suspicion-num').textContent = S.suspicion;
+    /* the bar carries the two lines the building changes its behaviour at, and
+       the label says which side of them it is on */
+    var track = $('.suspicion__track');
+    if (!track.querySelector('.suspicion__tick')) {
+      C.ALERT.forEach(function (a) {
+        track.appendChild(U.el('u', { class: 'suspicion__tick', style: 'left:' + a.at + '%' }));
+      });
+    }
+    var st = $('#suspicion-state');
+    var still = S.running && S.phase === 'play' && (Date.now() - S.lastActionAt) / 1000 >= C.PRESSURE.grace;
+    st.textContent = still ? 'STANDING STILL · +1 / ' + C.PRESSURE.every + 'S'
+                   : S.alert ? C.ALERT[S.alert - 1].name : 'SUSPICION';
+    st.classList.toggle('is-alert', S.alert > 0 || still);
+    $('#jail-line').textContent = S.jailLine || 'ASSANE IS CAUGHT.';
 
     /* Hold on the cut for a beat before revealing the dark room. This is the
        twist landing, and in a room full of people it needs a moment to breathe. */

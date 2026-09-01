@@ -55,9 +55,57 @@
     { g: 'S', t: 'FANTÔME',   test: function (s) { return s.spotted === 0 && s.suspicion <= 12; } },
     { g: 'A', t: 'OMBRE',     test: function (s) { return s.spotted === 0 && s.suspicion <= 40; } },
     { g: 'B', t: 'DISCRET',   test: function (s) { return s.spotted <= 1 && s.suspicion <= 65; } },
-    { g: 'C', t: 'REMARQUÉ',  test: function (s) { return s.spotted <= 2; } },
+    { g: 'C', t: 'REMARQUÉ',  test: function (s) { return s.spotted <= 2 && s.suspicion < 85; } },
     { g: 'D', t: 'BRUYANT',   test: function () { return true; } }
   ];
+
+  /* THE BUILDING'S ALERT LEVEL.
+     Suspicion used to be a number that only the rank card read. Now it is the
+     building's state of mind, and the building acts on it: at each threshold
+     every guard looks one square further down his line. It never comes back
+     down. A sloppy first half makes the second half harder, and both players
+     feel it in the same place — on Benjamin's plan the red gets longer, on
+     Assane's phone the footsteps get closer.
+     Past the second line La Tchatche allows one slip instead of two: a man
+     who has been told to look for somebody is not in a chatting mood. */
+  var ALERT = [
+    { at: 40, name: 'ATTENTIVE', line: 'A radio crackles somewhere. <em>They have been told to keep their eyes open.</em>' },
+    { at: 70, name: 'ALERT',     line: 'Doors, all over the building. <em>They are looking for somebody.</em>' }
+  ];
+
+  /* WHAT BENJAMIN CAN DO FROM THE VAN.
+     Three levers, each a decision rather than a lookup. Every one of them is
+     noticed — a phone ringing in an empty room at two in the morning, a
+     corridor going dark, a circuit dropping off the panel — so each costs
+     suspicion, and the uses do not come back. Benjamin has to choose WHEN, and
+     Assane has to ask. That is a conversation with stakes on both sides, which
+     the dossier alone never was. Durations are counted in Assane's moves,
+     because nothing in this build happens between his inputs. */
+  var LEVER = {
+    phone:  { id: 'phone',  icon: 'bell', name: 'RING A PHONE',   cost: 5,  turns: 2, uses: 2, reach: 8,
+              blurb: 'The nearest guard stops and looks at it for two of his moves.' },
+    lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
+              blurb: 'For three moves, every guard sees only the squares beside him.' },
+    laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
+              blurb: 'The beams drop for five moves. Back on with him in one, and somebody comes.' },
+    /* Never permanent. A looped camera shows an empty corridor for a few moves
+       and then it is a camera again — so a camera that cannot be walked
+       around is a camera the two of them have to time together. */
+    camera: { id: 'camera', icon: 'eye',  name: 'LOOP A CAMERA',  cost: 4,  turns: 4, uses: 3,
+              blurb: 'Pick one. It sees nothing for four moves, then it is back.' }
+  };
+
+  /* THE PRESSURE.
+     Standing still is free for half a minute. After that the building starts
+     to wonder about the man who is not going anywhere: a point of suspicion
+     every two seconds, until he moves. Moving while nobody can see him earns
+     those points back, one per step — and only those points. Idle suspicion
+     is a debt; real mistakes stay paid. It runs on the clock, not on moves,
+     which makes it the one thing in the build that happens between inputs —
+     deliberately, because its whole purpose is to end the pause. Counted only
+     during the infiltration: a module open is two people talking, and that is
+     not inactivity. */
+  var PRESSURE = { grace: 30, every: 2 };
 
   var AMBIENT = [
     'Dust, floor polish, old paper.',
@@ -110,6 +158,7 @@
       { id: 'c1', x: 7, y: 4, depth: 3, cycle: ['S', null, 'S', null], label: 'CAM 1' },
       { id: 'c2', x: 3, y: 0, depth: 2, cycle: ['S', 'S', 'S', null], label: 'CAM 2' }
     ],
+    LEVIERS: [LEVER.phone, LEVER.lights, LEVER.camera],
     DOORS: [
       { x: 3, y: 4, locked: true,  mark: 'dbar',     to: 'LA RÉSERVE' },
       { x: 9, y: 4, locked: false, mark: 'chevrons', to: 'BUREAU DE SÉCURITÉ' }
@@ -336,6 +385,7 @@
        in front of it was a chokepoint the east-lane guard could seal outright,
        and the lean route came back unreachable from all 80 phases. A ring with
        two ways round has to have two ways in. */
+    LEVIERS: [LEVER.phone],
     DOORS: [
       { x: 11, y: 5, locked: true, mark: 'trident', to: 'LA CHAMBRE (EST)' },
       { x: 3,  y: 5, locked: true, mark: 'trident', to: 'LA CHAMBRE (OUEST)' }
@@ -518,7 +568,7 @@
       '#.....................#',
       '#..#######...#######..#',
       '#..#######LLL#######..#',
-      '#....####.....####....#',
+      'X....####.....####....#',
       '#..#######LLL#######..#',
       '#..#######...#######..#',
       '#.....................#',
@@ -526,14 +576,14 @@
       '###############+#######',
       '###.................###',
       '###.................###',
-      '##########...##########',
+      '###########+###########',
       '##########.E.##########',
       '#######################'
     ],
     ROOMS: [
       { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 3, tint: 'cool' },
       { name: 'GALERIE NORD',    x: 1,  y: 4,  w: 21, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 4,  h: 5, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 0,  y: 6,  w: 5,  h: 5, tint: 'neutral' },
       { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 5,  h: 5, tint: 'olive' },
       { name: 'AILE EST',        x: 18, y: 6,  w: 4,  h: 5, tint: 'neutral' },
       { name: 'GALERIE SUD',     x: 1,  y: 11, w: 21, h: 2, tint: 'neutral' },
@@ -560,11 +610,32 @@
       { id: 'g3', badge: '3308', at: 24, dir: 1, depth: 1, loop: true,
         waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] }
     ],
-    CAMERAS: [],
+    /* Two cameras, and one of them cannot be walked around. CAM 1 hangs over
+       the desk and never blinks: the prize is under it, so the prize does not
+       exist without Benjamin looping it. CAM 2 watches the keypad every other
+       beat — that one can be timed, if somebody in the van is counting. */
+    CAMERAS: [
+      { id: 'c1', x: 11, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' },
+      /* on, off, on, off. Two-on/two-off left the square under it a trap on the
+         beat it woke (four dead states); every other beat leaves none, and is
+         the easiest rhythm there is to count out loud. */
+      { id: 'c2', x: 15, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
+    ],
+    LEVIERS: [LEVER.phone, LEVER.lights, LEVER.laser, LEVER.camera],
+    /* Taking the dossier kills the monitors. The television goes dark and the
+       two phones are all there is; the stairs are a floor away, and the hatch
+       in the west wall ('X' on the plan) is the only way out. */
+    PRIZE: { dark: true },
     DOORS: [
+      /* the service gate at the foot of the stairs. Its mark is a plain lock on
+         Benjamin's plan — what is stamped on the padlock is Assane's to see */
+      { x: 11, y: 16, locked: true, mark: 'lock', to: 'LE VESTIAIRE' },
       { x: 15, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
     ],
     MODULES: [
+      /* on the square he starts on, so it opens the moment both players are
+         ready — the first thing anyone does in this game is talk */
+      { id: 'grille',      x: 11, y: 17, name: 'LA GRILLE',      icon: 'lock' },
       { id: 'deguisement', x: 12, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
       { id: 'porte',       x: 15, y: 14, name: 'LA PORTE',       icon: 'lock' },
       /* The desk. For now it hands over the dossier and nothing more —
@@ -572,6 +643,23 @@
          works beats a half-built module that does not. */
       { id: 'prize',       x: 11, y: 2,  name: 'LE BUREAU',      icon: 'desk' }
     ],
+
+    /* LA GRILLE — the handshake.
+       Every "I don't understand" this prototype has produced came from the same
+       gap: the player did not yet know that the OTHER phone holds the missing
+       half. So the first thing that happens is the smallest possible proof of
+       it. Assane has a padlock with a symbol stamped on its tag and three keys
+       numbered 1, 2, 3. Benjamin has a card that says which symbol is which
+       key. Neither can open the gate alone; one sentence each and it is open.
+       No guard, no code, no ring, no counting — a wrong key rattles the gate
+       and costs a little suspicion, nothing worse. After this, every later
+       module has the same shape and needs no manual to say so. */
+    GRILLE: {
+      lock: 'trident',
+      board: [{ sym: 'crescent', key: 1 }, { sym: 'trident', key: 2 }, { sym: 'ladder', key: 3 }],
+      door: { x: 11, y: 16 },
+      rattle: 3
+    },
 
     /* LA PORTE.
        The keypad is numeric and Assane can see it. The code is in Benjamin's
@@ -589,6 +677,7 @@
        key is on each phone and the puzzle does not exist until they talk. */
     PORTE: {
       code: '2549',
+      door: { x: 15, y: 13 },
       sign: 'CHAMBRE 302',
       zero: 'hook',
       ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
@@ -643,13 +732,18 @@
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked.' },
       { k: 'LASER LINES',  v: 'Central corridors are protected between rounds. Do not cross. Go around.' },
-      { k: 'PATROLS',      v: 'Two officers, opposite directions, outer halls only.' }
+      { k: 'PATROLS',      v: 'Two officers, opposite directions, outer halls only.' },
+      { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
+      { k: 'CAMERAS',      v: 'CAM 1 covers the study desk continuously. CAM 2 sweeps the cloakroom keypad every other beat.' },
+      { k: 'EVACUATION',   v: 'Service hatch, west wall, row 9. Not on the public plans.' }
     ],
 
     BEATS: [
       'One of you is inside. One of you has the plans. Neither of you can finish alone.',
       'The guards move when Assane moves. Nothing happens between your inputs.',
-      'The way through the middle is sealed. Everything here is the long way round.'
+      'The way through the middle is sealed. Everything here is the long way round.',
+      'Benjamin has four levers in the van. Every one of them is noticed.',
+      'Standing still is free for thirty seconds. After that the building starts to wonder.'
     ]
   };
 
@@ -662,7 +756,7 @@
   var JOB_FIELDS = ['venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER', 'PORTE',
-    'PROCEDURES', 'BEATS'];
+    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE'];
 
   function loadJob(i) {
     var job = JOBS[i] || JOBS[0];
@@ -675,7 +769,7 @@
   L.content = {
     JOBS: JOBS, loadJob: loadJob, jobIndex: 0,
     DOOR_MARKS: DOOR_MARKS, RING_COLOUR: RING_COLOUR, GARMENTS: GARMENTS,
-    LINES: LINES, TOPICS: TOPICS, RANKS: RANKS,
+    LINES: LINES, TOPICS: TOPICS, RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE,
     AMBIENT: AMBIENT, STATIC_LINES: STATIC_LINES
   };
   loadJob(0);
