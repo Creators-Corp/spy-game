@@ -554,7 +554,7 @@
     if (S.porteEntry.length < C.PORTE.code.length) return false;
     if (S.porteEntry === C.PORTE.code) {
       U.sfx.unlock();
-      S.doors.forEach(function (d) { if (d.y === 12 || d.mark === 'dbar') d.locked = false; });
+      S.doors.forEach(function (d) { d.locked = false; });   /* this contract has one door */
       setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
       return true;
     }

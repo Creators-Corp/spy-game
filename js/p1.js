@@ -309,7 +309,7 @@
   function viewPrize() {
     var S = E.S;
     return screen([
-      head('LE DOSSIER'),
+      head('LE BUREAU'),
       body([
         el('div', { class: 'waiting' }, [
           (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),

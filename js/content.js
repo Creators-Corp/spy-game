@@ -516,13 +516,13 @@
       '#.....................#',
       '#.....................#',
       '#..#######...#######..#',
+      '#..#######LLL#######..#',
       '#..#######...#######..#',
       '#..#######LLL#######..#',
       '#..#######...#######..#',
-      '#..#######...#######..#',
       '#.....................#',
       '#.....................#',
-      '###########+###########',
+      '###############+#######',
       '###.................###',
       '###.................###',
       '###........E........###',
@@ -561,12 +561,15 @@
     ],
     CAMERAS: [],
     DOORS: [
-      { x: 11, y: 12, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
+      { x: 15, y: 12, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
     ],
     MODULES: [
-      { id: 'deguisement', x: 6,  y: 14, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
-      { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
-      { id: 'prize',       x: 11, y: 1,  name: 'LE DOSSIER',     icon: 'manu' }
+      { id: 'deguisement', x: 5,  y: 15, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'porte',       x: 15, y: 13, name: 'LA PORTE',       icon: 'lock' },
+      /* The desk. For now it hands over the dossier and nothing more —
+         the full Bureau puzzle is the stretch goal, and a placeholder that
+         works beats a half-built module that does not. */
+      { id: 'prize',       x: 11, y: 1,  name: 'LE BUREAU',      icon: 'desk' }
     ],
 
     /* LA PORTE.
