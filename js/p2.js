@@ -204,6 +204,7 @@
     (function () {
       var h = E.hatchTile();
       if (!h || !feed(h.x, h.y)) return;
+      if (C.PRIZE && C.PRIZE.hatchHidden) return;   /* not on the public plans */
       s += '<g color="var(--gold)" transform="translate(' + (h.x * TT + 2.5) + ',' + (h.y * TT + 2.5) +
            ') scale(' + ((TT - 5) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
     })();
@@ -362,7 +363,7 @@
                          '<b>Locked door</b> It needs a code or a mark.'));
       }
     }
-    if (hasChar('X')) {
+    if (hasChar('X') && !(C.PRIZE && C.PRIZE.hatchHidden)) {
       rows.push(keyRow('<g color="var(--gold)" transform="translate(2,2) scale(0.16)">' + G.iconMarkup('hatch') + '</g>',
                        '<b>Hatch</b> The way out, once he has it.'));
     }
@@ -648,6 +649,7 @@
       }
     });
 
+    if (C.ECOUTE) {
     /* THE LINE CODES.
        The book has no browsable list of patterns on purpose. If the six
        rhythms were printed here, Benjamin could eyeball a match and the board
@@ -697,6 +699,9 @@
       }));
     }
 
+    }
+
+    if (C.FAUX) {
     /* Benjamin's authentication notes. Note 1 is true of both canvases and
        settles nothing — a pair who stops reading after it can still pick the
        forgery. Nothing on screen says which note tells. */
@@ -705,6 +710,8 @@
     var notes = el('ol', { class: 'notes' });
     C.FAUX.notes.forEach(function (n) { notes.appendChild(el('li', { text: n.s })); });
     wrap.appendChild(notes);
+
+    }
 
     /* The emergency procedures live down here, under the safes, nowhere near
        the roster they need. Finding this at the moment the lights go out is

@@ -623,7 +623,7 @@
           el('p', { class: 'nav__senseline', html: S.sense || '…' })
         ]),
         pressureStrip(),
-        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: (S.dark ? 'DOSSIER' : 'MANUSCRIPT') + ' · ON YOU', style: 'margin-top:12px' }) : null,
+        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: ((C.PRIZE && C.PRIZE.name) || 'MANUSCRIPT') + ' · ON YOU', style: 'margin-top:12px' }) : null,
         /* the lights he can see for himself; the laser count is Benjamin's to say */
         S.levers.lights > 0 ? el('div', { class: 'tag tag--gold', text: 'LIGHTS DOWN · ' + S.levers.lights + ' MORE MOVE' + (S.levers.lights > 1 ? 'S' : ''), style: 'margin-top:12px' }) : null,
         el('p', { class: 'note', style: 'margin-top:12px' , text: S.dark
@@ -803,13 +803,20 @@
 
     /* The desk. The photo, the note and the badge are set live over the art —
        never generated inside it. No generated text, ever. */
+    var owner = C.PERSONNEL.filter(function (p) { return p.badge === C.BUREAU.badge; })[0];
+    var kidsHTML = (owner ? owner.kids.slice().sort(function (a, b) { return a.y - b.y; }) : [])
+      .map(function (k, i) { return '<div class="kid' + (i % 2 ? ' b' : '') + '" style="height:' + Math.max(26, 52 - i * 18) + 'px"></div>'; })
+      .join('');
     var desk = el('div', { class: 'desk' }, [
       U.artSlot('bureau-desk'),
       el('div', { class: 'desk__props' }, [
-        el('div', { class: 'prop prop--badge', html: '<b>' + C.BUREAU.badge + '</b><span>post · salle 9</span>' }),
+        /* the badge and the photo read from the roster, so the desk can belong
+           to anyone. The children stand tallest-first, eldest on the left —
+           which is not the order the file lists them in. */
+        el('div', { class: 'prop prop--badge', html: '<b>' + C.BUREAU.badge + '</b><span>post · ' + (owner ? owner.post.toLowerCase() : '') + '</span>' }),
         el('div', { class: 'prop prop--photo', html:
-          '<div class="kids"><div class="kid" style="height:52px"></div><div class="kid b" style="height:34px"></div></div>' +
-          '<span class="cap">two daughters</span>' }),
+          '<div class="kids">' + kidsHTML + '</div>' +
+          '<span class="cap">' + (C.BUREAU.photo || 'the children') + '</span>' }),
         /* The note is the question, and the question is per-job data. Job 1
            asks for the eldest child's year, job 2 for the officer's plate —
            same desk, same screen, a different thing to work out. */

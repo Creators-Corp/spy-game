@@ -652,7 +652,7 @@
       U.sfx.unlock();
       S.hasManuscript = true;
       S.loot.manuscrit = true;
-      setTimeout(function () { closeModule(true); startBlackout(); U.emit('render'); }, 900);
+      setTimeout(function () { closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); U.emit('render'); }, 900);
     } else {
       U.sfx.bad();
       S.coffreFails++;
@@ -809,13 +809,15 @@
 
   /* The object of the whole contract. One confirmation, no puzzle: the lock
      was the door, and the walk back out is the rest of the job. */
+  /* the monitors die with the prize. The room on the television goes black
+     and the run out is played on the two phones alone. */
+  function darken() { S.dark = true; toast('MONITORS DEAD', 'bad'); }
+
   function takePrize() {
     U.sfx.unlock();
     S.hasManuscript = true;
     S.loot.dossier = true;
-    /* the monitors die with it. The room on the television goes black and the
-       run out is played on the two phones alone. */
-    if (C.PRIZE && C.PRIZE.dark) { S.dark = true; toast('MONITORS DEAD', 'bad'); }
+    if (C.PRIZE && C.PRIZE.dark) darken();
     setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
   }
 
@@ -905,14 +907,15 @@
      version told a pair in contract three to find a security desk it does not
      contain. */
   function setObjective() {
-    var hasCloak = C.MODULES.some(function (m) { return m.id === 'deguisement'; });
+    var hasCloak = C.MODULES.some(function (m) { return m.id === 'deguisement'; }), O = C.OBJ || {};
     if (S.blackout) S.objective = 'Lights out. His phone is dead. Talk him to the vestibule.';
-    else if (S.hasManuscript) S.objective = hatchTile() ? 'He has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
+    else if (S.hasManuscript) S.objective = O.out ? O.out
+                                         : hatchTile() ? 'He has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
                                          : C.PORTE ? 'He has it. Back round the ring and down the stairs.'
                                                      : 'La Sortie. He has the manuscript. Get him out through the vestibule.';
     else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = 'The cloakroom first — or go in as you are, and be seen from further away.';
-    else if (C.PORTE && !S.solved.porte) S.objective = 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
-    else if (C.PORTE) S.objective = 'Through the door and round the ring. The desk is in the room at the top.';
+    else if (C.PORTE && !S.solved.porte) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
+    else if (C.PORTE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';
     else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
     else S.objective = 'Find the security desk. Open La Réserve.';
   }

@@ -107,6 +107,14 @@
      not inactivity. */
   var PRESSURE = { grace: 30, every: 2 };
 
+  /* the same lever with a different budget — contract four hands out fewer */
+  function lever(base, over) {
+    var o = {}, k;
+    for (k in base) o[k] = base[k];
+    for (k in over) o[k] = over[k];
+    return o;
+  }
+
   var AMBIENT = [
     'Dust, floor polish, old paper.',
     'A clock ticking, somewhere behind you.',
@@ -625,7 +633,7 @@
     /* Taking the dossier kills the monitors. The television goes dark and the
        two phones are all there is; the stairs are a floor away, and the hatch
        in the west wall ('X' on the plan) is the only way out. */
-    PRIZE: { dark: true },
+    PRIZE: { dark: true, name: 'DOSSIER' },
     DOORS: [
       /* the service gate at the foot of the stairs. Its mark is a plain lock on
          Benjamin's plan — what is stamped on the padlock is Assane's to see */
@@ -747,7 +755,161 @@
     ]
   };
 
-  var JOBS = [JOB3, JOB1, JOB2];
+  /* =======================================================================
+     CONTRAT No.4 — LA VEILLE DE VENTE
+     An auction house, the night before a sale. The shape of contract three
+     with the volume turned up band by band: the kitchens are what they
+     already know, the ring is where the levers stop being optional, and the
+     top floor is everything at once — a desk that releases a vault, a safe
+     under a camera that never blinks, and a way out that is not on the plan.
+     Built from modules that already exist: only the numbers are new.
+     ======================================================================= */
+  var JOB4 = {
+    id: 'veille',
+    venue: 'HÔTEL DES VENTES · LA VEILLE',
+    contract: 'CONTRAT No.4 — LA VEILLE DE VENTE',
+    target: 'Lot 12 · manuscrit enluminé',
+    venueArt: 'venue-establishing',
+    blurb: 'Three floors, each behind a door, each worse than the last. The vault is released from the desk beside it, and the way out is not drawn anywhere.',
+
+    MAP: [
+      '#######################',
+      '#####.....#....########',
+      '#####.....#....########',
+      '#####.....#....########',
+      '#####+#####/###########',
+      '#.....................X',
+      '#.....................#',
+      '#..######LLLLL######..#',
+      '#..######.....######..#',
+      '#..######LLLLL######..#',
+      '#.....................#',
+      '#.....................#',
+      '######+################',
+      '#.............#.......#',
+      '#.............#.......#',
+      '#............./.......#',
+      '#######.###############',
+      '#######E###############',
+      '#######################'
+    ],
+    ROOMS: [
+      { name: 'LA RÉSERVE',      x: 5,  y: 1,  w: 5,  h: 3, tint: 'cool' },
+      { name: 'BUREAU',          x: 11, y: 1,  w: 4,  h: 3, tint: 'olive' },
+      { name: 'GALERIE HAUTE',   x: 1,  y: 5,  w: 22, h: 2, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 1,  y: 7,  w: 2,  h: 3, tint: 'neutral' },
+      { name: 'COULOIR CENTRAL', x: 9,  y: 7,  w: 5,  h: 3, tint: 'olive' },
+      { name: 'AILE EST',        x: 20, y: 7,  w: 2,  h: 3, tint: 'neutral' },
+      { name: 'GALERIE BASSE',   x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
+      { name: 'LES CUISINES',    x: 1,  y: 13, w: 13, h: 3, tint: 'warm' },
+      { name: 'LE VESTIAIRE',    x: 15, y: 13, w: 7,  h: 3, tint: 'warm' },
+      { name: 'ESCALIER',        x: 7,  y: 16, w: 1,  h: 2, tint: 'warm' }
+    ],
+
+    /* Band A: one guard on a beat, the lesson they already had. Band B: the
+       ring guard sees TWO squares ahead now, and the north gallery has a
+       second man on a 32-beat walk against his 48 — they are never in step,
+       so there is no "always opposite" to lean on. */
+    GUARDS: [
+      /* the beat stops two short of each wall: a guard who walks into the
+         corner makes the corner a trap, and the scan found four dead states
+         at each end when he did */
+      { id: 'g1', badge: '4412', from: { x: 3, y: 14 }, to: { x: 11, y: 14 }, at: 0, dir: 1, depth: 1 },
+      { id: 'g2', badge: '2071', at: 0, dir: 1, depth: 2, loop: true,
+        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] },
+      { id: 'g3', badge: '5195', from: { x: 5, y: 5 }, to: { x: 17, y: 5 }, at: 6, dir: -1, depth: 1 }
+    ],
+    /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
+       three — timeable, if Benjamin is counting, loopable if he is not. */
+    CAMERAS: [
+      { id: 'c1', x: 7,  y: 0, depth: 2, cycle: ['S'],             label: 'CAM 1' },
+      { id: 'c2', x: 12, y: 0, depth: 2, cycle: ['S', null, null], label: 'CAM 2' }
+    ],
+    /* fewer pulls than contract three. The van is further away tonight. */
+    LEVIERS: [lever(LEVER.phone, { uses: 1 }), LEVER.lights, LEVER.laser, lever(LEVER.camera, { uses: 2 })],
+    PRIZE: { dark: true, name: 'MANUSCRIPT', hatchHidden: true },
+    OBJ: {
+      door:  'A locked door at the back of the kitchens. P1 has the keypad; P2 has the code.',
+      after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
+      out:   'He has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.'
+    },
+    DOORS: [
+      { x: 5,  y: 4,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
+      { x: 11, y: 4,  locked: false, mark: 'chevrons', to: 'BUREAU' },
+      { x: 6,  y: 12, locked: true,  mark: 'dbar',     to: 'GALERIE BASSE' },
+      { x: 14, y: 15, locked: false, mark: 'star4',    to: 'LE VESTIAIRE' }
+    ],
+    MODULES: [
+      { id: 'porte',       x: 6,  y: 13, name: 'LA PORTE',       icon: 'lock' },
+      { id: 'deguisement', x: 18, y: 14, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'bureau',      x: 12, y: 2,  name: 'LE BUREAU',      icon: 'desk' },
+      { id: 'coffre',      x: 7,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
+    ],
+
+    /* the same cipher as contract three, a different zero, and one fewer try */
+    PORTE: {
+      code: '7180',
+      sign: 'SALLE 10',
+      zero: 'star4',
+      door: { x: 6, y: 12 },
+      ring: ['drop', 'star4', 'spiral', 'chevrons', 'hook',
+             'bisect', 'crescent', 'trident', 'ladder', 'backz'],
+      fails: 2
+    },
+
+    /* contract one's dial, a new serial. Three rows share it; the ring colour
+       is the only thing that tells them apart. */
+    COFFRE: {
+      serial: 'AV-2231', ring: 'denim',
+      dial: ['hook', 'trident', 'spiral', 'drop', 'ladder', 'bisect', 'crescent', 'backz'],
+      code: ['trident', 'drop', 'hook', 'ladder'],
+      manual: [
+        { serial: 'AV-2213', ring: 'olive', seq: ['drop', 'hook', 'ladder', 'trident'] },
+        { serial: 'AV-2231', ring: 'amber', seq: ['hook', 'ladder', 'trident', 'drop'] },
+        { serial: 'AV-2231', ring: 'denim', seq: ['trident', 'drop', 'hook', 'ladder'] },
+        { serial: 'AV-3221', ring: 'denim', seq: ['ladder', 'trident', 'drop', 'hook'] },
+        { serial: 'AV-2231', ring: 'camel', seq: ['drop', 'trident', 'ladder', 'hook'] },
+        { serial: 'AV-2132', ring: 'denim', seq: ['hook', 'drop', 'trident', 'ladder'] }
+      ]
+    },
+
+    /* the desk belongs to KOFFI: two children, and the eldest is listed
+       second. Position is not the answer; reading is. */
+    BUREAU: { badge: '1184', mode: 'eldest', answer: '2005', doorMark: 'trident', photo: 'a boy and a girl' },
+
+    PERSONNEL: [
+      { badge: '4412', name: 'MOREAU, Serge',     post: 'LES CUISINES',  plate: '8021', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
+      { badge: '2071', name: 'DELACROIX, Yann',   post: 'GALERIE HAUTE', plate: '5530', kids: [] },
+      { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
+      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9083', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
+      { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
+      { badge: '1184', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
+    ],
+    /* contract one's rack: two uniforms buildable, VIDAL (BUREAU) and KOFFI
+       (LA RÉSERVE). The post decides it. */
+    RACK: JOB1.RACK,
+    UNIFORMS: JOB1.UNIFORMS,
+    DEGUISEMENT: { answerBadge: '1184', targetPost: 'LA RÉSERVE', conePenalty: 1 },
+    FACES: JOB1.FACES,
+    DIRT: JOB1.DIRT,
+
+    PROCEDURES: [
+      { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
+      { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Do not cross. The side halls are patrolled.' },
+      { k: 'PATROLS',      v: 'One officer on the full ring, one on the upper gallery. They do not keep step.' },
+      { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
+      { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
+      { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
+    ],
+
+    BEATS: [
+      'Three floors. Every door is a lock, and every floor is worse than the one below it.',
+      'The desk releases the vault. The vault holds the lot. Both are under cameras.',
+      'The way out is not drawn on the plan. Benjamin has the procedures; read them before you need them.'
+    ]
+  };
+
+  var JOBS = [JOB3, JOB4, JOB1, JOB2];
 
   /* Swap the data under the engine. Every other file reads L.content.<FIELD>
      and holds a reference to this same object, so assigning the fields here is
@@ -756,7 +918,7 @@
   var JOB_FIELDS = ['venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER', 'PORTE',
-    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE'];
+    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ'];
 
   function loadJob(i) {
     var job = JOBS[i] || JOBS[0];
