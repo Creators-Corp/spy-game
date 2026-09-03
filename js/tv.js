@@ -385,7 +385,8 @@
      ['SPOTTED', S.spotted + '×'],
      ['DISGUISED', S.disguised ? 'YES' : 'NO'],
      ['ALERT REACHED', S.alert ? C.ALERT[S.alert - 1].name : 'NEVER'],
-     ['TAKE', butin + ' / 2' + (S.solved.faux && !S.loot.tableau ? '  (the forgery)' : '')]
+     /* out of two only where there is a canvas to be greedy about */
+     ['TAKE', butin + ' / ' + (C.FAUX ? 2 : 1) + (S.solved.faux && !S.loot.tableau ? '  (the forgery)' : '')]
     ].forEach(function (row) {
       dl.appendChild(U.el('dt', { text: row[0] }));
       dl.appendChild(U.el('dd', { text: String(row[1]) }));
@@ -404,6 +405,20 @@
       : PHASE_LABEL[S.phase];
     $('#tv-phase').classList.toggle('is-night', inDark);
     $('#tv-venue').textContent = C.job.venue;
+
+    /* TENSION. One overlay across the whole television, red at the edges,
+       pulsing — faint and slow at ATTENTIVE, harder and faster at ALERT,
+       fastest when the pressure clock is charging or he has been stopped. A
+       near miss flares it for a beat; a level change or a spotting flashes it
+       full. The heartbeat follows the same number. */
+    var still = S.running && S.phase === 'play' && (Date.now() - S.lastActionAt) / 1000 >= C.PRESSURE.grace;
+    var live = S.phase === 'play' || S.phase === 'module';
+    var level = S.phase === 'tchatche' ? 3 : live ? Math.min(3, S.alert + (still ? 1 : 0)) : 0;
+    var scr = $('#tv-screen');
+    scr.className = 'tv__screen tension-' + level +
+      (S.flash && Date.now() - S.flash < 900 ? ' is-flash' : '') +
+      (live && S.lastBrush === S.turn && S.turn > 0 ? ' is-near' : '');
+    U.heartbeat([0, 1800, 1100, 700][level]);
     $('#tv-clock').textContent = U.mmss(S.elapsed);
     $('#tv-objective').textContent = S.objective;
     $('#suspicion-fill').style.width = S.suspicion + '%';

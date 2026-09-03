@@ -736,3 +736,17 @@
   background:var(--map-void);margin:0 auto 10px;max-width:218px;
 }
 .p1map svg{display:block;width:100%;}
+
+/* ============ THE DEGRADED LINK (P2) ============ */
+/* Once the building has gone dark the van's feed is a bad one: scanlines
+   rolling over the dossier, the picture jumping every few seconds. Nothing
+   is hidden by it. */
+.phone__screen.is-degraded{filter:contrast(.92) saturate(.8);}
+.phone__screen.is-degraded .pscreen{animation:jitter 2.7s steps(1) infinite;}
+.phone__screen.is-degraded::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,0) 0 2px, rgba(255,255,255,.05) 2px 3px);
+  animation:scan 6s linear infinite;
+}
+@keyframes scan{from{background-position:0 0}to{background-position:0 60px}}
+@keyframes jitter{0%,88%,100%{transform:translateX(0)}89%{transform:translateX(3px)}91%{transform:translateX(-2px)}93%{transform:translateX(1px)}}

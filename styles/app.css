@@ -226,3 +226,19 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 }
 /* the two that want real weight */
 .plan__title,.rankcard__grade{ font-weight:700; }
+
+/* the phones shake: a fake vibration on anything a real phone would buzz for */
+.phone__body.is-buzz{animation:buzz .32s linear 1;}
+.phone__body.is-buzz--long{animation:buzz .8s linear 1;}
+@keyframes buzz{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-3px,1px) rotate(-.4deg)}
+  20%{transform:translate(3px,-1px) rotate(.4deg)}
+  30%{transform:translate(-3px,0)}
+  40%{transform:translate(3px,1px)}
+  50%{transform:translate(-2px,-1px)}
+  60%{transform:translate(2px,1px)}
+  70%{transform:translate(-2px,0)}
+  80%{transform:translate(2px,0)}
+  90%{transform:translate(-1px,0)}
+}

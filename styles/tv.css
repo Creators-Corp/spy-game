@@ -283,3 +283,20 @@
 /* the pressure ring on Assane: fills gold, then throbs red */
 .pring.is-hot{animation:throb 1s infinite;transform-origin:center;transform-box:fill-box;}
 @keyframes throb{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ===================== TENSION =====================
+   One red vignette over the whole television. Three levels, each its own
+   weight and tempo, so the room can tell ATTENTIVE from ALERT from across
+   the sofa without reading the bar. Red is threat; this is threat. */
+.tv__vignette{
+  position:absolute;inset:0;pointer-events:none;z-index:8;opacity:0;
+  --lo:0;--hi:0;
+  background:radial-gradient(ellipse at center, rgba(193,55,46,0) 50%, rgba(193,55,46,.62) 100%);
+}
+.tv__screen.tension-1 .tv__vignette{--lo:.18;--hi:.5;animation:vig 3s ease-in-out infinite;}
+.tv__screen.tension-2 .tv__vignette{--lo:.35;--hi:.8;animation:vig 1.4s ease-in-out infinite;box-shadow:inset 0 0 0 3px var(--red);}
+.tv__screen.tension-3 .tv__vignette{--lo:.5;--hi:1;animation:vig .65s ease-in-out infinite;box-shadow:inset 0 0 0 5px var(--red);}
+.tv__screen.is-near .tv__vignette{opacity:.9;animation:none;}
+.tv__screen.is-flash .tv__vignette{animation:flash .9s ease-out 1;}
+@keyframes vig{0%,100%{opacity:var(--lo)}50%{opacity:var(--hi)}}
+@keyframes flash{0%{opacity:1;background:rgba(193,55,46,.7)}100%{opacity:var(--lo)}}

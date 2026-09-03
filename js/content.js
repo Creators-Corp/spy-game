@@ -75,15 +75,13 @@
 
   /* WHAT BENJAMIN CAN DO FROM THE VAN.
      Three levers, each a decision rather than a lookup. Every one of them is
-     noticed — a phone ringing in an empty room at two in the morning, a
-     corridor going dark, a circuit dropping off the panel — so each costs
+     noticed — a corridor going dark, a circuit dropping off the panel, a
+     camera feed that suddenly shows nothing — so each costs
      suspicion, and the uses do not come back. Benjamin has to choose WHEN, and
      Assane has to ask. That is a conversation with stakes on both sides, which
      the dossier alone never was. Durations are counted in Assane's moves,
      because nothing in this build happens between his inputs. */
   var LEVER = {
-    phone:  { id: 'phone',  icon: 'bell', name: 'RING A PHONE',   cost: 5,  turns: 2, uses: 2, reach: 8,
-              blurb: 'The nearest guard stops and looks at it for two of his moves.' },
     lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
               blurb: 'For three moves, every guard sees only the squares beside him.' },
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
@@ -166,7 +164,7 @@
       { id: 'c1', x: 7, y: 4, depth: 3, cycle: ['S', null, 'S', null], label: 'CAM 1' },
       { id: 'c2', x: 3, y: 0, depth: 2, cycle: ['S', 'S', 'S', null], label: 'CAM 2' }
     ],
-    LEVIERS: [LEVER.phone, LEVER.lights, LEVER.camera],
+    LEVIERS: [LEVER.lights, LEVER.camera],
     DOORS: [
       { x: 3, y: 4, locked: true,  mark: 'dbar',     to: 'LA RÉSERVE' },
       { x: 9, y: 4, locked: false, mark: 'chevrons', to: 'BUREAU DE SÉCURITÉ' }
@@ -393,7 +391,7 @@
        in front of it was a chokepoint the east-lane guard could seal outright,
        and the lean route came back unreachable from all 80 phases. A ring with
        two ways round has to have two ways in. */
-    LEVIERS: [LEVER.phone],
+    LEVIERS: [],
     DOORS: [
       { x: 11, y: 5, locked: true, mark: 'trident', to: 'LA CHAMBRE (EST)' },
       { x: 3,  y: 5, locked: true, mark: 'trident', to: 'LA CHAMBRE (OUEST)' }
@@ -629,7 +627,7 @@
          the easiest rhythm there is to count out loud. */
       { id: 'c2', x: 15, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
     ],
-    LEVIERS: [LEVER.phone, LEVER.lights, LEVER.laser, LEVER.camera],
+    LEVIERS: [LEVER.lights, LEVER.laser, LEVER.camera],
     /* Taking the dossier kills the monitors. The television goes dark and the
        two phones are all there is; the stairs are a floor away, and the hatch
        in the west wall ('X' on the plan) is the only way out. */
@@ -750,7 +748,7 @@
       'One of you is inside. One of you has the plans. Neither of you can finish alone.',
       'The guards move when Assane moves. Nothing happens between your inputs.',
       'The way through the middle is sealed. Everything here is the long way round.',
-      'Benjamin has four levers in the van. Every one of them is noticed.',
+      'Benjamin has three levers in the van. Every one of them is noticed.',
       'Standing still is free for thirty seconds. After that the building starts to wonder.'
     ]
   };
@@ -826,7 +824,7 @@
       { id: 'c2', x: 12, y: 0, depth: 2, cycle: ['S', null, null], label: 'CAM 2' }
     ],
     /* fewer pulls than contract three. The van is further away tonight. */
-    LEVIERS: [lever(LEVER.phone, { uses: 1 }), LEVER.lights, LEVER.laser, lever(LEVER.camera, { uses: 2 })],
+    LEVIERS: [LEVER.lights, LEVER.laser, lever(LEVER.camera, { uses: 2 })],
     PRIZE: { dark: true, name: 'MANUSCRIPT', hatchHidden: true },
     OBJ: {
       door:  'A locked door at the back of the kitchens. P1 has the keypad; P2 has the code.',

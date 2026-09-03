@@ -87,6 +87,7 @@
          redrawn by the clock — he is reading. */
       var p = E.tick(Date.now());
       if (E.S.phase === 'play') { L.tv.render(); L.p1.pressure(p); }
+      if (p && p.ticking) U.buzz('p1');   /* the phone nags while the clock charges */
     }, 1000);
 
     /* keyboard is a convenience for testing alone; the real input is the pad */

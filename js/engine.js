@@ -93,6 +93,8 @@
       dark: false,             /* the monitors are dead: TV shows nothing, phones carry it all */
       alert: 0,                /* the building's alert level, 0-2. Only ever rises. */
       alertNote: null,
+      flash: 0,                /* the television flares red for a beat */
+      lastBrush: -1,           /* the turn a sightline last passed within arm's reach */
       jailLine: null,
       unlocked: {},            /* which dossier tabs Benjamin has earned */
       declined: {},            /* optional modules he has chosen to walk past */
@@ -222,9 +224,10 @@
   /* ...and the building's alert level adds a square per step. With the lights
      down nobody sees past arm's length, whatever the alert. */
   function coneDepth(g) {
-    if (S.levers.lights > 0) return 0;
-    var base = S.blackout ? C.BLACKOUT.torchDepth + (g.alert > 0 ? 1 : 0) : g.depth;
-    return base + S.alert + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
+    /* the power cut is a lights-out, and reads like one: nobody sees past
+       arm's length in the dark, whatever the alert level says */
+    if (S.levers.lights > 0 || S.blackout) return 0;
+    return g.depth + S.alert + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
   }
 
   /* EVERY point of suspicion goes through here, so the building's alert level
@@ -243,7 +246,9 @@
       toast('ALERT · ' + a.name, 'bad');
       S.sense = a.line;
       S.alertNote = a.line;   /* read out by the next sense line, whatever else is happening */
+      S.flash = Date.now();
       U.sfx.spot();
+      U.buzz('both', true);
     }
   }
 
@@ -380,27 +385,7 @@
     var L = leverDef(id);
     if (!L || S.phase !== 'play' || !(S.levers.uses[id] > 0)) return false;
     var note = L.name;
-    if (id === 'phone') {
-      var r = C.ROOMS.filter(function (x) { return x.name === roomName; })[0];
-      if (!r) return false;
-      /* the nearest guard to the ringing phone stops and turns to look at it
-         — the same reflex a run triggers, pointed where Benjamin chooses.
-         Which way he ends up facing is Benjamin's problem. */
-      var p = roomCentre(r), best = null, bd = 99;
-      S.guards.forEach(function (g) {
-        var q = g.path[g.at], d = Math.abs(q.x - p.x) + Math.abs(q.y - p.y);
-        if (d < bd) { bd = d; best = g; }
-      });
-      S.noise = p;
-      if (best && bd <= (L.reach || 8)) {
-        best.alert = L.turns;
-        best.facing = dirToward(best.path[best.at], p);
-        note = 'PHONE · ' + r.name;
-      } else {
-        note = 'PHONE · NOBODY NEAR IT';
-      }
-      S.sense = 'A telephone, ringing and ringing. <em>' + bearing(p, S.assane) + ' of you.</em>';
-    } else if (id === 'lights') {
+    if (id === 'lights') {
       S.levers.lights = L.turns;
       note = 'LIGHTS OUT';
       S.sense = 'The corridor lights die. <em>Everything is arm’s length now.</em>';
@@ -420,6 +405,7 @@
     S.levers.last = { id: id, note: note, at: Date.now() };
     toast(note, 'good');
     U.sfx.good();
+    U.buzz('p2');
     raise(L.cost);
     return true;
   }
@@ -470,7 +456,7 @@
       if (isWall(n1.x, n1.y)) {
         var d = doorAt(n1.x, n1.y);
         toast(d ? 'LOCKED' : 'WALL', 'bad');
-        U.sfx.block();
+        U.sfx.block(); U.buzz('p1');
         return { ok: false, blocked: true };
       }
       crossed.push(n1);
@@ -480,7 +466,7 @@
       }
       S.assane = crossed[crossed.length - 1];
       U.sfx.step();
-      if (opts.run) { toast('NOISE', 'bad'); U.sfx.block(); }
+      if (opts.run) { toast('NOISE', 'bad'); U.sfx.block(); U.buzz('p1'); }
     } else {
       toast(opts.freeze ? 'FROZEN' : 'HOLD', null);
       U.sfx.tap();
@@ -491,19 +477,6 @@
     markSeen();
     if (S.grace > 0) S.grace--;
     if (opts.run) makeNoise();
-
-    /* Benjamin's levers run on Assane's clock. The lasers coming back on with
-       him standing in the beam is the one way a lever can hurt him — and it is
-       the reason the countdown on Benjamin's phone has to be said out loud. */
-    if (S.levers.lights > 0) S.levers.lights--;
-    if (S.levers.laser > 0) {
-      S.levers.laser--;
-      if (S.levers.laser === 0) {
-        toast('LASERS BACK ON', 'bad');
-        if (charAt(S.assane.x, S.assane.y) === 'L') { getSpotted(nearestGuard().id); return { ok: true, spotted: true }; }
-      }
-    }
-    for (var cid in S.levers.cams) if (S.levers.cams[cid] > 0) S.levers.cams[cid]--;
 
     var t = threat();
 
@@ -525,13 +498,34 @@
     var brush = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) {
       return !!t[(S.assane.x + v[0]) + ',' + (S.assane.y + v[1])];
     });
-    if (brush) raise(1);
+    if (brush) { raise(1); S.lastBrush = S.turn; }
 
     /* a step nobody saw earns back a point the clock added — never more */
     if (crossed.length && S.pressure > 0) {
       S.pressure--;
-      S.suspicion = Math.max(0, S.suspicion - 1);
+      /* the alert levels are gates: once the building has crossed one it does
+         not uncross it, and the number cannot dip back under the line */
+      var floor = S.alert ? C.ALERT[S.alert - 1].at : 0;
+      S.suspicion = Math.max(floor, S.suspicion - 1);
     }
+
+    /* Benjamin's levers run on Assane's clock, and they tick AFTER this move
+       has been judged — so a lever bought for three moves covers three, and
+       the number on Benjamin's phone is exactly the number of moves left.
+       Ticking before the check made "three" mean two. The lasers coming back
+       on with him standing in the beam is the one way a lever can hurt him,
+       and it is the reason that countdown has to be said out loud. */
+    if (S.levers.lights > 0) S.levers.lights--;
+    if (S.levers.laser > 0) {
+      S.levers.laser--;
+      if (S.levers.laser === 0) {
+        toast('LASERS BACK ON', 'bad');
+        U.buzz('both');
+        if (charAt(S.assane.x, S.assane.y) === 'L') { getSpotted(nearestGuard().id); return { ok: true, spotted: true }; }
+      }
+    }
+    for (var cid in S.levers.cams) if (S.levers.cams[cid] > 0) S.levers.cams[cid]--;
+
 
     S.sense = senseLine();
 
@@ -598,6 +592,7 @@
     if (MODULE_PAGE[id]) unlock(MODULE_PAGE[id]);
     S.moduleId = id;
     S.phase = 'module';
+    U.buzz('p1');   /* something is in front of him */
     S.coffreEntry = [];
     S.clavierEntry = '';
     /* Fresh attempt on every approach. Two bad codes send you to La Tchatche;
@@ -654,7 +649,7 @@
       S.loot.manuscrit = true;
       setTimeout(function () { closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); U.emit('render'); }, 900);
     } else {
-      U.sfx.bad();
+      U.sfx.bad(); U.buzz('p1');
       S.coffreFails++;
       raise(15);
       if (S.coffreFails >= 2) {
@@ -686,7 +681,7 @@
       setTimeout(function () { S.moduleId = null; finish(); U.emit('render'); }, 900);
       return true;
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     raise(10);
     return false;
   }
@@ -701,7 +696,7 @@
       setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
       return true;
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     raise(10);
     return false;
   }
@@ -715,7 +710,7 @@
       setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
       return true;
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     raise(8);
     return false;
   }
@@ -727,7 +722,7 @@
       U.sfx.unlock();
       S.loot.tableau = true;
     } else {
-      U.sfx.bad();
+      U.sfx.bad(); U.buzz('p1');
       raise(15);
     }
     setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
@@ -746,7 +741,7 @@
       setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
       return true;
     }
-    U.sfx.block();
+    U.sfx.block(); U.buzz('p1');
     S.grille.tried[key] = true;
     raise(K.rattle || 3);
     return false;
@@ -795,7 +790,7 @@
       setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
       return true;
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     S.porteFails++;
     raise(8);
     /* three wrong codes and somebody comes to see who is standing at the door */
@@ -823,7 +818,7 @@
 
   function bureauSubmit(code) {
     if (code === C.BUREAU.answer) { U.sfx.unlock(); S.bureauStep = 1; return true; }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     raise(10);
     return false;
   }
@@ -834,7 +829,7 @@
       setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
       return true;
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('p1');
     raise(10);
     return false;
   }
@@ -862,7 +857,9 @@
     S.phase = 'tchatche';
     S.tchatche = { badge: badge, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
+    S.flash = Date.now();
     U.sfx.spot();
+    U.buzz('both', true);
   }
 
   function rollOptions(badge, round) {
@@ -889,7 +886,7 @@
       t.options = rollOptions(t.badge, t.round);
       return { win: true };
     }
-    U.sfx.bad();
+    U.sfx.bad(); U.buzz('both');
     t.last = 'bad';
     t.strikes++;
     raise(10);
@@ -900,7 +897,7 @@
   /* on full alert a stopped man is searched, not chatted to */
   function maxStrikes() { return S.alert >= 2 ? 1 : 2; }
 
-  function jail() { S.phase = 'jail'; S.running = false; U.sfx.jail(); }
+  function jail() { S.phase = 'jail'; S.running = false; U.sfx.jail(); U.buzz('both', true); }
 
   /* ---------------------------------------------------------------- end */
   /* Written against what the contract HAS, not against contract one. The old

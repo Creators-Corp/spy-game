@@ -121,7 +121,10 @@
     function open(x, y) {
       var ch = E.charAt(x, y);
       if (ch === '#') return false;
-      if (ch === 'L' && !(S.levers.laser > 0)) return false;
+      /* the beams belong to the wiring page. On the people page a laser
+         square is drawn as plain floor, so the plan does not read as if the
+         building had holes in it. */
+      if (ch === 'L' && !(S.levers.laser > 0) && layer === 'electronics') return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -461,7 +464,7 @@
         disabled: (!live || left <= 0) && !active ? '' : null,
         onclick: function () {
           if (active) return;
-          if (L.id === 'phone' || L.id === 'camera') { leverOpen = isOpen ? null : L.id; U.sfx.tap(); U.emit('render'); return; }
+          if (L.id === 'camera') { leverOpen = isOpen ? null : L.id; U.sfx.tap(); U.emit('render'); return; }
           if (E.pullLever(L.id)) U.emit('render');
         }
       }, [
@@ -476,17 +479,6 @@
         ])
       ]);
       wrap.appendChild(b);
-      if (L.id === 'phone' && isOpen) {
-        var chips = el('div', { class: 'lever__rooms' }, [
-          el('span', { class: 'lbl', style: 'width:100%', text: 'WHICH ROOM RINGS' })
-        ]);
-        C.ROOMS.forEach(function (r) {
-          chips.appendChild(el('button', { class: 'chip2', text: r.name, onclick: function () {
-            if (E.pullLever('phone', r.name)) { leverOpen = null; U.emit('render'); }
-          } }));
-        });
-        wrap.appendChild(chips);
-      }
       if (L.id === 'camera' && isOpen) {
         var cams = el('div', { class: 'lever__rooms' }, [
           el('span', { class: 'lbl', style: 'width:100%', text: 'WHICH CAMERA' })
@@ -854,6 +846,9 @@
   function render() {
     var S = E.S, host = $('#p2-screen');
     U.clear(host);
+    /* the van's link degrades once the building has gone dark: scanlines
+       and the odd jump. Cosmetic — the plan is still the plan. */
+    host.classList.toggle('is-degraded', !!(S.dark || S.blackout) && (S.phase === 'play' || S.phase === 'module'));
     if (S.phase === 'plan') { host.appendChild(viewRole()); return; }
     if (S.phase === 'rank' || S.phase === 'jail') { host.appendChild(viewEnd()); return; }
 

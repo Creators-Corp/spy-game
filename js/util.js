@@ -103,6 +103,56 @@ window.DC = window.DC || {};
       o.start(t); o.stop(t + dur + 0.02);
     } catch (e) { /* audio is optional, never load-bearing */ }
   }
+  /* THE PHONES SHAKE. A fake vibration — the whole handset jolts for a third
+     of a second — on anything that would make a real phone buzz: a wrong
+     code, a guard turning round, the building going up a level. On a real
+     device the motor runs too. Every buzz has a matching visual and a sound,
+     so the cue survives a muted room and a phone lying on a table. */
+  function buzz(who, long) {
+    var ids = who === 'both' ? ['p1', 'p2'] : [who];
+    ids.forEach(function (id) {
+      var el = document.querySelector('#' + id + ' .phone__body');
+      if (!el) return;
+      el.classList.remove('is-buzz', 'is-buzz--long');
+      void el.offsetWidth;                       /* restart the animation */
+      el.classList.add('is-buzz');
+      if (long) el.classList.add('is-buzz--long');
+    });
+    if (navigator.vibrate) { try { navigator.vibrate(long ? [120, 60, 160] : 40); } catch (e) {} }
+  }
+
+  /* THE HEARTBEAT. Runs while the building is on alert or the pressure clock
+     is charging, faster the worse it gets. Synthesised here so it works with
+     an empty art folder; drop a licensed loop at art/heartbeat.mp3 (Artlist
+     or wherever) and it is used instead, sped up with the tension. */
+  var heartTimer = null, heartRate = 0, heartFile = null, heartFileState = 0;
+  function heartbeat(rate) {
+    if (rate === heartRate) return;
+    heartRate = rate;
+    if (heartTimer) { clearInterval(heartTimer); heartTimer = null; }
+    if (heartFile) heartFile.pause();
+    if (!rate || muted) return;
+    if (heartFileState === 0) {
+      heartFileState = 1;
+      var a = new Audio(assetURL('art/heartbeat.mp3'));
+      a.loop = true;
+      a.addEventListener('canplaythrough', function () { heartFileState = 2; heartFile = a; });
+      a.addEventListener('error', function () { heartFileState = 3; });
+    }
+    if (heartFile) {
+      heartFile.playbackRate = Math.min(2, Math.max(0.6, 1500 / rate));
+      heartFile.volume = 0.5;
+      heartFile.play().catch(function () {});
+      return;
+    }
+    var thump = function () {
+      tone(54, 0.12, 'sine', 0.10);
+      setTimeout(function () { tone(46, 0.18, 'sine', 0.08); }, 150);
+    };
+    thump();
+    heartTimer = setInterval(thump, rate);
+  }
+
   var sfx = {
     step:  function () { tone(190, 0.05, 'square', 0.03); },
     block: function () { tone(90, 0.10, 'sawtooth', 0.04); },
@@ -117,7 +167,10 @@ window.DC = window.DC || {};
        that has been compressed to death. */
     pulse: function (long) { tone(long ? 380 : 720, long ? 0.30 : 0.09, 'square', 0.05); }
   };
-  function setMuted(v) { muted = v; }
+  function setMuted(v) {
+    muted = v;
+    if (v) { if (heartTimer) { clearInterval(heartTimer); heartTimer = null; } if (heartFile) heartFile.pause(); heartRate = 0; }
+  }
   function isMuted() { return muted; }
 
   /* ---------- misc ---------- */
@@ -145,7 +198,7 @@ window.DC = window.DC || {};
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
     artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
-    sfx: sfx, setMuted: setMuted, isMuted: isMuted,
+    sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);
