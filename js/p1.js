@@ -246,15 +246,18 @@
   function viewGrille() {
     var S = E.S, K = C.GRILLE;
 
-    /* THE PADLOCK, AS HE IS LOOKING AT IT. The mark is engraved on the body in
-       the artwork; the gold chip beside it draws GRILLE.lock, so the data is
-       still what decides the puzzle and the picture is what sells it. Change
-       the lock symbol in content.js and the chip follows — the engraving does
-       not, so change the plate with it. */
-    var tag = G.icon(K.lock);
+    /* THE PADLOCK, AS HE IS LOOKING AT IT — and that is the whole of it. The
+       mark is engraved on the body in the artwork, so a gold chip repeating it
+       beside the picture was the same symbol twice and made the screen look
+       like a diagram of a padlock rather than a padlock.
+
+       Which means the artwork is now the ONLY place this contract's mark
+       appears on Assane's phone. GRILLE.lock still decides which key opens the
+       gate; if it is ever changed, grille-padlock.png has to be redrawn with
+       it or the picture will be quietly lying. content.js says so where the
+       lock is set. */
     var padlock = el('div', { class: 'padlock' }, [
-      U.artSlot('grille-padlock', 'padlock__plate'),
-      el('div', { class: 'padlock__tag' }, [tag, el('span', { class: 'lbl', text: 'STAMPED ON IT' })])
+      U.artSlot('grille-padlock', 'padlock__plate')
     ]);
 
     /* THREE KEYS ON ONE RING, and they are one picture because that is how
@@ -292,6 +295,87 @@
         ring
       ]),
       foot([ el('p', { class: 'note', text: 'The wrong key rattles the gate. Nothing worse.' }) ])
+    ]);
+  }
+
+  function viewPorte() {
+    var S = E.S, K = C.PORTE;
+
+    /* THE CODE IS ON THIS SCREEN, AND IT IS UNREADABLE FROM HERE.
+       It used to be four dots: Assane named the one mark under the zero and
+       Benjamin read four numbers straight off his own page, which made the
+       module one sentence long and gave Assane nothing to do but type.
+
+       The four symbols of the code are engraved on the keypad instead. Assane
+       can see them and cannot turn them into numbers — the ring that does that
+       is in the dossier. So he describes one, Benjamin answers with a digit,
+       he taps it, and they do that four times. The digit he taps lands under
+       the symbol it answered, so the pair can see how far along they are
+       without either of them counting out loud. */
+    var codeSyms = E.porteCodeSymbols();
+    var readout = el('div', { class: 'symrow symrow--code' });
+    codeSyms.forEach(function (sym, i) {
+      var typedD = S.porteEntry.charAt(i);
+      var cell = el('div', { class: 'symrow__cell'
+        + (typedD ? ' is-read' : '')
+        + (i === S.porteEntry.length ? ' is-next' : '') });
+      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
+      cell.appendChild(ic);
+      cell.appendChild(el('b', { text: typedD || '·' }));
+      readout.appendChild(cell);
+    });
+    if (S.porteFails > 0 && !S.porteEntry) readout.classList.add('is-bad');
+
+    var pad = el('div', { class: 'keypad' });
+    function key(n) {
+      return el('button', { text: n, onclick: function () { E.porteTap(n); U.emit('render'); } });
+    }
+    ['1','2','3','4','5','6','7','8','9'].forEach(function (n) { pad.appendChild(key(n)); });
+    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR',
+      onclick: function () { S.porteEntry = ''; U.emit('render'); } }));
+    pad.appendChild(key('0'));
+    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
+      if (S.porteEntry.length < K.code.length) return;
+      E.porteSubmit(); U.emit('render');
+    } }));
+
+    /* The plate. The zero carries a mark under it, drawn at the size a real
+       engraver would have put it: small enough to ignore, big enough to
+       describe. Everything Benjamin needs is in that one shape. */
+    var digits = K.sign.replace(/[^0-9]/g, '');
+    var zeroAt = digits.indexOf('0');
+    var plate = el('div', { class: 'plate' }, [
+      el('span', { class: 'plate__word', text: K.sign.replace(/[0-9].*$/, '').trim() })
+    ]);
+    var row = el('span', { class: 'plate__digits' });
+    digits.split('').forEach(function (d, i) {
+      var cell = el('span', { class: 'plate__d' }, [el('b', { text: d })]);
+      if (i === zeroAt) {
+        var g = G.icon(K.zero);
+        g.style.color = 'var(--ink)';
+        cell.appendChild(el('i', { class: 'plate__mark' }, [g]));
+      }
+      row.appendChild(cell);
+    });
+    plate.appendChild(row);
+
+    var left = (K.fails || 3) - S.porteFails;
+    return screen([
+      head('LA PORTE'),
+      body([
+        U.howto([
+          'Describe the mark under the 0 to Benjamin. It tells him where the ring starts.',
+          'Then describe the four symbols on the keypad, one at a time. He answers each with a number — tap it.'
+        ]),
+        plate,
+        readout,
+        pad
+      ]),
+      foot([
+        el('p', { class: 'note', text: left > 1
+          ? 'A wrong code is loud. ' + left + ' tries before somebody comes.'
+          : 'One try left. The next wrong code brings somebody to the door.' })
+      ])
     ]);
   }
 

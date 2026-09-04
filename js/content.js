@@ -281,6 +281,10 @@
        No guard, no code, no ring, no counting: a wrong key rattles the gate
        and costs a little suspicion, nothing worse. */
     GRILLE: {
+      /* THIS MARK IS ALSO PAINTED INTO art/grille-padlock.png, and that
+         picture is the only place Assane sees it. Change it here and the
+         plate has to be redrawn with it, or his phone will be showing one
+         symbol while the gate answers to another. */
       lock: 'trident',
       /* `at` and `wide` are where each blade sits across grille-keys.png, as a
          fraction of its width — the three fan out and overlap, so they are one

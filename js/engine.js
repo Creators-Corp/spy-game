@@ -770,7 +770,7 @@
     var here = charAt(S.assane.x, S.assane.y), hatch = hatchTile();
     if (S.hasManuscript && (hatch ? here === 'X' : here === 'E')) {
       /* the way out locked itself when the power went */
-      if (S.blackout && !S.solved.clavier) { openModule('clavier'); return { ok: true, module: 'clavier' }; }
+      if (S.blackout && C.CLAVIER && !S.solved.clavier) { openModule('clavier'); return { ok: true, module: 'clavier' }; }
       finish();
       return { ok: true, done: true };
     }
@@ -889,7 +889,19 @@
   }
 
   /* LE TWIST. The safe opens and the building answers. */
+  /* LE TWIST NEEDS DATA, and right now nothing has it. BLACKOUT (the camera
+     zones and the feed cycle) and CLAVIER (the keypad on the way out) were
+     both defined only inside the two contracts that were cut, and neither
+     survivor sets S.blackout — both take the prize with PRIZE.dark, which
+     kills the monitors instead. So the whole sequence is dormant: the feeds on
+     P2, RUN and FIGE-TOI on P1, the keypad at the hatch.
+
+     The code is left standing because it is a sequence worth having back, but
+     it is fenced: without the data it simply does not start, rather than
+     throwing three files away from here. Give a contract a BLACKOUT block and
+     a CLAVIER and it wakes up. */
   function startBlackout() {
+    if (!C.BLACKOUT || !C.BLACKOUT.zones) return;
     S.blackout = true;
     S.blackoutAt = Date.now();
     S.guards.forEach(function (g) { g.alert = 0; });

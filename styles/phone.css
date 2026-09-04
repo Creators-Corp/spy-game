@@ -690,22 +690,12 @@
 .warn b{display:inline;}
 
 /* ============ LA GRILLE ============ */
-/* P1: the padlock, its tag, three numbered keys. The tag is the loudest thing
-   on the screen because it is the only thing Benjamin cannot see. */
+/* P1: the padlock, photographed, and nothing else. The mark is engraved on it
+   — repeating that on a chip beside the picture was the same symbol twice. */
 .padlock{
-  display:flex;align-items:center;justify-content:center;gap:16px;
   border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--stone);padding:16px;margin-bottom:14px;
+  background:var(--stone);padding:0;margin-bottom:14px;overflow:hidden;
 }
-.padlock__body{width:92px;height:92px;flex:none;}
-.padlock__body svg{width:100%;height:100%;display:block;}
-.padlock__tag{
-  width:88px;flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;
-  background:var(--gold);border:var(--stroke) solid var(--ink);
-  border-radius:6px 6px 16px 16px;padding:10px 8px 8px;
-}
-.padlock__tag svg{width:50px;height:50px;color:var(--on-gold);display:block;}
-.padlock__tag .lbl{color:var(--on-gold);margin:0;}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .keys button{
   border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
@@ -731,9 +721,11 @@
 .keyring__hit.is-tried{background:rgba(0,0,0,.42);pointer-events:none;}
 .keyring__hit.is-bad{background:rgba(193,55,46,.45);animation:nudge .22s;}
 
-/* the padlock is a photograph now, not an icon */
-.padlock__plate{width:100%;aspect-ratio:896/1200;max-height:180px;border:var(--stroke) solid var(--ink);}
-.padlock__plate img{object-fit:cover;object-position:center 42%;}
+/* the padlock is a photograph now, not an icon. Cropped to the lock itself:
+   the plate is a door and a hasp and most of it is not the thing he has to
+   describe. */
+.padlock__plate{width:100%;aspect-ratio:5/3;border:0;background:transparent;}
+.padlock__plate img{object-fit:cover;object-position:center 46%;}
 .keys button.is-tried{opacity:.35;pointer-events:none;border-style:dashed;}
 .keys button.is-bad{animation:nudge .22s;background:var(--red);}
 
