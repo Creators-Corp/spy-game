@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deux Complices — the illustrated floor</title>
+<link rel="stylesheet" href="styles/fonts.css">
+<link rel="stylesheet" href="styles/app.css">
+<style>
+  /* A workbench, not a screen of the game. The same contract the engine is
+     running, drawn with the tile set, with the layers switchable so the
+     artist can see each one alone. Arrow keys move Assane; the guards step
+     when he steps, exactly as on the television. */
+  html,body{height:auto;overflow:auto;}
+  body{background:#0A0D11;color:var(--ink);font-family:var(--font);padding:18px 22px 40px;}
+  .bench{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+  .bench__map{flex:1 1 720px;min-width:320px;background:#0C1118;border:var(--stroke) solid var(--ink);border-radius:var(--r);overflow:hidden;}
+  .bench__map svg{display:block;width:100%;height:auto;}
+  .bench__side{flex:0 0 260px;display:flex;flex-direction:column;gap:12px;}
+  .box{border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);padding:12px;}
+  .box h3{margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);}
+  .box label{display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;cursor:pointer;}
+  .box select,.box button{font:inherit;color:inherit;background:var(--stone);border:var(--stroke) solid var(--ink);border-radius:var(--r);padding:7px 9px;width:100%;}
+  .box button{cursor:pointer;text-transform:uppercase;letter-spacing:.12em;font-size:11px;margin-top:6px;}
+  .box button:hover{background:var(--gold);color:var(--on-gold);}
+  .box .seg{display:flex;gap:6px;}
+  .box .seg button{margin:0;}
+  .box .seg button.is-on{background:var(--gold);color:var(--on-gold);}
+  .note{font-size:11.5px;line-height:1.5;color:var(--ink-soft);margin:6px 0 0;}
+  .stat{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  .pring.is-hot{animation:throb 1s infinite;}
+  @keyframes throb{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin:0 0 14px;color:var(--ink-soft);}
+  h1 b{color:var(--ink);}
+</style>
+</head>
+<body>
+<h1><b>The illustrated floor</b> · tile set at 300 × 290, shown at 50%</h1>
+<div class="bench">
+  <div class="bench__map" id="map"></div>
+  <aside class="bench__side">
+    <div class="box">
+      <h3>Contract</h3>
+      <select id="job"></select>
+      <button id="doors" type="button">Open every door</button>
+      <button id="reset" type="button">Reset</button>
+      <p class="note">Arrow keys or WASD move Assane. Space holds still. The guards step when he steps.</p>
+    </div>
+    <div class="box">
+      <h3>Whose view</h3>
+      <div class="seg">
+        <button type="button" data-view="benjamin" class="is-on">Benjamin</button>
+        <button type="button" data-view="assane">Assane</button>
+      </div>
+      <p class="note">Benjamin: the whole floor, every sightline. Assane: fog of war, and a guard only where he can see one — the television's rule. Cones are never shown to Assane.</p>
+      <label><input type="checkbox" id="edges"> outline the +1 squares beside a sightline</label>
+    </div>
+    <div class="box">
+      <h3>Layers</h3>
+      <label><input type="checkbox" data-layer="ground" checked> ground — parquet</label>
+      <label><input type="checkbox" data-layer="vision" checked> vision — red hatch on the floor</label>
+      <label><input type="checkbox" data-layer="walls" checked> walls, lasers, doors</label>
+      <label><input type="checkbox" data-layer="props" checked> props — desk, objectives, hatch</label>
+      <label><input type="checkbox" data-layer="actors" checked> characters</label>
+      <label><input type="checkbox" data-layer="ui" checked> ui — pressure ring</label>
+      <label><input type="checkbox" data-layer="grid" id="grid"> grid — coordinates and piece names, for markup</label>
+      <button id="export" type="button">Export PNG</button>
+      <button id="sheet" type="button">Export full layout</button>
+      <p class="note">The PNG is the board at 50% — one tile is 150 × 145 px — with whatever layers are on.</p>
+    </div>
+    <div class="box">
+      <h3>State</h3>
+      <div class="stat" id="stat"></div>
+    </div>
+  </aside>
+</div>
+
+<div id="glyph-sprite" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></div>
+<!-- nocache-loader: the bench is edited constantly and a cached content.js
+     silently shows yesterday's map. Load the sources with a per-visit stamp so
+     a refresh is always a refresh. -->
+<script>
+(function () {
+  var v = '?v=' + Date.now();
+  ['js/util.js', 'js/glyphs.js', 'js/figures.js', 'js/content.js', 'js/engine.js', 'js/tiles.js'].forEach(function (src) {
+    document.write('<script src="' + src + v + '"><\/script>');
+  });
+})();
+</script>
+<script>
+(function (L) {
+  var U = L.util, C = L.content, E = L.engine, T = L.tiles;
+  var $ = U.$, view = 'benjamin', layers = {}, edges = false;
+
+  L.glyphs.build();
+  var sel = $('#job');
+  C.JOBS.forEach(function (j, i) { sel.appendChild(U.el('option', { value: i, text: j.contract })); });
+
+  function start(i) {
+    C.loadJob(i);
+    E.reset();
+    E.begin();
+    /* the bench is for looking at the floor, not for the gate */
+    var S = E.S; S.phase = 'play'; S.moduleId = null;
+    C.MODULES.forEach(function (m) { if (m.id === 'grille') { S.solved.grille = true; S.doors.forEach(function (d) { if (d.x === m.x && d.y === m.y - 1) d.locked = false; }); } });
+    draw();
+  }
+  function draw() {
+    T.render($('#map'), { view: view, layers: layers, edges: edges, scale: 0.5 });
+    var S = E.S;
+    $('#stat').textContent = C.contract + '\n' + 'turn ' + S.turn + ' · suspicion ' + S.suspicion + ' · alert ' + S.alert +
+      ' · at ' + E.coordOf(S.assane.x, S.assane.y) + ' facing ' + S.facing;
+  }
+
+  sel.addEventListener('change', function () { start(Number(sel.value)); });
+  $('#doors').addEventListener('click', function () { E.S.doors.forEach(function (d) { d.locked = false; }); draw(); });
+  $('#reset').addEventListener('click', function () { start(Number(sel.value)); });
+  U.$$('[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      view = b.getAttribute('data-view');
+      U.$$('[data-view]').forEach(function (x) { x.classList.toggle('is-on', x === b); });
+      draw();
+    });
+  });
+  U.$$('[data-layer]').forEach(function (cb) {
+    cb.addEventListener('change', function () { layers[cb.getAttribute('data-layer')] = cb.checked; draw(); });
+  });
+  $('#edges').addEventListener('change', function () { edges = $('#edges').checked; draw(); });
+
+  /* the board as a PNG, drawn from the live SVG. Same-origin images, so the
+     canvas is clean and can be saved. */
+  /* An SVG drawn as an image may not fetch anything, so every tile is
+     inlined as a data URL first, and the glyph sprite is copied in. */
+  var dataCache = {};
+  function asData(path) {
+    if (dataCache[path]) return Promise.resolve(dataCache[path]);
+    return fetch(path).then(function (r) { return r.blob(); }).then(function (b) {
+      return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { dataCache[path] = fr.result; res(fr.result); }; fr.readAsDataURL(b); });
+    });
+  }
+  window.exportPNG = function (scale) {
+    var svg = $('#map svg'), vb = svg.getAttribute('viewBox').split(' ').map(Number);
+    var w = Math.round(vb[2] * (scale || 0.5)), h = Math.round(vb[3] * (scale || 0.5));
+    var xml = new XMLSerializer().serializeToString(svg);
+    var syms = document.querySelector('#glyph-sprite svg');
+    if (syms) xml = xml.replace('</defs>', syms.innerHTML + '</defs>');
+    var paths = [], re = /href="(art\/[^"]+)"/g, m;
+    while ((m = re.exec(xml))) if (paths.indexOf(m[1]) < 0) paths.push(m[1]);
+    return Promise.all(paths.map(asData)).then(function (datas) {
+      paths.forEach(function (p, i) { xml = xml.split('href="' + p + '"').join('href="' + datas[i] + '"'); });
+      var blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      return new Promise(function (resolve, reject) {
+        var im = new Image();
+        im.onload = function () {
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(im, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(cv.toDataURL('image/png'));
+        };
+        im.onerror = reject;
+        im.src = url;
+      });
+    });
+  };
+  $('#export').addEventListener('click', function () {
+    exportPNG(0.5).then(function (data) {
+      var a = document.createElement('a'); a.href = data; a.download = 'floor-' + C.jobIndex + '.png'; a.click();
+    });
+  });
+
+  /* THE FULL COMPUTED LAYOUT, for reference — saved to art/tiles/computed.json,
+     which nothing reads. Use it to find the tile a cell currently gets, then
+     copy that cell into overrides.json and change it. The override sheet stays
+     small and hand-written on purpose: pin every cell and a rule fix would
+     never reach the board again. */
+  $('#sheet').addEventListener('click', function () {
+    var btn = this;
+    fetch('art/tiles/computed.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .catch(function () { return {}; })
+      .then(function (all) {
+        all[C.id] = T.dump();
+        return fetch('/save?path=art/tiles/computed.json', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(all, null, 1)
+        });
+      })
+      .then(function (r) {
+        btn.textContent = r.ok ? 'Saved to art/tiles/computed.json' : 'Save failed';
+        setTimeout(function () { btn.textContent = 'Export full layout'; }, 2500);
+      })
+      .catch(function () {
+        /* no dev server: fall back to a download */
+        var all = {}; all[C.id] = T.dump();
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(all, null, 1)], { type: 'application/json' }));
+        a.download = 'computed.json'; a.click();
+      });
+  });
+
+  var KEYS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+               w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0], ' ': [0, 0] };
+  window.addEventListener('keydown', function (ev) {
+    var k = KEYS[ev.key];
+    if (!k) return;
+    ev.preventDefault();
+    var S = E.S;
+    if (S.phase !== 'play') { S.phase = 'play'; S.moduleId = null; S.tchatche = null; }
+    var r = E.act(k[0], k[1]);
+    /* a module or a stop is a screen of the game, not of the bench: step past it */
+    if (r.module || r.spotted) { S.phase = 'play'; S.moduleId = null; S.tchatche = null; }
+    draw();
+  });
+  setInterval(function () { if (E.S.running) { E.S.elapsed++; E.tick(Date.now()); draw(); } }, 1000);
+
+  /* hold the first draw until the override sheet is in, or the board paints
+     from the rules and visibly corrects itself a moment later */
+  U.on('render', draw);
+  T.ready(function () { start(0); });
+})(window.DC);
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+{
+ "_readme": [
+  "Hand-edited exceptions to the wall rules, per contract, per cell.",
+  "A cell listed here is drawn EXACTLY as listed and the rules are ignored for it.",
+  "Order in the list is drawing order. An empty list [] leaves the cell blank.",
+  "Cell names are the grid's: column letter + 1-based row. Row 0 is the padding",
+  "row above the map, where a two-tile face puts its top half.",
+  "Tile names are files in art/tiles/ without the .png.",
+  "Partitions - walls with rooms on BOTH sides - live here rather than in a rule:",
+  "chambre rows 13/14, veille rows 4/5 and 12/13. See TILES.md section 7."
+ ],
+ "chambre": {
+  "K0": [
+   "wall-blank-corner-top-left"
+  ],
+  "K1": [
+   "wall-blank-corner-bottom-left"
+  ],
+  "L0": [
+   "wall-molded-top-left"
+  ],
+  "L1": [
+   "wall-molded-bottom-left"
+  ],
+  "M0": [
+   "wall-molded-top-right"
+  ],
+  "M1": [
+   "wall-molded-bottom-right"
+  ],
+  "N0": [
+   "wall-blank-top"
+  ],
+  "N1": [
+   "wall-blank-bottom"
+  ],
+  "O0": [
+   "wall-blank-corner-top-right"
+  ],
+  "O1": [
+   "wall-blank-corner-bottom-right"
+  ],
+  "E13": [
+   "wall-molded-top-left"
+  ],
+  "E14": [
+   "wall-molded-bottom-left"
+  ],
+  "F13": [
+   "wall-molded-top-right"
+  ],
+  "F14": [
+   "wall-molded-bottom-right"
+  ],
+  "G13": [
+   "wall-molded-top-left"
+  ],
+  "G14": [
+   "wall-molded-bottom-left"
+  ],
+  "H13": [
+   "wall-molded-top-right"
+  ],
+  "H14": [
+   "wall-molded-bottom-right"
+  ],
+  "I13": [
+   "wall-molded-top-left"
+  ],
+  "I14": [
+   "wall-molded-bottom-left"
+  ],
+  "J13": [
+   "wall-molded-top-right"
+  ],
+  "J14": [
+   "wall-molded-bottom-right"
+  ],
+  "K13": [
+   "wall-molded-top-left"
+  ],
+  "K14": [
+   "wall-molded-bottom-left"
+  ],
+  "L13": [
+   "wall-molded-top-right"
+  ],
+  "L14": [
+   "wall-molded-bottom-right"
+  ],
+  "M13": [
+   "wall-molded-top-left"
+  ],
+  "M14": [
+   "wall-molded-bottom-left"
+  ],
+  "N13": [
+   "wall-molded-top-right"
+  ],
+  "N14": [
+   "wall-molded-bottom-right"
+  ],
+  "O13": [
+   "wall-molded-top-left"
+  ],
+  "O14": [
+   "wall-molded-bottom-left"
+  ],
+  "P13": [
+   "wall-molded-top-right"
+  ],
+  "P14": [
+   "wall-molded-bottom-right"
+  ],
+  "R13": [
+   "wall-molded-top-left"
+  ],
+  "R14": [
+   "wall-molded-bottom-left"
+  ],
+  "S13": [
+   "wall-molded-top-right"
+  ],
+  "S14": [
+   "wall-molded-bottom-right"
+  ],
+  "T13": [
+   "wall-molded-top-left"
+  ],
+  "T14": [
+   "wall-molded-bottom-left"
+  ],
+  "U13": [
+   "wall-molded-top-right"
+  ],
+  "U14": [
+   "wall-molded-bottom-right"
+  ],
+  "Q13": [
+   "wall-blank-top"
+  ],
+  "Q14": [
+   "wall-blank-bottom"
+  ],
+  "K16": [
+   "wall-edge-tjunction-right"
+  ],
+  "O16": [
+   "wall-edge-tjunction-left"
+  ],
+  "D13": [
+   "wall-edge-tjunction-right"
+  ],
+  "V13": [
+   "wall-edge-tjunction-left"
+  ],
+  "C4": [
+   "wall-blank-corner-bottom-left"
+  ],
+  "C3": [
+   "wall-blank-corner-top-left"
+  ],
+  "B12": [],
+  "B13": [],
+  "B14": [],
+  "C12": [
+   "wall-edge-right"
+  ],
+  "C13": [
+   "wall-corner-inedge-right"
+  ],
+  "B10": [
+   "floor-tile",
+   "wall-outer-edge-center"
+  ],
+  "B11": [
+   "wall-outer-bottom-center"
+  ],
+  "C10": [
+   "wall-corner-top-left"
+  ],
+  "C11": [
+   "wall-edge-right"
+  ],
+  "A7": [
+   "wall-corner-top-right"
+  ],
+  "A8": [
+   "wall-edge-left"
+  ],
+  "A9": [
+   "wall-edge-left"
+  ],
+  "A10": [
+   "wall-corner-bottom-right"
+  ],
+  "A11": [
+   "wall-outer-bottom-right"
+  ],
+  "B7": [
+   "wall-blank-top"
+  ],
+  "B8": [
+   "wall-blank-bottom"
+  ],
+  "B9": [
+   "wall-outer-edge-center"
+  ],
+  "C9": [
+   "wall-corner-top-left"
+  ]
+ },
+ "veille": {
+  "C8": [
+   "wall-edge-left"
+  ],
+  "N8": [
+   "wall-edge-left"
+  ],
+  "J8": [
+   "wall-edge-right"
+  ],
+  "U8": [
+   "wall-edge-right"
+  ]
+ }
+}
