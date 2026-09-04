@@ -175,14 +175,23 @@ and his disguise allow. Drawn as cut, the full piece would put hatching on
 squares that are safe and leave squares bare that catch you, which is worse
 than a mismatch of style: it is the picture lying about the rule.
 
-So the piece is a texture and the rule is the stencil. Each guard's sprite is
-laid down facing the way he is, masked so its white becomes the vision colour,
-and clipped to the squares the engine actually calls dangerous. What you see is
-the artist's hatch; where you see it is the truth.
+Cutting the full piece to the rule was tried and does not work either, for a
+reason worth writing down: **the file has no pixels behind the man.** Mask it to
+`cone()` and the five ring squares that sit behind and beside him come out
+bare — and those squares catch you. A picture that leaves a square that catches
+you unpainted is worse than one that is merely the wrong shape. So the lit case
+is back on the hatch pattern, which covers every square `cone()` names.
 
-The small piece is the exception that needs no cutting: with the lights out
-`coneDepth()` is 0, the cone *is* a 3 × 3 block, and the art matches it square
-for square.
+The small piece is the exception, and it needs no cutting at all: with the
+lights out `coneDepth()` is 0, the cone *is* a 3 × 3 block, the art has content
+in all nine cells, and it matches square for square. That one is in use.
+
+**The full-size piece is therefore still on the shelf.** It can only go in once
+one of two things happens: it is re-cut to the rule's shape — the eight squares
+around a man, behind him included, and a line one tile tall ahead — or the rule
+is changed to the art's rectangle, which means guards see three times as much
+floor and nothing at their backs, and both contracts need re-scanning for dead
+states before anybody trusts a route again.
 
 **This layer has no player-facing home yet.** The television must never draw a
 cone — that is the design law that keeps P2 from reading P1's secrets off the

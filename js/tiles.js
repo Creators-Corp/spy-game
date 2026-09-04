@@ -551,12 +551,17 @@
       for (k in threat) cells[k] = 1;
       S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
 
-      if (view === 'benjamin' || armsLength) {
-        /* the guards get the artist's piece, stencilled */
-        S.guards.forEach(function (g, gi) { s += sightlineFor(g, gi, armsLength ? 0 : E.coneDepth(g)); });
-        /* cameras are not drawn here at all, and were not before — see the
-           note above threat(): a second red pattern over the same floor could
-           not be told from the first at a glance */
+      /* ONLY THE SMALL PIECE IS USED, AND ONLY BECAUSE IT FITS.
+         The full-size piece was laid down here too for a while, masked and
+         clipped to cone(). It looked right and it was not: the file has no
+         pixels behind the man — that is the whole shape of it, a block ahead
+         and nothing else — so the five squares of his ring that sit behind and
+         beside him came out BARE. They catch you. A picture that leaves a
+         square that catches you unpainted is worse than one that is merely a
+         different shape, so the lit case is back on the hatch pattern, which
+         covers every square cone() names. See TILES.md 5b. */
+      if (armsLength) {
+        S.guards.forEach(function (g, gi) { s += sightlineFor(g, gi, 0); });
       } else {
         for (k in cells) {
           var pr = k.split(',').map(Number);
