@@ -651,17 +651,34 @@
       /* the beams are not drawn on this floor — they are Benjamin's to
          know, and on the illustrated plan they read as damage. */
 
-      /* doors: gold while locked (the thing to open), grey once it is not. A
-         door in a north face stands in the face; one in a side wall swings. */
+      /* DOORS: SHUT AND GOLD IS THE ONE TO OPEN, standing open is one that is
+         already dealt with. A door in a north face stands in the face; one in
+         a side wall swings.
+
+         THE BOX HAS TO LEAVE THE WALL'S TOP COURSE SHOWING, and that is the
+         whole of the change these two pieces of art needed. img() draws them
+         with `meet`, so the picture is fitted inside the box and never
+         stretched — which means the box's ASPECT decides which way it fits.
+         The old double doors were about square, so they fitted by width and
+         came up short, and the gap they left at the top of the box was the
+         wall band's own panels showing over the lintel. That gap read as
+         masonry above a doorway and it was an accident.
+
+         These are single doors at roughly one by two, so in the old box they
+         fitted by height instead, filled it, and swallowed the course above.
+         The box is shorter now — bottom in exactly the same place, top pushed
+         down to where the old art's picture actually started — so the blocks
+         sit above the door on purpose this time. Bottom edges: py + 298.7 on a
+         face, py + 290 on a partition, both unchanged from before. */
       S.doors.forEach(function (d) {
         if (!wallKnown(d.x, d.y)) return;
         var horizontal = floorLike(d.x, d.y + 1) || floorLike(d.x, d.y - 1);
         px = d.x * W; py = d.y * H;
         if (horizontal) {
-          var name = d.locked ? 'goal-door-front' : 'prop-door-gray';
+          var name = d.locked ? 'goal-door-closed' : 'goal-door-open';
           var onBlock = floorLike(d.x, d.y - 1);        /* a partition: the door sits on the grey */
-          if (onBlock) s += img(name, px + W * 0.06, py - H * 0.05, W * 0.88, H * 1.08, { keep: true });
-          else s += img(name, px + W * 0.02, py - H * 0.1, W * 0.96, H * 1.1, { keep: true });
+          if (onBlock) s += img(name, px + W * 0.06, py + H * 0.15, W * 0.88, H * 0.88, { keep: true });
+          else s += img(name, px + W * 0.02, py + H * 0.12, W * 0.96, H * 0.88, { keep: true });
         } else {
           s += img('goal-door-side', px + W * 0.2, py - H * 0.25, W * 0.6, H * 1.25, { keep: true, opacity: d.locked ? 1 : 0.85 });
         }
