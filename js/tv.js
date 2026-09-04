@@ -229,7 +229,10 @@
     /* THE ROSTER NUMBER, on the briefing where both players can see it before
        anything starts. The guards stand somewhere else every run; this is the
        number that says which somewhere, and ?seed=<n> plays that one again. */
-    $('#plan-job').textContent = C.contract + '  ·  ROSTER ' + S.seed;
+    /* the eyebrow is one line or it wraps into the title. The venue is already
+       in the top bar and the target sits under the title, so all this line has
+       to carry is which contract and which shift. */
+    $('#plan-job').textContent = C.contract.split(' — ')[0] + '  ·  ROSTER ' + S.seed;
     $('#lamp-p1').classList.toggle('is-ready', S.ready.p1);
     $('#lamp-p2').classList.toggle('is-ready', S.ready.p2);
   }

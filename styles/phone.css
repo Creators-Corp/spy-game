@@ -714,6 +714,26 @@
 .keys button:hover{background:var(--gold);}
 /* the whole button IS the key, so it wants the room the number used to take */
 .keys button svg{width:100%;height:auto;aspect-ratio:1/1;}
+
+/* THE RING, PHOTOGRAPHED, with three plates over the blades. The keys fan out
+   and overlap on the ring, so they are one picture and the tap targets are
+   invisible rectangles across its lower half — the half where the blades have
+   separated. Nothing is drawn on them: a visible button would be a label, and
+   a label is the thing this puzzle is built to do without. */
+.keyring{position:relative;margin-top:2px;}
+.keyring__art{width:100%;aspect-ratio:896/1200;border:0;background:transparent;}
+.keyring__art img{object-fit:contain;}
+.keyring__hits{position:absolute;left:0;right:0;bottom:0;height:62%;display:block;}
+.keyring__hit{
+  position:absolute;top:0;bottom:0;border:0;background:transparent;border-radius:var(--r);
+}
+.keyring__hit:hover{background:rgba(214,168,78,.22);box-shadow:inset 0 0 0 2px var(--gold);}
+.keyring__hit.is-tried{background:rgba(0,0,0,.42);pointer-events:none;}
+.keyring__hit.is-bad{background:rgba(193,55,46,.45);animation:nudge .22s;}
+
+/* the padlock is a photograph now, not an icon */
+.padlock__plate{width:100%;aspect-ratio:896/1200;max-height:180px;border:var(--stroke) solid var(--ink);}
+.padlock__plate img{object-fit:cover;object-position:center 42%;}
 .keys button.is-tried{opacity:.35;pointer-events:none;border-style:dashed;}
 .keys button.is-bad{animation:nudge .22s;background:var(--red);}
 

@@ -282,9 +282,16 @@
        and costs a little suspicion, nothing worse. */
     GRILLE: {
       lock: 'trident',
-      board: [{ sym: 'crescent', key: 1, shape: 'keyWard' },
-              { sym: 'trident',  key: 2, shape: 'keyHoles' },
-              { sym: 'ladder',   key: 3, shape: 'keyTeeth' }],
+      /* `at` and `wide` are where each blade sits across grille-keys.png, as a
+         fraction of its width — the three fan out and overlap, so they are one
+         photograph with three plates over it rather than three sprites. Left
+         to right: the toothed one, the pierced one, the old warded one.
+         `shape` is the line drawing of the same key on Benjamin's card.
+         The plate art has this lock's mark engraved on it: change `lock` and
+         the chip on P1 follows, but the photograph will need redrawing. */
+      board: [{ sym: 'ladder',   key: 3, shape: 'keyTeeth',  at: 0.02, wide: 0.36 },
+              { sym: 'trident',  key: 2, shape: 'keyHoles',  at: 0.38, wide: 0.28 },
+              { sym: 'crescent', key: 1, shape: 'keyWard',   at: 0.66, wide: 0.32 }],
       door: { x: 12, y: 16 },
       rattle: 3
     },
@@ -372,12 +379,15 @@
       { k: 'EVACUATION',   v: 'Service hatch, west wall, row 9. Marked on the plan.' }
     ],
 
+    /* THREE LINES, AND EACH FITS ONE. The panel is 46% of the television and
+       vertically centred, so a fourth beat does not overflow tidily — it
+       pushes the eyebrow up behind the top bar and the READY lamps down behind
+       the bottom one. Everything cut from here is said again by the game
+       itself within a minute of starting. */
     BEATS: [
-      'One of you is inside. One of you has the plans. Neither of you can finish alone.',
-      'The guards move when Assane moves. Nothing happens between your inputs.',
-      'The way through the middle is sealed. Everything here is the long way round.',
-      'Benjamin has three levers in the van. Every one of them is noticed.',
-      'Standing still is free for thirty seconds. After that the building starts to wonder.'
+      'One of you is inside. One of you has the plans.',
+      'Guards move only when Assane moves.',
+      'The middle is sealed. Everything is the long way round.'
     ]
   };
 
@@ -598,9 +608,9 @@
     ],
 
     BEATS: [
-      'Three floors. Every door is a lock, and every floor is worse than the one below it.',
-      'The desk releases the vault. The vault holds the lot. Both are under cameras.',
-      'The way out is not drawn on the plan. Benjamin has the procedures; read them before you need them.'
+      'Three floors, and each is worse than the one below.',
+      'The desk releases the vault. Both are under cameras.',
+      'The way out is not on the plan. Read the procedures.'
     ]
   };
 
