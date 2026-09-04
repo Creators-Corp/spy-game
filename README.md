@@ -361,9 +361,9 @@ moment neither player can get past alone.
 
 ### A guard is three rows tall and contract four's galleries were two
 
-`cone()` gives every man the eight squares around him, so a patrol standing
-anywhere in a two-row corridor covers the whole height of it and cannot be
-walked past. He is a moving plug, and the only answer to a plug is to wait.
+`cone()` gives every man the three tiles across his own line — see `TILES.md`
+5b — so a patrol standing anywhere in a two-row corridor covers the whole
+height of it and cannot be walked past. He is a moving plug, and the only answer to a plug is to wait.
 Both of contract four's galleries had one, on the rows carrying the doors — so
 every north-south crossing had a plug sliding across it, the two legs that
 cross the building averaged 81 turns against a walking distance of 46, and a

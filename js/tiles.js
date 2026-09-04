@@ -498,51 +498,55 @@
          actually says are dangerous, so a wall still stops it. White rather
          than red on purpose: in the dark these are torches, and the dossier
          says as much. */
-      var armsLength = S.levers.lights > 0 || S.blackout;
+      /* THE ARTIST'S SIGHTLINE, AND THE RULE IT IS NOW THE SHAPE OF.
+         cone() used to be a body and a one-tile line ahead, which left the two
+         squares diagonally in front of a guard free — the first thing everyone
+         tried, and impossible to explain to somebody watching. It is the shape
+         of these pieces now: three tiles across from one square behind him to
+         `depth` ahead, narrowing to a single tile one further on.
 
-      /* THE ARTIST'S HATCH, CUT TO THE ENGINE'S SHAPE.
-         The two sightline pieces are rectangles: the small one is a 3x3 block,
-         the full one is three tiles tall for five columns ahead and nothing
-         behind. cone() is neither — it is the eight squares around a man,
-         BEHIND HIM INCLUDED, plus a line one tile tall ahead. Drawing either
-         piece as cut would put hatching on squares that are safe and leave
-         squares that catch you bare, which is worse than a mismatch of style:
-         it is the picture lying about the rule.
+         Both pieces are drawn facing WEST — the man stands one column in from
+         the right-hand end and the look runs away from him to the left — so
+         west is no rotation and the other three turn about the square he is
+         standing on. The full piece is authored at depth three and stretched
+         along its own axis for anything else, so ATTENTIVE and ALERT widen his
+         look rather than merely lengthening it.
 
-         So the piece is a texture and the rule is the stencil. Each guard's
-         sprite is laid down facing the way he is, masked so its white becomes
-         the vision colour, and clipped to the squares the engine actually
-         calls dangerous. What you see is his hatch; where you see it is the
-         truth. Red while the lights are on, because red is threat here; white
-         when they are out, because then it is a torch. */
+         Both are masked red, because red is threat on this floor. */
       function sightlineFor(g, gi, depth) {
         var p = E.guardAt(g);
         if (!known(p.x, p.y) && !wallKnown(p.x, p.y)) return '';
         var mine = E.cone(p.x, p.y, g.facing, depth);
         if (!mine.length) return '';
-        var small = depth === 0;
-        var cw = small ? 3 : 6, ch = 3;
-        /* the piece is drawn facing east: the man stands in its left-hand
-           column, so it starts on his own square and reaches away from him */
-        var ix = small ? (p.x - 1) * W : p.x * W, iy = (p.y - 1) * H;
+        var small = depth <= 0, id = 'tl-sight-' + gi, box = 10;
+        var spin = { W: 0, N: 90, E: 180, S: 270 }[g.facing] || 0;
         var cx = p.x * W + W / 2, cy = p.y * H + H / 2;
-        var spin = { E: 0, S: 90, W: 180, N: 270 }[g.facing] || 0;
-        var id = 'tl-sight-' + gi, box = 8;
+        var cols = small ? 3 : depth + 3;
+        var ix = (small ? p.x - 1 : p.x - depth - 1) * W, iy = (p.y - 1) * H;
+        var art = '<image href="' + href(small ? 'guard-sightline-small' : 'guard-sightline') + '"' +
+                  ' x="' + ix + '" y="' + iy + '" width="' + (cols * W) + '" height="' + (3 * H) + '"' +
+                  ' preserveAspectRatio="none" transform="rotate(' + spin + ' ' + cx + ' ' + cy + ')"/>';
+
+        /* THE TORCH NEEDS NO CLIP. Every non-wall neighbour is in the ring, so
+           the only thing a 3x3 can cover beyond the rule is stone, and Assane
+           can never stand on stone — while clipping it chopped the glow square
+           against the wall and made the piece read as a 3x2.
+           THE FAN DOES need one: it can reach past a wall into the next room,
+           and painting a square there would be a lie. */
         var clip = '';
-        mine.concat([p.x + ',' + p.y]).forEach(function (k) {
-          var c = k.split(',');
-          clip += '<rect x="' + (c[0] * W) + '" y="' + (c[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '"/>';
-        });
-        return '<clipPath id="' + id + '">' + clip + '</clipPath>' +
-          '<mask id="' + id + '-m">' +
-            '<image href="' + href(small ? 'guard-sightline-small' : 'guard-sightline') + '"' +
-            ' x="' + ix + '" y="' + iy + '" width="' + (cw * W) + '" height="' + (ch * H) + '"' +
-            ' preserveAspectRatio="none" transform="rotate(' + spin + ' ' + cx + ' ' + cy + ')"/>' +
-          '</mask>' +
-          '<rect clip-path="url(#' + id + ')" mask="url(#' + id + '-m)"' +
+        if (!small) {
+          mine.concat([p.x + ',' + p.y]).forEach(function (k) {
+            var c = k.split(',');
+            clip += '<rect x="' + (c[0] * W) + '" y="' + (c[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '"/>';
+          });
+        }
+        return (clip ? '<clipPath id="' + id + '-c">' + clip + '</clipPath>' : '') +
+          '<mask id="' + id + '-m">' + art + '</mask>' +
+          '<rect' + (clip ? ' clip-path="url(#' + id + '-c)"' : '') +
+          ' mask="url(#' + id + '-m)"' +
           ' x="' + ((p.x - box) * W) + '" y="' + ((p.y - box) * H) + '"' +
           ' width="' + (box * 2 * W) + '" height="' + (box * 2 * H) + '"' +
-          ' fill="' + (small ? '#F4F7FA' : RED) + '" opacity="' + (small ? 0.9 : 0.8) + '"/>';
+          ' fill="' + RED + '" opacity="' + (small ? 0.85 : 0.78) + '"/>';
       }
 
       /* every threatened square, however it is going to be painted — the +1
@@ -551,17 +555,10 @@
       for (k in threat) cells[k] = 1;
       S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
 
-      /* ONLY THE SMALL PIECE IS USED, AND ONLY BECAUSE IT FITS.
-         The full-size piece was laid down here too for a while, masked and
-         clipped to cone(). It looked right and it was not: the file has no
-         pixels behind the man — that is the whole shape of it, a block ahead
-         and nothing else — so the five squares of his ring that sit behind and
-         beside him came out BARE. They catch you. A picture that leaves a
-         square that catches you unpainted is worse than one that is merely a
-         different shape, so the lit case is back on the hatch pattern, which
-         covers every square cone() names. See TILES.md 5b. */
-      if (armsLength) {
-        S.guards.forEach(function (g, gi) { s += sightlineFor(g, gi, 0); });
+      if (view === 'benjamin') {
+        /* coneDepth() is already 0 with the lights cut or the power gone, so
+           the torch and the fan are the same call */
+        S.guards.forEach(function (g, gi) { s += sightlineFor(g, gi, E.coneDepth(g)); });
       } else {
         for (k in cells) {
           var pr = k.split(',').map(Number);

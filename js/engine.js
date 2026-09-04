@@ -267,19 +267,56 @@
      "he is looking north, so do not be north of him, and do not be next to
      him." */
   function cone(x, y, dir, depth) {
-    var out = [], ax, ay;
-    for (ax = -1; ax <= 1; ax++) {
-      for (ay = -1; ay <= 1; ay++) {
-        if (!ax && !ay) continue;
-        if (!isWall(x + ax, y + ay)) out.push((x + ax) + ',' + (y + ay));
+    var out = [];
+
+    /* ARM'S LENGTH. With the lights cut or the power gone a man sees the eight
+       squares around him and nothing else, whatever his round says. That is
+       also exactly the shape guard-sightline-small is cut to. */
+    function ring() {
+      for (var ax = -1; ax <= 1; ax++) {
+        for (var ay = -1; ay <= 1; ay++) {
+          if (!ax && !ay) continue;
+          if (!isWall(x + ax, y + ay)) out.push((x + ax) + ',' + (y + ay));
+        }
       }
+      return out;
     }
-    if (!dir) return out;
     var v = DIRV[dir];
-    for (var d = 2; d <= depth + 1; d++) {
-      var cx = x + v.x * d, cy = y + v.y * d;
-      if (isWall(cx, cy)) break;          /* a wall stops the line dead */
-      out.push(cx + ',' + cy);
+    if (!v || depth <= 0) return ring();
+
+    /* AND OTHERWISE: A BODY'S WIDTH OF FLOOR, WIDENING TO THE FRONT.
+       Three tiles across, running from one square behind him to `depth`
+       squares ahead, and then one square further on its own as the tip — the
+       far end of a look narrows to a line. This is the artist's sightline
+       piece, which is where the shape comes from; the drawing is authored at
+       depth three and the two agree square for square there.
+
+       What it replaced was a body and a sightline: the same eight squares
+       around him, but only a ONE-tile line ahead however far it reached. That
+       made the two squares diagonally in front of a guard free, which is not
+       something you can explain to somebody watching, and it is the first
+       thing everyone tried.
+
+       Deeper alert levels stretch the body rather than the line, so ATTENTIVE
+       and ALERT widen what he covers instead of just lengthening it.
+
+       The line still dies on a wall: once the square straight ahead is stone
+       there is nothing more to see, and the fan stops there rather than
+       reaching round the corner. */
+    var sx = -v.y, sy = v.x;              /* one step to his side */
+    var reach = -1;
+    for (var d = -1; d <= depth; d++) {
+      if (d > 0 && isWall(x + v.x * d, y + v.y * d)) break;
+      for (var s = -1; s <= 1; s++) {
+        var cx = x + v.x * d + sx * s, cy = y + v.y * d + sy * s;
+        if (cx === x && cy === y) continue;          /* not the tile he is on */
+        if (!isWall(cx, cy)) out.push(cx + ',' + cy);
+      }
+      reach = d;
+    }
+    if (reach === depth) {
+      var tx = x + v.x * (depth + 1), ty = y + v.y * (depth + 1);
+      if (!isWall(tx, ty)) out.push(tx + ',' + ty);
     }
     return out;
   }

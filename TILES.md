@@ -163,41 +163,41 @@ combined.
 
 ---
 
-## 5b. The sightline pieces, and why they are stencilled
+## 5b. The sightline pieces ARE the rule
 
-Both sightline files are rectangles. `guard-sightline` is three tiles tall for
-five columns ahead with nothing behind the man; `guard-sightline-small` is a
-flat 3 × 3.
+Both files are drawn facing **west**: the man stands one column in from the
+right-hand end, and his look runs away from him to the left, three tiles across,
+narrowing to a single tile at the tip.
 
-`cone()` is neither. It is the eight squares around him — **behind him
-included** — plus a line **one tile tall** ahead, as deep as his alert level
-and his disguise allow. Drawn as cut, the full piece would put hatching on
-squares that are safe and leave squares bare that catch you, which is worse
-than a mismatch of style: it is the picture lying about the rule.
+`cone()` is that shape now. Three tiles across from one square behind him to
+`depth` squares ahead, then one square further on its own. At depth three — a
+ring guard with no disguise against him — the drawing and the rule agree square
+for square, which is what the full-size file is authored at.
 
-Cutting the full piece to the rule was tried and does not work either, for a
-reason worth writing down: **the file has no pixels behind the man.** Mask it to
-`cone()` and the five ring squares that sit behind and beside him come out
-bare — and those squares catch you. A picture that leaves a square that catches
-you unpainted is worse than one that is merely the wrong shape. So the lit case
-is back on the hatch pattern, which covers every square `cone()` names.
+What it replaced was a body and a one-tile line: the same eight squares around
+him, but only a single tile wide however far the look reached. That left the two
+squares diagonally in front of a guard free, which is the first thing everyone
+tries and impossible to explain to somebody watching over your shoulder.
 
-The small piece is the exception, and it needs no cutting at all: with the
-lights out `coneDepth()` is 0, the cone *is* a 3 × 3 block, the art has content
-in all nine cells, and it matches square for square. That one is in use.
+Deeper alert levels stretch the body rather than the line, so ATTENTIVE and
+ALERT widen what a man covers instead of merely lengthening it. The full piece
+is stretched along its own axis to match; the line still dies on a wall.
 
-**The full-size piece is therefore still on the shelf.** It can only go in once
-one of two things happens: it is re-cut to the rule's shape — the eight squares
-around a man, behind him included, and a line one tile tall ahead — or the rule
-is changed to the art's rectangle, which means guards see three times as much
-floor and nothing at their backs, and both contracts need re-scanning for dead
-states before anybody trusts a route again.
+With the lights cut or the power gone `coneDepth()` is 0 and the rule falls back
+to the eight squares around him — which is exactly `guard-sightline-small`, in
+all nine of its cells. Both pieces are masked **red**, because red is threat on
+this floor.
 
-**This layer has no player-facing home yet.** The television must never draw a
-cone — that is the design law that keeps P2 from reading P1's secrets off the
-shared screen — and Benjamin's in-game plan is a schematic at 20px a tile,
-where a 300px hatched sprite would be a smudge. It is real the day Benjamin's
-plan moves to this renderer.
+The torch is drawn whole and the fan is clipped. A 3 × 3 can only ever cover
+stone beyond the rule and Assane can never stand on stone, so clipping it just
+chopped the glow square against a wall and made the piece read as a 3 × 2. The
+fan can reach past a wall into the next room, where painting a square really
+would be a lie.
+
+**This layer still has no player-facing home.** The television must never draw a
+cone — the design law that keeps P2 from reading P1's secrets off the shared
+screen — and Benjamin's in-game plan is a schematic at 20px a tile. It is real
+the day Benjamin's plan moves to this renderer.
 
 ---
 
