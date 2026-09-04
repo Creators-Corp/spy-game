@@ -910,7 +910,7 @@
   /* ---------------------------------------------------------- LES VISAGES */
   function viewVisages() {
     var S = E.S, t = S.tchatche;
-    var wrap = el('div', {}, [
+    var wrap = el('div', { class: 'dossier__faces' }, [
       el('p', { class: 'h', text: 'FACES · NIGHT SHIFT' }),
       U.howto([
         'Assane describes the guard standing in front of him. Tap that face.',
@@ -921,6 +921,7 @@
     Object.keys(C.FACES).forEach(function (badge) {
       var b = el('button', {
         class: pickedFace === badge ? 'is-on' : '',
+        'aria-pressed': pickedFace === badge ? 'true' : 'false',
         onclick: function () { pickedFace = badge; U.sfx.tap(); U.emit('render'); }
       });
       b.appendChild(L.face.portrait(C.FACES[badge], 'faces__portrait'));
