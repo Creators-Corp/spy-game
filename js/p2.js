@@ -993,7 +993,7 @@
        and the odd jump. Cosmetic — the plan is still the plan. */
     host.classList.toggle('is-degraded', !!(S.dark || S.blackout) && (S.phase === 'play' || S.phase === 'module'));
     if (S.phase === 'plan') { host.appendChild(viewRole()); return; }
-    if (S.phase === 'rank' || S.phase === 'jail') { host.appendChild(viewEnd()); return; }
+    if (S.phase === 'rank' || S.phase === 'jail') { host.appendChild(U.polishScreen(viewEnd())); return; }
 
     var avail = availableTabs().map(function (t) { return t[0]; });
     if (avail.indexOf(tab) < 0) tab = 'plan';
@@ -1003,6 +1003,8 @@
               : tab === 'manuel' ? viewManuel()
               : tab === 'personnel' ? viewPersonnel()
               : viewVisages();
+
+    if (tab === 'porte' || tab === 'manuel') U.polishScreen(inner);
 
     /* it asks from above the tabs, so it is there whichever page he happened
        to be reading when Assane walked into the thing */

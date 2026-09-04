@@ -53,6 +53,26 @@ window.DC = window.DC || {};
     ]);
   }
 
+  // Apply the shared action artwork without replacing handlers or button state.
+  function polishScreen(root) {
+    root.classList.add('ui-polish');
+    $$('.btn', root).forEach(function (button) {
+      if (button.querySelector('.action-art')) return;
+      var label = el('span', { class: 'action-label' });
+      while (button.firstChild) label.appendChild(button.firstChild);
+      button.appendChild(label);
+      button.classList.add('art-action');
+      ['light', 'dark'].forEach(function (state) {
+        button.appendChild(el('img', {
+          class: 'action-art action-art--' + state,
+          src: assetURL('art/ui/van-action-' + state + '.png'),
+          alt: '', 'aria-hidden': 'true', draggable: 'false'
+        }));
+      });
+    });
+    return root;
+  }
+
   /* ---------- art placeholder slots ----------
      Every image in the prototype is a named slot. If art/<name>.png exists it is
      used; if not, the slot draws itself as a labelled dashed box so the layout is
@@ -388,7 +408,7 @@ window.DC = window.DC || {};
 
   L.util = {
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
-    phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
+    polishScreen: polishScreen, phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
     warmup: warmup, musicVolume: musicVolume, sfxVolume: sfxVolume, silence: stopSamples,

@@ -971,6 +971,7 @@
                                     : viewBureau();
     else if (S.phase === 'tchatche') v = viewTchatche();
     else v = viewEnd();
+    if ((S.phase === 'module' && S.moduleId !== 'deguisement') || S.phase === 'rank' || S.phase === 'jail') U.polishScreen(v);
     host.appendChild(v);
     if (S.phase === 'play' && S.running) {
       var idle = Math.max(0, (Date.now() - S.lastActionAt) / 1000);

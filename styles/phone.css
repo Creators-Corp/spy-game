@@ -1078,3 +1078,91 @@
 .dossier__faces .howto em{color:#FFEFCC;}
 .pscreen--tchatche .howto b,
 .dossier__faces .howto b{background:#090C11;color:#FD6A1A;border-color:#4C93E4;}
+
+/* Remaining puzzle and end screens. Gameplay swatches and artwork retain
+   their own palette; these rules style the surrounding interface. */
+.ui-polish{color:#FFEFCC;}
+.ui-polish :is(.note,.howto em,.notes,.proc dd,.lbl,.plate__word){color:#FFEFCC;}
+.ui-polish :is(.h,.mod__head h2){color:#FD6A1A;}
+.ui-polish .howto b{background:#090C11;color:#FD6A1A;border:1px solid #4C93E4;}
+.ui-polish :is(.safe__plate,.plate,.readout,.manual__seq,.board__result,.warn,.proc),
+.pscreen--dossier .keyboard{
+  border:2px solid #778495;border-radius:0;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+  color:#FFEFCC;
+}
+.ui-polish .proc{padding:12px;}
+.pscreen--dossier .keyboard{padding:12px;}
+.pscreen--dossier .keyboard :is(.note,.howto em){color:#FFEFCC;}
+.pscreen--dossier .keyboard .h{color:#FD6A1A;}
+.ui-polish :is(.desk,.padlock,.canvas__art,.keyring),
+.pscreen--dossier .deadscreen{
+  position:relative;border:2px solid #778495;border-radius:0;
+}
+/* Overlay strokes remain visible over edge-to-edge illustrations. */
+.ui-polish :is(.desk,.padlock,.canvas__art,.keyring)::after,
+.pscreen--dossier .deadscreen::after{
+  content:"";position:absolute;inset:1px;border:1px solid #778495;
+  box-shadow:0 0 0 1px #0C1118;pointer-events:none;z-index:2;
+}
+.ui-polish :is(.entry i,.board__slots i,.pulse,.manual__seq .steps i,.symrow__cell){
+  border:2px solid #778495;border-radius:0;background:#0C1118;color:#FFEFCC;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.ui-polish :is(.keypad button,.doorgrid button,.keys button,.undo,.manual__row,.board__keys button,.symring__cell){
+  border:1px solid #4C93E4;border-radius:0;background:#0A1626;color:#FFEFCC;
+}
+.ui-polish :is(.keypad button,.doorgrid button,.keys button,.undo,.manual__row,.board__keys button):hover{color:#FFFFFF;}
+.ui-polish :is(.keypad button,.doorgrid button,.keys button,.undo,.manual__row,.board__keys button):active,
+.ui-polish .manual__row.is-on{
+  background:#090C11;color:#FD6A1A;border-color:#FD6A1A;
+}
+.ui-polish .manual__row.is-on .manual__ringname{color:#FD6A1A;}
+.ui-polish .board__keys .board__clear{background:#0A1626 !important;}
+.ui-polish .board__keys .board__clear:active{background:#090C11 !important;}
+.ui-polish .doorgrid span{color:inherit;}
+.ui-polish .symrow__cell b{color:#FFEFCC;}
+.ui-polish .symrow__cell.is-read{background:#090C11;color:#FD6A1A;}
+.ui-polish .symrow__cell.is-read b{color:#FD6A1A;}
+.ui-polish .symrow__cell.is-next{border-color:#FD6A1A;box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #FD6A1A;}
+.ui-polish .ringdial__cell rect{fill:#0A1626;stroke:#4C93E4;}
+.ui-polish .ringdial__cell:is(:hover,.is-zero) rect{fill:#090C11;stroke:#FD6A1A;}
+.ui-polish .ringdial__cell.is-zero use{color:#FD6A1A;}
+.ui-polish .ringdial__n.is-zero{fill:#FD6A1A;}
+.ui-polish .dial__disc{fill:#0A1626;stroke:#4C93E4;}
+.ui-polish .dial__cell:is(:hover,.is-used) .dial__disc{fill:#090C11;stroke:#FD6A1A;}
+.ui-polish .dial__cell:is(:hover,.is-used) use{color:#FD6A1A;}
+/* Worn keys and lit pulses must remain visually distinct to solve the puzzles. */
+.ui-polish .keypad--night button.is-worn{background:#090C11;color:#FD6A1A;border-color:#FD6A1A;box-shadow:inset 0 0 0 2px #FD6A1A;}
+.ui-polish .prop--wear b{color:#FD6A1A;}
+.ui-polish .pulse.is-on{background:#FD6A1A;border-color:#FD6A1A;}
+.ui-polish .pulse.is-on b{color:#090C11;}
+.ui-polish .board__result:not(.is-none){background:#090C11;color:#FD6A1A;}
+.ui-polish .entry i.is-bad,
+.ui-polish .readout.is-bad{background:var(--red);color:#FFEFCC;}
+.ui-polish .symrow--code.is-bad .symrow__cell{border-color:var(--red);}
+.ui-polish .rule{height:4px;background:linear-gradient(to bottom,#778495 0 2px,#0C1118 2px 3px,#778495 3px 4px);}
+.ui-polish .art-action{
+  position:relative;isolation:isolate;min-height:44px;border:0;border-radius:0;
+  background:transparent;color:#FFEFCC;
+}
+.ui-polish .art-action .action-art{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;user-select:none;
+}
+.ui-polish .art-action .action-art--dark{visibility:hidden;}
+.ui-polish .art-action:hover{background:transparent;color:#FFFFFF;}
+.ui-polish .art-action:active{color:#FD6A1A;}
+.ui-polish .art-action:active .action-art--light{visibility:hidden;}
+.ui-polish .art-action:active .action-art--dark{visibility:visible;}
+.ui-polish .art-action.is-wrong{background:var(--red);color:#FFEFCC;}
+.ui-polish .art-action.is-wrong .action-art{visibility:hidden;}
+.ui-polish .pfoot{position:relative;background:#0C1118;border-top:2px solid #778495;}
+.ui-polish .pfoot::before{content:"";position:absolute;top:1px;left:0;right:0;height:1px;background:#778495;pointer-events:none;}
+.ui-polish button:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+.pscreen--dossier .signal.is-good{background:#090C11;color:#FD6A1A;border-color:#778495;}
+
+/* Invisible key hit areas remain transparent so the photograph is the clue. */
+.ui-polish .keyring__hit:hover{background:rgba(253,106,26,.12);box-shadow:inset 0 0 0 1px #FD6A1A;}
+.ui-polish .keyring__hit.is-bad{background:rgba(193,55,46,.45);box-shadow:inset 0 0 0 1px var(--red);}
+.ui-polish .keys button.is-bad{background:var(--red);color:#FFEFCC;}
+.ui-polish .waiting{border:2px solid #778495;background:#0C1118;box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;}
