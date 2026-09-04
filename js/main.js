@@ -77,6 +77,9 @@
   }
 
   function restart() {
+    /* a new job silences the old one: without this a catch sting or a victory
+       cue plays on over the plan screen of the next run */
+    U.silence();
     E.reset(pinned);
     L.p1.resetTyped();
     L.p2.reset();

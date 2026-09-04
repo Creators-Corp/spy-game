@@ -215,7 +215,6 @@ window.DC = window.DC || {};
       }, 40);
       scoreEl = null;
     }
-    if (!track) stopSamples();
     if (!track || !SCORE[track] || muted) return;
     try {
       var a = new Audio(assetURL(SCORE[track]));
@@ -237,6 +236,7 @@ window.DC = window.DC || {};
        art/sfx-step.wav     SoundBits — Focused Sports · Badminton Racket Swing
        art/sfx-impact.wav   Artlist Original — Epic Moments · Tech Impact
        art/sfx-caught.wav   Artlist Original — Epic Orchestral · Royal String Logo
+       art/sfx-victory.wav  Unrealsfx — Candy Game Vol 2 · Bonus Point Notification
 
      THE STEP IS POLYPHONIC and the other two are not, which is the only real
      complication here. A stinger fires once and restarting it is exactly what
@@ -260,7 +260,11 @@ window.DC = window.DC || {};
     /* halved from 0.60. It is fourteen seconds of orchestra arriving on top of
        a module both players have to read and talk through, so it wants to be
        the thing under the conversation rather than the thing that stops it. */
-    caught: { src: 'art/sfx-caught.wav', vol: 0.30, voices: 1 }
+    caught:  { src: 'art/sfx-caught.wav',  vol: 0.30, voices: 1 },
+    /* he is out. The rank card is the only screen in the game with nothing
+       underneath it — the score has already gone quiet by then — so this one
+       gets the room to itself. */
+    victory: { src: 'art/sfx-victory.wav', vol: 0.35, voices: 1 }
   };
   /* the same live knob the music has, for the same reason: the right level is
      a property of the room this gets shown in, not of the file.
@@ -306,10 +310,13 @@ window.DC = window.DC || {};
     voiceAt[name]++;
     try { a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
   }
-  /* SILENCE MEANS SILENCE. The catch sting is thirteen seconds long, which is
-     most of a tchatche and all of a restart — without this, hitting
-     RECOMMENCER left the strings playing over the plan screen of the next
-     job. Called wherever the score goes quiet, so the two always agree. */
+  /* SILENCE MEANS SILENCE, BUT ONLY WHEN A JOB ENDS AND ANOTHER BEGINS.
+     This used to run from score(null), which covers the rank card — and the
+     rank card is exactly where the victory cue plays. finish() sets the phase,
+     the render that follows asks the score for silence, and the sound that had
+     just started was stopped a frame later. It hangs off restart() now: the
+     thing it was ever protecting against was a fourteen-second catch sting
+     carrying over into the plan screen of the next job. */
   function stopSamples() {
     for (var k in samples) {
       var pool = samples[k];
@@ -332,6 +339,8 @@ window.DC = window.DC || {};
     unlock:function () { tone(440, 0.07, 'triangle', 0.05); setTimeout(function () { tone(590, 0.07, 'triangle', 0.05); }, 70); setTimeout(function () { tone(880, 0.20, 'triangle', 0.06); }, 140); },
     jail:  function () { tone(70, 0.60, 'sawtooth', 0.10); },
     tap:   function () { tone(520, 0.03, 'sine', 0.03); },
+    /* he is on the street with the thing in his coat */
+    victory: function () { sample('victory'); },
     /* a system going down: the beams, the lights, the power itself */
     impact: function () { sample('impact'); },
     /* a hand on his shoulder. Runs under LA TCHATCHE rather than stopping for
@@ -382,7 +391,7 @@ window.DC = window.DC || {};
     phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
-    warmup: warmup, musicVolume: musicVolume, sfxVolume: sfxVolume,
+    warmup: warmup, musicVolume: musicVolume, sfxVolume: sfxVolume, silence: stopSamples,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);

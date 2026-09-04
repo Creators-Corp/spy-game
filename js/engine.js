@@ -1284,7 +1284,7 @@
     else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
     else S.objective = 'Find the security desk. Open La Réserve.';
   }
-  function finish() { S.phase = 'rank'; S.running = false; U.sfx.good(); }
+  function finish() { S.phase = 'rank'; S.running = false; U.sfx.victory(); }
 
   function rank() {
     for (var i = 0; i < C.RANKS.length; i++) if (C.RANKS[i].test(S)) return C.RANKS[i];

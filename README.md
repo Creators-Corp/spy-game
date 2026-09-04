@@ -75,8 +75,9 @@ Then just let them talk. Nothing on either phone tells a player what the other o
 | `art/sfx-step.wav` | SoundBits — Focused Sports · *Badminton Racket Swing* |
 | `art/sfx-impact.wav` | Artlist Original — Epic Moments · *Tech Impact* |
 | `art/sfx-caught.wav` | Artlist Original — Epic Orchestral · *Royal String Logo* |
+| `art/sfx-victory.wav` | Unrealsfx — Candy Game Vol 2 · *Bonus Point Notification* |
 
-**Three recorded cues, against a synthesised bench.** Every other cue in the game is an oscillator, so it works with an empty art folder and survives a phone speaker. These three are not. Assane's step is a whoosh, played three voices deep and round-robin so a held arrow key overlaps the way footsteps do rather than chopping one sample off at 200ms — and it keeps the old square-wave blip as its fallback, because a step is the one cue that fires often enough for its absence to feel like the game has stopped responding. The other two: *Tech Impact* lands whenever a building system dies — the beams dropped, the lights cut, or the power itself going on contract two — and *Royal String Logo* is the building's verdict the moment a hand lands on Assane's shoulder, running under LA TCHATCHE rather than stopping for it. Looping a camera deliberately gets neither: it is the quiet lever, and announcing it would tell the room the one thing nobody in the fiction is supposed to hear.
+**Four recorded cues, against a synthesised bench.** Every other cue in the game is an oscillator, so it works with an empty art folder and survives a phone speaker. These three are not. Assane's step is a whoosh, played three voices deep and round-robin so a held arrow key overlaps the way footsteps do rather than chopping one sample off at 200ms — and it keeps the old square-wave blip as its fallback, because a step is the one cue that fires often enough for its absence to feel like the game has stopped responding. The other two: *Tech Impact* lands whenever a building system dies — the beams dropped, the lights cut, or the power itself going on contract two — *Royal String Logo* is the building's verdict the moment a hand lands on Assane's shoulder, running under LA TCHATCHE rather than stopping for it; and *Bonus Point Notification* is the only one that gets the room to itself, on the rank card, after the score has already gone quiet. Looping a camera deliberately gets neither: it is the quiet lever, and announcing it would tell the room the one thing nobody in the fiction is supposed to hear.
 
 **If P1 gets spotted, that is not a loss.** It is **La Tchatche**: P1 describes the guard's face, P2 finds him in VISAGES, reads the crack, and tells P1 which of three lines to use. Three exchanges. Two mistakes ends the job — and losing takes five seconds and gets a laugh.
 
@@ -443,6 +444,7 @@ Likeness rules are already enforced in the prompts: **Omar Sy is cleared** and A
 | P2 | the four dossier tabs; nothing ever switches them for you |
 | RECOMMENCER | restart the job |
 | SON | mute — every audio cue has a visual twin, so the whole thing is playable muted, music included |
+| levels | `DC.util.musicVolume(0.05)` and `DC.util.sfxVolume('caught', 0.2)` set them live; the numbers they settle on go in `util.js` |
 | SLOTS | hide placeholder labels for screenshots |
 
 ---
