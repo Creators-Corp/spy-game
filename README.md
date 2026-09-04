@@ -235,6 +235,28 @@ class of problem, and it found every one of the five above.
 
 ---
 
+## TWO CONTRACTS
+
+The first two — LA VENTE DE NUIT and LA COLLECTION PRIVÉE — are gone. They were
+the ones that taught the shape, and everything they proved is proved better by
+the two that replaced them; a picker with four entries also made the demo open
+with a choice nobody yet had the information to make. LA CHAMBRE 302 is now
+No.1 and LA VEILLE DE VENTE is No.2, and the four tables the veille used to
+borrow from the old No.1 (the rack, the uniforms, the faces, the gossip) now sit
+in the veille itself.
+
+**LA GRILLE goes both ways now.** It is the first thing that happens and its
+whole job is to prove that the other phone holds the missing half — so it had
+better take two sentences rather than one. Assane has a padlock with a symbol
+on its tag and three keys on a ring; Benjamin's card pairs each symbol with a
+key. Nothing is numbered and nothing is written: the keys are *drawn*, on both
+phones. So Assane describes the symbol, Benjamin finds the row and describes the
+key, and Assane picks the one that matches. It used to be Benjamin reading out
+"key 2" and Assane pressing the button marked 2, which is a lookup with a
+courier rather than a conversation.
+
+---
+
 ## A BEAM IS NOT A WALL
 
 You can walk through a laser. What you cannot do is walk through one quietly:
@@ -355,16 +377,16 @@ fetch('tools/route.js').then(r=>r.text()).then(eval)
 then `DC.route.script(DC.route.solve({ job: 1, mode: 'quiet' }))` for a route,
 or `DC.route.audit(20, 1)` to re-run the check after touching a patrol.
 
-**`WALKTHROUGH.md`** is a rehearsed S on contract four, verified end to end and
+**`WALKTHROUGH.md`** is a rehearsed S on contract two, verified end to end and
 good for every run: thirty-four steps, the three module answers, and the one
 moment neither player can get past alone.
 
-### A guard is three rows tall and contract four's galleries were two
+### A guard is three rows tall and contract two's galleries were two
 
 `cone()` gives every man the three tiles across his own line — see `TILES.md`
 5b — so a patrol standing anywhere in a two-row corridor covers the whole
 height of it and cannot be walked past. He is a moving plug, and the only answer to a plug is to wait.
-Both of contract four's galleries had one, on the rows carrying the doors — so
+Both of contract two's galleries had one, on the rows carrying the doors — so
 every north-south crossing had a plug sliding across it, the two legs that
 cross the building averaged 81 turns against a walking distance of 46, and a
 solved route opened with twenty-one taps of HOLD STILL.
@@ -375,7 +397,7 @@ floor — a ring is a lovely shape, but here it traversed *both* long rows and
 plugged the gallery twice a lap. 81 turns became 68. Nobody was removed and
 nothing was made shallower; `content.js` says how to put the ring back.
 
-About forty turns of contract four are still spent letting somebody go past.
+About forty turns of contract two are still spent letting somebody go past.
 That is the floor of two galleries, two aisles and three patrols, and no
 reshuffling of beats gets under it — posting a guard on a short beat instead
 makes it worse, because a patrol that never walks away seals the corridor

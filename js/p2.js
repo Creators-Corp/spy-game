@@ -449,15 +449,20 @@
   function keyBoard() {
     var wrap = el('div', { class: 'keyboard' }, [
       el('p', { class: 'h', text: 'SERVICE GATE · KEYS' }),
-      el('p', { class: 'note', style: 'margin:0 0 6px', text: 'Assane has the keys. Ask him what is on the padlock’s tag.' })
+      el('p', { class: 'note', style: 'margin:0 0 6px', text: 'Assane has the keys on a ring, and nothing is written on any of them. Ask what is stamped on the padlock’s tag, then describe the key beside it.' })
     ]);
     var rows = el('div', { class: 'keyboard__rows' });
     C.GRILLE.board.forEach(function (b) {
+      /* symbol on the left, the key it opens on the right, both drawn. The
+         row used to end in the words KEY 2, which Benjamin could read out
+         without ever looking at the thing — and then Assane pressed the
+         button marked 2 without looking either. */
       var ic = G.icon(b.sym); ic.style.color = 'var(--ink)';
+      var kc = G.icon(b.shape || 'key'); kc.style.color = 'var(--ink)';
       rows.appendChild(el('div', { class: 'keyrow' }, [
         el('i', {}, [ic]),
         el('span', { class: 'keyrow__arrow', text: '→' }),
-        el('b', { text: 'KEY ' + b.key })
+        el('i', { class: 'keyrow__key' }, [kc])
       ]));
     });
     wrap.appendChild(rows);

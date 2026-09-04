@@ -712,8 +712,8 @@
   padding:12px 4px 10px;display:grid;place-items:center;gap:4px;
 }
 .keys button:hover{background:var(--gold);}
-.keys button svg{width:40px;height:40px;}
-.keys button b{font-family:var(--mono);font-size:24px;font-weight:500;}
+/* the whole button IS the key, so it wants the room the number used to take */
+.keys button svg{width:100%;height:auto;aspect-ratio:1/1;}
 .keys button.is-tried{opacity:.35;pointer-events:none;border-style:dashed;}
 .keys button.is-bad{animation:nudge .22s;background:var(--red);}
 
@@ -724,6 +724,8 @@
 }
 .keyrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--stone-dk);}
 .keyrow:first-child{border-top:0;}
+.keyrow__key{flex:1 1 auto !important;width:auto !important;}
+.keyrow__key svg{width:70px;height:36px;}
 .keyrow i{
   width:36px;height:36px;flex:none;display:grid;place-items:center;
   border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);

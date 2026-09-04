@@ -16,7 +16,7 @@ The workbench is `tiles.html`; open it on the dev server, pick a contract, tick
 `art/tiles/computed.json`.
 
 This document is the contract between the map data and the artwork. Contract
-three (`chambre`) follows it. Contract four (`veille`) does not yet; the last
+three (`chambre`) follows it. Contract two (`veille`) does not yet; the last
 section says exactly where and why.
 
 ---
@@ -135,7 +135,7 @@ combined.
    goes inside the floor tile.
 
 4. **A face that ends against wall** is capped with the blank-corner pieces.
-   *(Contract three sets these by hand in the sheet rather than by rule; see §6.)*
+   *(Contract one sets these by hand in the sheet rather than by rule; see §6.)*
 
 5. **A side wall run** takes a plain band in the wall cell, capped at the bottom
    with a bottom corner. At the top it climbs one cell into the wall above it,
@@ -149,7 +149,7 @@ combined.
    the same column as the band below it. The renderer settles this by asking
    the cell below what it actually emits, rather than by re-deciding which rule
    fired — the two disagreed, and the wall jogged sideways by its own thickness
-   at contract four's entrance for exactly that reason.
+   at contract two's entrance for exactly that reason.
 
 6. **A pocket** — floor with wall above it and wall below it — takes a filled
    corner, and its band climbs the two cells above, capped.
@@ -215,15 +215,15 @@ it. Order in the list is drawing order; `[]` blanks a cell; tile names are files
 in `art/tiles/` without the `.png`.
 
 **Keep it small.** It is for decisions, not for a copy of the board. Pin every
-cell and a rule fix will never reach the board again. Contract three uses it for
+cell and a rule fix will never reach the board again. Contract one uses it for
 about fifty cells: the chambre's north face, the partition between the galerie
 sud and the vestiaire, and four T-junctions.
 
 ---
 
-## 7. Contract four
+## 7. Contract two
 
-Contract four now follows the rules. The three faults this section used to
+Contract two now follows the rules. The three faults this section used to
 list are gone, and what fixed each one is worth keeping:
 
 - **The hatch sat on the map's edge**, so the outer wall had nowhere to be
@@ -236,7 +236,7 @@ list are gone, and what fixed each one is worth keeping:
 Its sheet holds four cells: the bands beside the laser openings at C8, J8, N8
 and U8, which the rules leave open because a laser square counts as floor.
 
-Contract three's sheet holds about seventy cells and includes two, **B9 and
+Contract one's sheet holds about seventy cells and includes two, **B9 and
 C9**, that exist only to pin the chambre against rule 5's cap fix. The same
 jog is present there. Unpin those two if you want it corrected; the map is
 signed off as it stands, so it is deliberately frozen.

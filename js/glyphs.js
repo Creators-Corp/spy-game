@@ -41,6 +41,19 @@
     car:     'M14 62 L18 44 L34 34 L66 34 L82 44 L86 62 L86 72 L14 72 Z M30 44 L70 44 M50 34 L50 44 M32 72 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 M68 72 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0',
     /* --- Benjamin's levers, and the gate --- */
     key:     'M30 50 m-14 0 a14 14 0 1 0 28 0 a14 14 0 1 0 -28 0 M44 50 L84 50 M74 50 L74 62 M64 50 L64 60',
+    /* THREE KEYS ON ONE RING, and they are told apart by shape alone. No
+       number, no letter, nothing written: Benjamin sees the same three
+       drawings Assane does and has to say which one in his own words, which is
+       the whole of the first handshake. Same bow on each so the difference is
+       always in the blade. */
+    keyTeeth: 'M28 50 m-13 0 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 M41 50 L88 50 '
+            + 'M50 50 L50 62 M58 50 L58 57 M66 50 L66 64 M74 50 L74 57 M82 50 L82 62',
+    keyHoles: 'M28 50 m-13 0 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 M41 50 L88 50 '
+            + 'M55 50 m-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 '
+            + 'M68 50 m-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 '
+            + 'M81 50 m-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0',
+    keyWard: 'M28 50 m-13 0 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 M41 50 L88 50 '
+            + 'M76 50 L76 68 L88 68 M88 50 L88 60',
     bell:    'M50 14 L50 22 M32 62 C32 36 40 26 50 26 C60 26 68 36 68 62 L78 72 L22 72 Z M42 80 A8 8 0 0 0 58 80',
     bulb:    'M50 14 C34 14 24 26 24 40 C24 52 32 56 36 64 L64 64 C68 56 76 52 76 40 C76 26 66 14 50 14 Z M38 74 L62 74 M42 84 L58 84',
     beam:    'M12 50 L36 50 M64 50 L88 50 M42 38 L58 62 M58 38 L42 62',

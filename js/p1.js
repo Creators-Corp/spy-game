@@ -263,18 +263,23 @@
           else U.emit('render');
         }
       });
-      var ic = G.icon('key'); ic.style.color = 'var(--ink)';
+      /* the key is the picture. Nothing is written on it, so the only way to
+         ask for one is to describe it and the only way to pick one is to
+         recognise it. */
+      var ic = G.icon(b.shape || 'key'); ic.style.color = 'var(--ink)';
       btn.appendChild(ic);
-      btn.appendChild(el('b', { text: String(b.key) }));
       keys.appendChild(btn);
     });
 
     return screen([
       head('LA GRILLE'),
       body([
-        el('p', { class: 'note', style: 'margin:0 0 12px', text: 'A service gate. Tell Benjamin what is stamped on the tag.' }),
+        U.howto([
+          'Describe the mark stamped on the tag to Benjamin.',
+          'He has three keys drawn on his card and will describe the one that fits. Tap it.'
+        ]),
         padlock,
-        el('p', { class: 'lbl lbl--c', style: 'margin:0 0 8px', text: 'TAP THE KEY HE NAMES' }),
+        el('p', { class: 'lbl lbl--c', style: 'margin:0 0 8px', text: 'TAP THE KEY HE DESCRIBES' }),
         keys
       ]),
       foot([ el('p', { class: 'note', text: 'The wrong key rattles the gate. Nothing worse.' }) ])

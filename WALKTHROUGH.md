@@ -1,7 +1,7 @@
-# CONTRAT No.4 — LA VEILLE DE VENTE · a rehearsed S
+# CONTRAT No.2 — LA VEILLE DE VENTE · a rehearsed S
 
-**No seed, no setup.** Open `index.html`, pick **CONTRAT No.4** on Benjamin's
-phone, both players tap READY. The guards start in the same place every run, so
+**No seed, no setup.** Open `index.html`, pick **CONTRAT No.2 — LA VEILLE DE VENTE** on
+Benjamin's phone, both players tap READY. The guards start in the same place every run, so
 this route is the route — it does not go stale and it does not need a roster
 number.
 
@@ -103,7 +103,7 @@ the only thing that opens that square is Benjamin pulling **LOOP A CAMERA**
 from the van, which buys four moves — in, the safe, and back out past the lens.
 
 Neither player can finish it alone, neither screen shows the other's half, and
-nothing about it is a reflex test. Looping costs 4 suspicion and contract four
+nothing about it is a reflex test. Looping costs 4 suspicion and contract two
 gives Benjamin only two of them.
 
 ### The beams are a door, if you want one
