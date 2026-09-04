@@ -257,8 +257,24 @@ window.DC = window.DC || {};
        attention stops being a footstep */
     step:   { src: 'art/sfx-step.wav',   vol: 0.30, voices: 3 },
     impact: { src: 'art/sfx-impact.wav', vol: 0.60, voices: 1 },
-    caught: { src: 'art/sfx-caught.wav', vol: 0.60, voices: 1 }
+    /* halved from 0.60. It is fourteen seconds of orchestra arriving on top of
+       a module both players have to read and talk through, so it wants to be
+       the thing under the conversation rather than the thing that stops it. */
+    caught: { src: 'art/sfx-caught.wav', vol: 0.30, voices: 1 }
   };
+  /* the same live knob the music has, for the same reason: the right level is
+     a property of the room this gets shown in, not of the file.
+         DC.util.sfxVolume('caught', 0.2)
+     Then put the number you settle on in the table above. */
+  function sfxVolume(name, v) {
+    var def = SAMPLE[name];
+    if (!def) return null;
+    if (v === undefined) return def.vol;
+    def.vol = Math.max(0, Math.min(1, v));
+    var pool = samples[name];
+    if (pool) for (var i = 0; i < pool.length; i++) pool[i].volume = def.vol;
+    return def.vol;
+  }
   var samples = {}, voiceAt = {};
   function loadSample(name) {
     if (samples[name] !== undefined) return samples[name];
@@ -366,7 +382,7 @@ window.DC = window.DC || {};
     phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
-    warmup: warmup, musicVolume: musicVolume,
+    warmup: warmup, musicVolume: musicVolume, sfxVolume: sfxVolume,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);
