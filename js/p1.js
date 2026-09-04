@@ -525,82 +525,14 @@
      bound it, a guard if one is in view, the hatch if he has found it. Drawn
      from the same visibleSet the television used, so it can never show more
      than the room did. */
-  /* WHAT HE CAN SEE, NOT A SEVEN-BY-SEVEN HOLE IN IT.
-     This drew a fixed window three squares in every direction, which was
-     written when the only thing that ever killed the television was a power
-     cut — and in a power cut visibleSet() collapses to a radius of three, so
-     the window and the sight were the same size and the crop cost nothing.
-
-     The monitors dying is a different ending. The lights are still on, his
-     eyes still reach twenty-six squares down a corridor, and the fixed window
-     was throwing all of it away: he had the whole gallery in front of him and
-     a phone showing him seven tiles of it. So the window is measured off the
-     visible set itself — the bounding box of everything he can actually see,
-     clamped to the building, never smaller than the old seven so a genuine
-     blackout still reads as a peephole.
-
-     T stays 36 because every stroke and radius below is in those units; the
-     svg scales to the panel, so T only fixes the proportions. */
-  function localMap() {
-    var S = E.S, vis = E.visibleSet(), T = 36;
-    var cols = C.MAP[0].length, rows = C.MAP.length;
-    var ax = S.assane.x, ay = S.assane.y;
-    var x0 = ax, x1 = ax, y0 = ay, y1 = ay;
-    for (var k in vis) {
-      var c = k.split(','), vx = +c[0], vy = +c[1];
-      if (vx < x0) x0 = vx;
-      if (vx > x1) x1 = vx;
-      if (vy < y0) y0 = vy;
-      if (vy > y1) y1 = vy;
-    }
-    /* never tighter than the old peephole, and never off the building */
-    function widen(lo, hi, centre, limit) {
-      while (hi - lo < 6) {
-        if (centre - lo <= hi - centre && lo > 0) lo--;
-        else if (hi < limit) hi++;
-        else if (lo > 0) lo--;
-        else break;
-      }
-      return [Math.max(0, lo), Math.min(limit, hi)];
-    }
-    var sx = widen(x0, x1, ax, cols - 1), sy = widen(y0, y1, ay, rows - 1);
-    x0 = sx[0]; x1 = sx[1]; y0 = sy[0]; y1 = sy[1];
-    var W = (x1 - x0 + 1) * T, H = (y1 - y0 + 1) * T, s = '';
-
-    s += '<svg viewBox="0 0 ' + W + ' ' + H + '">';
-    s += '<rect width="' + W + '" height="' + H + '" fill="var(--map-void)"/>';
-    for (var y = y0; y <= y1; y++) {
-      for (var x = x0; x <= x1; x++) {
-        var key = x + ',' + y, px = (x - x0) * T, py = (y - y0) * T;
-        if (!vis[key]) continue;
-        var ch = E.charAt(x, y), d = E.doorAt(x, y);
-        if (E.isWall(x, y)) {
-          s += '<rect x="' + px + '" y="' + py + '" width="' + T + '" height="' + T + '" fill="var(--stone-dk)"/>';
-          if (ch === 'L') s += '<line x1="' + px + '" y1="' + (py + T / 2) + '" x2="' + (px + T) + '" y2="' + (py + T / 2) + '" stroke="var(--red)" stroke-width="3"/>';
-          if (d) s += '<rect x="' + (px + 4) + '" y="' + (py + T / 2 - 3) + '" width="' + (T - 8) + '" height="6" rx="1.5" fill="var(--map-edge)"/>';
-          continue;
-        }
-        s += '<rect x="' + px + '" y="' + py + '" width="' + (T + 0.5) + '" height="' + (T + 0.5) + '" fill="var(--floor-neutral-lit)"/>';
-        if (ch === 'X') s += '<g color="var(--gold)" transform="translate(' + (px + 5) + ',' + (py + 5) + ') scale(' + ((T - 10) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
-        var m = E.moduleAt(x, y);
-        if (m) s += '<rect x="' + (px + 7) + '" y="' + (py + 7) + '" width="' + (T - 14) + '" height="' + (T - 14) + '" rx="2" fill="none" stroke="var(--gold)" stroke-width="2"/>';
-      }
-    }
-    S.guards.forEach(function (g) {
-      var p = E.guardAt(g);
-      if (!vis[p.x + ',' + p.y]) return;
-      var cx = (p.x - x0) * T + T / 2, cy = (p.y - y0) * T + T / 2;
-      var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
-      s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + v[0] * 16) + '" y2="' + (cy + v[1] * 16) + '" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="var(--red)" stroke="var(--ink)" stroke-width="2"/>';
-    });
-    s += '<circle cx="' + ((ax - x0) * T + T / 2) + '" cy="' + ((ay - y0) * T + T / 2) +
-         '" r="10" fill="var(--gold)" stroke="var(--ink)" stroke-width="2"/>';
-    s += '</svg>';
-    var box = el('div', { class: 'p1map' });
-    box.innerHTML = s;
-    return box;
-  }
+  /* THERE IS NO MAP ON THIS PHONE, in the dark or out of it.
+     One lived here for the ending where the monitors die — a little plan of
+     what Assane could see, drawn on his own screen. It was cut for the reason
+     it should never have been added: he is THE HANDS. He has a d-pad, a
+     sensory readout and a partner with the floor plan, and the moment his
+     phone draws him a map he stops having to ask for one. Benjamin still has
+     the plan; that is the whole arrangement, and the monitors dying is
+     supposed to make it matter more rather than hand Assane a replacement. */
 
   /* the strip under WHAT YOU SENSE that fills while he stands still. Updated
      in place by the clock — see pressure() below — never by a re-render. */
@@ -666,7 +598,6 @@
     var view = screen([
       head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
       body([
-        S.dark ? localMap() : null,
         el('div', { class: 'nav__sense' }, [
           el('h2', { class: 'h' }, [
             el('img', { src: U.assetURL('art/ui/flourish-left.png'), alt: '' }),
@@ -680,7 +611,7 @@
         /* the lights he can see for himself; the laser count is Benjamin's to say */
         S.levers.lights > 0 ? el('div', { class: 'tag tag--gold', text: 'LIGHTS DOWN · ' + S.levers.lights + ' MORE MOVE' + (S.levers.lights > 1 ? 'S' : ''), style: 'margin-top:12px' }) : null,
         el('p', { class: 'note', text: S.dark
-          ? 'The monitors are dead. This is everything you can see. Benjamin still has the plan.'
+          ? 'The monitors are dead. You have your senses and Benjamin’s voice. He still has the plan.'
           : 'One tap is one step, for both you and the guards.\nTry not to linger, or you’ll raise suspicion.' })
       ]),
       foot([el('div', { class: 'nav__controls' }, [pad])])
