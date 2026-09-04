@@ -773,9 +773,12 @@
 
 /* ============ THE DARK RUN (P1) ============ */
 /* the seven squares around him, when the television has nothing to show */
+/* It used to be capped at 218px, which was the right size for a seven-tile
+   peephole and half the room it needs for a gallery he can see the whole
+   length of. It takes the panel now. */
 .p1map{
   border:var(--stroke) solid var(--ink);border-radius:var(--r);overflow:hidden;
-  background:var(--map-void);margin:0 auto 10px;max-width:218px;
+  background:var(--map-void);margin:0 auto 10px;width:100%;
 }
 .p1map svg{display:block;width:100%;}
 
