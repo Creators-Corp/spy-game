@@ -716,7 +716,12 @@
     S.levers.uses[id]--;
     S.levers.last = { id: id, note: note, at: Date.now() };
     toast(note, 'good');
-    U.sfx.good();
+    /* THE TWO THAT KILL A SYSTEM GET THE STINGER. Dropping the beams and
+       killing the lights are the van reaching into the building and switching
+       something off; looping a camera is quieter than that by design — it is
+       meant to go unnoticed, and a four-second impact over it would announce
+       to the room the one thing nobody in the fiction is supposed to hear. */
+    if (id === 'lights' || id === 'laser') U.sfx.impact(); else U.sfx.good();
     U.buzz('p2');
     raise(L.cost);
     return true;
@@ -1020,7 +1025,9 @@
     S.guards.forEach(function (g) { g.alert = 0; });
     startLink();
     toast('POWER CUT', 'bad');
-    U.sfx.jail();
+    /* the same sound as a lever, because it is the same event — the building
+       losing a system — only this time nobody chose it */
+    U.sfx.impact();
     setObjective();
   }
 
@@ -1212,7 +1219,11 @@
     S.tchatche = { badge: badge, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
     S.flash = Date.now();
+    /* the stab first, then the sting under it: sfx.spot() is synthesised and
+       instant, so it lands on the frame he is stopped even if the sample is
+       still loading or the room is muted at the file level */
     U.sfx.spot();
+    U.sfx.caught();
     U.buzz('both', true);
   }
 

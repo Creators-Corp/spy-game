@@ -194,6 +194,7 @@ window.DC = window.DC || {};
       }, 40);
       scoreEl = null;
     }
+    if (!track) stopSamples();
     if (!track || !SCORE[track] || muted) return;
     try {
       var a = new Audio(assetURL(SCORE[track]));
@@ -206,6 +207,55 @@ window.DC = window.DC || {};
     } catch (e) { scoreNow = null; }
   }
 
+  /* ---------- ONE-SHOT SAMPLES ----------
+     Everything in sfx below is synthesised, deliberately: it works with an
+     empty art folder and it survives a phone speaker. This is the exception —
+     a recorded stinger for the moments a building system dies, which is a
+     sound no oscillator here is going to fake.
+
+       art/sfx-impact.wav   Artlist Original — Epic Moments · Tech Impact
+       art/sfx-caught.wav   Artlist Original — Epic Orchestral · Royal String Logo
+
+     It is warmed when the job starts rather than fetched at the moment it is
+     wanted, because the whole point of an impact is that it lands on the frame
+     the thing happens. Missing file, refused autoplay, no Audio at all: it
+     stays silent and every one of these moments still has its toast, its
+     phone buzz and its line on Assane's readout. Nothing is carried by sound
+     alone, here least of all. */
+  var SAMPLE = { impact: 'art/sfx-impact.wav', caught: 'art/sfx-caught.wav' };
+  var samples = {};
+  function loadSample(name) {
+    if (samples[name] !== undefined) return samples[name];
+    samples[name] = null;
+    try {
+      var a = new Audio(assetURL(SAMPLE[name]));
+      a.preload = 'auto';
+      a.volume = 0.6;
+      a.addEventListener('error', function () { samples[name] = null; });
+      samples[name] = a;
+    } catch (e) { /* audio is optional, never load-bearing */ }
+    return samples[name];
+  }
+  /* called when the infiltration begins, so the fetch is done before the first
+     lever anybody pulls */
+  function warmup() { for (var k in SAMPLE) loadSample(k); }
+  function sample(name) {
+    if (muted) return;
+    var a = loadSample(name);
+    if (!a) return;
+    try { a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
+  }
+  /* SILENCE MEANS SILENCE. The catch sting is thirteen seconds long, which is
+     most of a tchatche and all of a restart — without this, hitting
+     RECOMMENCER left the strings playing over the plan screen of the next
+     job. Called wherever the score goes quiet, so the two always agree. */
+  function stopSamples() {
+    for (var k in samples) {
+      var a = samples[k];
+      if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} }
+    }
+  }
+
   var sfx = {
     step:  function () { tone(190, 0.05, 'square', 0.03); },
     block: function () { tone(90, 0.10, 'sawtooth', 0.04); },
@@ -215,6 +265,12 @@ window.DC = window.DC || {};
     unlock:function () { tone(440, 0.07, 'triangle', 0.05); setTimeout(function () { tone(590, 0.07, 'triangle', 0.05); }, 70); setTimeout(function () { tone(880, 0.20, 'triangle', 0.06); }, 140); },
     jail:  function () { tone(70, 0.60, 'sawtooth', 0.10); },
     tap:   function () { tone(520, 0.03, 'sine', 0.03); },
+    /* a system going down: the beams, the lights, the power itself */
+    impact: function () { sample('impact'); },
+    /* a hand on his shoulder. Runs under LA TCHATCHE rather than stopping for
+       it — the strings are the building's verdict, the talking is the answer
+       to it, and the two are meant to overlap. */
+    caught: function () { sample('caught'); },
     /* the wiretap. Long and short differ in DURATION and in pitch, so the
        two are distinguishable by ear, on screen, and through a phone speaker
        that has been compressed to death. */
@@ -228,6 +284,7 @@ window.DC = window.DC || {};
       heartRate = 0;
       if (scoreEl) { scoreEl.pause(); scoreEl = null; }
       scoreNow = null;                 /* so unmuting starts it again */
+      stopSamples();
     }
   }
   function isMuted() { return muted; }
@@ -258,6 +315,7 @@ window.DC = window.DC || {};
     phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
+    warmup: warmup,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);

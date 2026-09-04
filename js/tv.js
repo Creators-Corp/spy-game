@@ -362,6 +362,8 @@
        he got stopped. Only having the thing in his hands moves it. */
     U.score(S.phase === 'plan' || S.phase === 'rank' || S.phase === 'jail' ? null
           : S.hasManuscript ? 'escape' : 'infiltration');
+    /* fetch the stinger while nothing needs it yet */
+    if (S.running) U.warmup();
     $('#tv-clock').textContent = U.mmss(S.elapsed);
     $('#tv-objective').textContent = S.objective;
     $('#suspicion-fill').style.width = S.suspicion + '%';

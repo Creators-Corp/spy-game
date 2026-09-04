@@ -72,6 +72,10 @@ Then just let them talk. Nothing on either phone tells a player what the other o
 |---|---|
 | `art/music-infiltration.mp3` | Ziv Moran — *Shades* |
 | `art/music-escape.mp3` | Monument Music — *Chapter Two* |
+| `art/sfx-impact.wav` | Artlist Original — Epic Moments · *Tech Impact* |
+| `art/sfx-caught.wav` | Artlist Original — Epic Orchestral · *Royal String Logo* |
+
+**Two recorded stingers, against a synthesised bench.** Every other cue in the game is an oscillator, so it works with an empty art folder and survives a phone speaker. These two are not: *Tech Impact* lands whenever a building system dies — the beams dropped, the lights cut, or the power itself going on contract two — and *Royal String Logo* is the building's verdict the moment a hand lands on Assane's shoulder, running under LA TCHATCHE rather than stopping for it. Looping a camera deliberately gets neither: it is the quiet lever, and announcing it would tell the room the one thing nobody in the fiction is supposed to hear.
 
 **If P1 gets spotted, that is not a loss.** It is **La Tchatche**: P1 describes the guard's face, P2 finds him in VISAGES, reads the crack, and tells P1 which of three lines to use. Three exchanges. Two mistakes ends the job — and losing takes five seconds and gets a laugh.
 
