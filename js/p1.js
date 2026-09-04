@@ -355,14 +355,17 @@
 
     var mirror = F.uniformStack(outfit, 'mirror');
 
-    var racks = el('div', {});
+    var racks = el('div', { class: 'disguise__racks' });
     [['head', 'HEAD'], ['torso', 'TORSO'], ['legs', 'LEGS']].forEach(function (pair) {
       var slot = pair[0];
-      racks.appendChild(el('p', { class: 'h', style: 'margin:8px 0 4px', text: pair[1] }));
+      var category = el('section', { class: 'disguise__category', 'aria-label': pair[1] }, [
+        el('h2', { class: 'h', text: pair[1] })
+      ]);
       var row = el('div', { class: 'rack' });
       C.RACK[slot].forEach(function (id) {
         var b = el('button', {
           class: outfit[slot] === id ? 'is-on' : '',
+          'aria-pressed': outfit[slot] === id ? 'true' : 'false',
           onclick: function () {
             outfit[slot] = outfit[slot] === id ? null : id;
             U.sfx.tap(); U.emit('render');
@@ -371,11 +374,12 @@
         b.appendChild(L.figures.garmentTile(slot, id, 'gtile--rack'));
         row.appendChild(b);
       });
-      racks.appendChild(row);
+      category.appendChild(row);
+      racks.appendChild(category);
     });
 
     var complete = outfit.head && outfit.torso && outfit.legs;
-    return screen([
+    var view = screen([
       head('LE DÉGUISEMENT'),
       body([
         el('div', { class: 'mirrorwrap' }, [
@@ -387,7 +391,7 @@
       ]),
       foot([
         el('button', {
-          class: 'btn ' + (complete ? 'btn--go' : ''),
+          class: 'btn disguise__confirm',
           text: complete ? 'GET DRESSED' : 'PICK THREE PIECES',
           disabled: complete ? null : '',
           onclick: function () {
@@ -396,10 +400,24 @@
             else U.emit('render');
           }
         }),
-        el('button', { class: 'btn', text: 'GO IN AS YOU ARE',
+        el('button', { class: 'btn disguise__confirm', text: 'GO IN AS YOU ARE',
           onclick: function () { E.declineModule(); U.emit('render'); } })
       ])
     ]);
+    view.classList.add('pscreen--disguise');
+    U.$$('.disguise__confirm', view).forEach(function (button) {
+      var label = button.textContent;
+      button.textContent = '';
+      button.appendChild(el('span', { text: label }));
+      ['light', 'dark'].forEach(function (state) {
+        button.appendChild(el('img', {
+          class: 'disguise__button-art disguise__button-art--' + state,
+          src: U.assetURL('art/ui/van-action-' + state + '.png'),
+          alt: '', 'aria-hidden': 'true', draggable: 'false'
+        }));
+      });
+    });
+    return view;
   }
 
   /* ---------------------------------------------------------- LE FAUX */

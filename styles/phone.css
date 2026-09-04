@@ -984,3 +984,46 @@
 
 .pscreen--dossier .lever.is-live .lever__txt em{color:#FFEFCC;}
 .pscreen--dossier .lever.is-live .lever__cost{color:var(--red);}
+
+/* The disguise wardrobe follows the shared panel and action treatment. */
+.pscreen--disguise .disguise__racks{display:flex;flex-direction:column;gap:12px;margin-top:12px;}
+.pscreen--disguise .disguise__category,
+.pscreen--disguise .mirrorwrap{
+  border:2px solid #778495;border-radius:0;padding:10px;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.pscreen--disguise .disguise__category .h{text-align:center;color:#FFEFCC;margin:0 0 8px;}
+.pscreen--disguise .rack button{border:1px solid #4C93E4;background:#0A1626;color:#FFEFCC;}
+.pscreen--disguise .rack button:is(.is-on,:active){background:#090C11;}
+.pscreen--disguise .disguise__confirm{
+  position:relative;isolation:isolate;border:0;border-radius:0;
+  min-height:63px;padding:15px 12px;background:transparent;color:#FFEFCC;
+}
+.pscreen--disguise .disguise__button-art{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;user-select:none;
+}
+.pscreen--disguise .disguise__button-art--dark{visibility:hidden;}
+.pscreen--disguise .disguise__confirm:active:not(:disabled){color:#FF883D;}
+.pscreen--disguise .disguise__confirm:active:not(:disabled) .disguise__button-art--light{visibility:hidden;}
+.pscreen--disguise .disguise__confirm:active:not(:disabled) .disguise__button-art--dark{visibility:visible;}
+.pscreen--disguise button:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+.pscreen--disguise .pfoot{position:relative;background:#0C1118;border-top:2px solid #778495;}
+.pscreen--disguise .pfoot::before{
+  content:"";position:absolute;left:0;right:0;top:1px;height:1px;background:#778495;pointer-events:none;
+}
+
+.pscreen--disguise .rack button.is-on{border-color:#FD6A1A;}
+
+/* Staff file frames and selectable headers; dropdown bodies keep their styling. */
+.pscreen--dossier .file{
+  border:2px solid #778495;border-radius:0;padding:2px;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.pscreen--dossier .file__hd{
+  border:1px solid #4C93E4;background:#0A1626;color:#FFEFCC;
+}
+.pscreen--dossier .file__hd:active,
+.pscreen--dossier .file.is-on .file__hd{
+  background:#090C11;color:#FD6A1A;
+}
+.pscreen--dossier .file.is-on .file__hd{border-color:#FD6A1A;}
