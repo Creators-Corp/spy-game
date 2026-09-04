@@ -891,7 +891,7 @@
        does not already know how a co-op game works was being asked to guess the
        verb. The two dots were unlabelled as well — they read as decoration
        until the first one turns red, which is exactly too late. */
-    return screen([
+    var view = screen([
       head('LA TCHATCHE'),
       body([
         /* Portrait beside the situation rather than above it, and the count and
@@ -920,6 +920,20 @@
         ? 'The building is on alert. One mistake and he searches you. Nothing here is timed.'
         : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
     ]);
+    view.classList.add('pscreen--tchatche');
+    U.$$('.lines .btn', view).forEach(function (button) {
+      var label = button.textContent;
+      button.textContent = '';
+      button.appendChild(el('span', { text: label }));
+      ['light', 'dark'].forEach(function (state) {
+        button.appendChild(el('img', {
+          class: 'tchatche__button-art tchatche__button-art--' + state,
+          src: U.assetURL('art/ui/van-action-' + state + '.png'),
+          alt: '', 'aria-hidden': 'true', draggable: 'false'
+        }));
+      });
+    });
+    return view;
   }
 
   /* --------------------------------------------------------------- ends */
