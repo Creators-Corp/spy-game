@@ -499,33 +499,73 @@
          than red on purpose: in the dark these are torches, and the dossier
          says as much. */
       var armsLength = S.levers.lights > 0 || S.blackout;
-      if (armsLength) {
-        S.guards.forEach(function (g, gi) {
-          var p = E.guardAt(g);
-          if (!known(p.x, p.y) && !wallKnown(p.x, p.y)) return;
-          var mine = E.cone(p.x, p.y, g.facing, 0);
-          if (!mine.length) return;
-          var id = 'tl-torch-' + gi, clip = '';
-          mine.concat([p.x + ',' + p.y]).forEach(function (k) {
-            var c = k.split(',');
-            clip += '<rect x="' + (c[0] * W) + '" y="' + (c[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '"/>';
-          });
-          s += '<clipPath id="' + id + '">' + clip + '</clipPath>';
-          s += '<g clip-path="url(#' + id + ')">' +
-               img('guard-sightline-small', (p.x - 1) * W, (p.y - 1) * H, W * 3, H * 3, { keep: true, opacity: 0.85 }) +
-               '</g>';
+
+      /* THE ARTIST'S HATCH, CUT TO THE ENGINE'S SHAPE.
+         The two sightline pieces are rectangles: the small one is a 3x3 block,
+         the full one is three tiles tall for five columns ahead and nothing
+         behind. cone() is neither — it is the eight squares around a man,
+         BEHIND HIM INCLUDED, plus a line one tile tall ahead. Drawing either
+         piece as cut would put hatching on squares that are safe and leave
+         squares that catch you bare, which is worse than a mismatch of style:
+         it is the picture lying about the rule.
+
+         So the piece is a texture and the rule is the stencil. Each guard's
+         sprite is laid down facing the way he is, masked so its white becomes
+         the vision colour, and clipped to the squares the engine actually
+         calls dangerous. What you see is his hatch; where you see it is the
+         truth. Red while the lights are on, because red is threat here; white
+         when they are out, because then it is a torch. */
+      function sightlineFor(g, gi, depth) {
+        var p = E.guardAt(g);
+        if (!known(p.x, p.y) && !wallKnown(p.x, p.y)) return '';
+        var mine = E.cone(p.x, p.y, g.facing, depth);
+        if (!mine.length) return '';
+        var small = depth === 0;
+        var cw = small ? 3 : 6, ch = 3;
+        /* the piece is drawn facing east: the man stands in its left-hand
+           column, so it starts on his own square and reaches away from him */
+        var ix = small ? (p.x - 1) * W : p.x * W, iy = (p.y - 1) * H;
+        var cx = p.x * W + W / 2, cy = p.y * H + H / 2;
+        var spin = { E: 0, S: 90, W: 180, N: 270 }[g.facing] || 0;
+        var id = 'tl-sight-' + gi, box = 8;
+        var clip = '';
+        mine.concat([p.x + ',' + p.y]).forEach(function (k) {
+          var c = k.split(',');
+          clip += '<rect x="' + (c[0] * W) + '" y="' + (c[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '"/>';
         });
-        s += '</g>';
-      } else {
-      var cells = {};
-      for (var k in threat) cells[k] = 1;
-      S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
-      for (k in cells) {
-        var pr = k.split(',').map(Number);
-        if (!known(pr[0], pr[1])) continue;
-        var byCam = camThreat[k] && !(threat[k] && threat[k].some && threat[k].some(function (id) { return id.charAt(0) === 'g'; }));
-        s += '<rect x="' + (pr[0] * W) + '" y="' + (pr[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '" fill="url(#' + (byCam ? 'tl-hatch-cam' : 'tl-hatch') + ')"/>';
+        return '<clipPath id="' + id + '">' + clip + '</clipPath>' +
+          '<mask id="' + id + '-m">' +
+            '<image href="' + href(small ? 'guard-sightline-small' : 'guard-sightline') + '"' +
+            ' x="' + ix + '" y="' + iy + '" width="' + (cw * W) + '" height="' + (ch * H) + '"' +
+            ' preserveAspectRatio="none" transform="rotate(' + spin + ' ' + cx + ' ' + cy + ')"/>' +
+          '</mask>' +
+          '<rect clip-path="url(#' + id + ')" mask="url(#' + id + '-m)"' +
+          ' x="' + ((p.x - box) * W) + '" y="' + ((p.y - box) * H) + '"' +
+          ' width="' + (box * 2 * W) + '" height="' + (box * 2 * H) + '"' +
+          ' fill="' + (small ? '#F4F7FA' : RED) + '" opacity="' + (small ? 0.9 : 0.8) + '"/>';
       }
+
+      /* every threatened square, however it is going to be painted — the +1
+         outline below is measured off this and has to be the same set */
+      var cells = {}, k;
+      for (k in threat) cells[k] = 1;
+      S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
+
+      if (view === 'benjamin' || armsLength) {
+        /* the guards get the artist's piece, stencilled */
+        S.guards.forEach(function (g, gi) { s += sightlineFor(g, gi, armsLength ? 0 : E.coneDepth(g)); });
+        /* cameras are not drawn here at all, and were not before — see the
+           note above threat(): a second red pattern over the same floor could
+           not be told from the first at a glance */
+      } else {
+        for (k in cells) {
+          var pr = k.split(',').map(Number);
+          if (!known(pr[0], pr[1])) continue;
+          var byCam = camThreat[k] && !(threat[k] && threat[k].some && threat[k].some(function (id) { return id.charAt(0) === 'g'; }));
+          s += '<rect x="' + (pr[0] * W) + '" y="' + (pr[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '" fill="url(#' + (byCam ? 'tl-hatch-cam' : 'tl-hatch') + ')"/>';
+        }
+      }
+
       /* the +1 zone: a sightline passing within arm's reach costs a point */
       if (opts.edges) {
         for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) {
@@ -535,7 +575,6 @@
         }
       }
       s += '</g>';
-      }
     }
 
     /* ---- 3. WALLS, LASERS, DOORS ---- */

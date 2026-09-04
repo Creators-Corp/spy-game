@@ -1133,7 +1133,7 @@
     coordOf: coordOf,
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
-    guardAt: guardAt,
+    guardAt: guardAt, coneDepth: coneDepth,
     zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,

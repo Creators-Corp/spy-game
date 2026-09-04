@@ -39,7 +39,7 @@ two-tile face puts its top half.
 | layer | what it draws |
 |---|---|
 | ground | `floor-tile` on every walkable square |
-| vision | the guards' sightlines, hatched red, as one continuous pattern — except with the lights cut or the power gone, when every cone collapses to the eight squares around a man and the layer lays `guard-sightline-small` over each of them instead, clipped to the squares the engine calls dangerous. White, because in the dark those are torches |
+| vision | each guard's sightline, drawn from the artist's piece and **cut to the engine's shape**. `guard-sightline` while the lights are on, masked red because red is threat; `guard-sightline-small` with the lights cut or the power gone, left white because then it is a torch. Cameras are not drawn here — a second red pattern over the same floor could not be told from the first |
 | walls | masses, faces, bands, corners, doors |
 | props | the objectives, the desk, the window |
 | actors | guards and Assane, drawn south-most last so they overlap correctly |
@@ -160,6 +160,35 @@ combined.
 
 8. **No pillars.** A band belongs in a wall cell, or — where the wall is
    concave — in the floor tile beside it. Never hanging in the middle of a room.
+
+---
+
+## 5b. The sightline pieces, and why they are stencilled
+
+Both sightline files are rectangles. `guard-sightline` is three tiles tall for
+five columns ahead with nothing behind the man; `guard-sightline-small` is a
+flat 3 × 3.
+
+`cone()` is neither. It is the eight squares around him — **behind him
+included** — plus a line **one tile tall** ahead, as deep as his alert level
+and his disguise allow. Drawn as cut, the full piece would put hatching on
+squares that are safe and leave squares bare that catch you, which is worse
+than a mismatch of style: it is the picture lying about the rule.
+
+So the piece is a texture and the rule is the stencil. Each guard's sprite is
+laid down facing the way he is, masked so its white becomes the vision colour,
+and clipped to the squares the engine actually calls dangerous. What you see is
+the artist's hatch; where you see it is the truth.
+
+The small piece is the exception that needs no cutting: with the lights out
+`coneDepth()` is 0, the cone *is* a 3 × 3 block, and the art matches it square
+for square.
+
+**This layer has no player-facing home yet.** The television must never draw a
+cone — that is the design law that keeps P2 from reading P1's secrets off the
+shared screen — and Benjamin's in-game plan is a schematic at 20px a tile,
+where a 300px hatched sprite would be a smudge. It is real the day Benjamin's
+plan moves to this renderer.
 
 ---
 
