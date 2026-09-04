@@ -457,7 +457,12 @@
       down ? deadLink()
            : el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
       night ? linkStrip() : (layer === 'electronics' ? camCycles() : null),
-      night ? null : leversPanel(),
+      /* THE VAN IS STILL THERE IN THE DARK. This used to be `night ? null`,
+         which took the whole panel away the moment the power went — including
+         CUT THE LASERS, the one lever that still does something, on the exact
+         leg where the walk out passes the beams. The panel stays; the levers
+         that have stopped meaning anything say so on their own faces. */
+      leversPanel(),
       down ? null : mapKey(night),
       night ? el('p', { class: 'note', style: 'margin-top:10px', text: down
         ? 'It comes back. Keep him still until it does, or walk him from memory and hope.'
@@ -573,6 +578,8 @@
     list.forEach(function (L) {
       var left = S.levers.uses[L.id] || 0;
       var active = L.id === 'lights' ? S.levers.lights : L.id === 'laser' ? S.levers.laser : 0;
+      /* the power cut leaves two of these with nothing to switch */
+      var inert = E.leverInert(L.id);
 
       /* THE CAMERA LEVER SAYS TWO THINGS, AND NEITHER IS A QUESTION.
          The title names the box a tap would take — the one nearest Assane, so
@@ -588,7 +595,7 @@
         /* soonest back leads: the useful fact is when a lens wakes up, not
            which one has been asleep longest */
         dark.sort(function (a, b) { return S.levers.cams[a.id] - S.levers.cams[b.id]; });
-        if (live && left > 0) target = E.nearestCam();
+        if (live && left > 0 && !inert) target = E.nearestCam();
       }
       var darkLine = dark.length
         ? dark.map(function (c) { return c.label + ' · ' + S.levers.cams[c.id]; }).join(', ') +
@@ -597,17 +604,18 @@
 
       var ic = G.icon(L.icon);
       var b = el('button', {
-        class: 'lever' + (active || dark.length ? ' is-live' : ''),
-        disabled: (!live || left <= 0) && !active ? '' : null,
+        class: 'lever' + (!inert && (active || dark.length) ? ' is-live' : ''),
+        disabled: inert || ((!live || left <= 0) && !active) ? '' : null,
         onclick: function () {
-          if (active) return;
+          if (active || inert) return;
           if (E.pullLever(L.id)) U.emit('render');
         }
       }, [
         el('i', { class: 'lever__ic' }, [ic]),
         el('span', { class: 'lever__txt' }, [
           el('b', { text: L.name + (target ? ' · ' + target.label : '') }),
-          el('em', { text: darkLine ? darkLine
+          el('em', { text: inert ? inert
+                        : darkLine ? darkLine
                         : active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT' : L.blurb })
         ]),
         el('span', { class: 'lever__side' }, [

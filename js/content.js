@@ -660,7 +660,7 @@
       { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
-      { k: 'POWER FAILURE', v: 'Emergency supply runs two cameras at a time and nothing else. Interior doors hold their last state; the service hatch locks itself.' },
+      { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines hold — they are on the same supply as the alarm and stay armed. Interior doors hold their last state; the service hatch locks itself.' },
       { k: 'RELEASE CODE',  v: 'Badge number of the officer posted to that zone, digits reversed.' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],

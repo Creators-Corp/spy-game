@@ -651,9 +651,28 @@
   function roomCentre(r) {
     return { x: r.x + Math.floor((r.w - 1) / 2), y: r.y + Math.floor((r.h - 1) / 2) };
   }
+  /* WHAT A LEVER IS WORTH ONCE THE POWER IS OUT.
+     Two of the three stop meaning anything the moment the building goes dark,
+     and the engine is where that has to be said or a use gets burned for
+     nothing. Cutting the lights: coneDepth() already returns 0 in a blackout,
+     so there is no cone left to shrink. Looping a camera: threat() skips every
+     camera in a blackout, so the box is already blind.
+
+     THE BEAMS ARE THE EXCEPTION and they are not an oversight. A power cut
+     that dropped them too would hand the pair the central corridor — the one
+     shortcut this floor is built around not having — as a reward for opening
+     the safe. They stay up, they still trip, and cutting them stays the one
+     thing Benjamin can DO in the dark rather than say. */
+  function leverInert(id) {
+    if (!S.blackout) return null;
+    if (id === 'lights') return 'The lights are already out.';
+    if (id === 'camera') return 'Every camera is down with the power.';
+    return null;
+  }
   function pullLever(id, roomName) {
     var L = leverDef(id);
     if (!L || S.phase !== 'play' || !(S.levers.uses[id] > 0)) return false;
+    if (leverInert(id)) return false;
     var note = L.name;
     if (id === 'lights') {
       S.levers.lights = L.turns;
@@ -1262,6 +1281,7 @@
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth,
     seesAssane: seesAssane, linkDown: linkDown, nearestCam: nearestCam,
+    leverInert: leverInert,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
