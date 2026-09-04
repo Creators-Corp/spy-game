@@ -311,7 +311,9 @@
 
 /* ===================== LE BLACKOUT — THE PHONES ===================== */
 
-/* P1's screen has given up. Carries no information, by design. */
+/* THE VAN'S SCREEN has given up. Carries no information, by design — and it
+   is Benjamin's screen now, not Assane's: drawn by deadLink() in p2.js for the
+   move or two a dropout lasts. */
 .deadscreen{
   position:relative;border:var(--stroke) solid var(--ink);border-radius:var(--r);
   background:var(--night);overflow:hidden;
@@ -321,34 +323,6 @@
   position:absolute;left:0;right:0;bottom:8px;text-align:center;
   font-family:var(--mono);font-size:11px;letter-spacing:.24em;
   color:var(--zinc);text-transform:uppercase;
-}
-
-/* Arming a run is two taps and a decision — never a gesture, never timed. */
-.runtoggle{
-  display:block;width:100%;padding:11px;margin-bottom:8px;
-  border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--paper);
-  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-}
-.runtoggle:hover{background:var(--stone);}
-.runtoggle.is-armed{background:var(--orange);color:var(--on-color);}
-
-.dpad__freeze{
-  background:var(--night) !important;color:var(--on-color);
-  display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  font-size:9px;letter-spacing:.12em;
-}
-.dpad__freeze:hover{background:var(--night-2) !important;}
-.dpad__freeze i{
-  width:11px;height:11px;border-radius:99px;background:var(--gold);display:block;
-  animation:heartbeat 1.6s infinite;
-}
-@keyframes heartbeat{
-  0%,100%{transform:scale(1);opacity:1}
-  12%{transform:scale(1.5);opacity:.7}
-  24%{transform:scale(1);opacity:1}
-  36%{transform:scale(1.35);opacity:.8}
-  48%{transform:scale(1);opacity:1}
 }
 
 /* the worn keypad */
@@ -375,18 +349,10 @@
 .keypad--night .k-clear{background:var(--night);color:var(--zinc-lt);}
 .keypad--night .k-ok{background:var(--gold);color:var(--ink);}
 
-/* P2's camera grid */
+/* P2's floor, after the power went. There was a row of zone chips here, one
+   per camera zone, lit two at a time; the dropout is whole-screen now and the
+   chips had nothing left to say. */
 .plan2--night{background:var(--night);border-color:var(--ink);}
-.feeds{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
-.feed{
-  border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--night-2);color:var(--zinc);
-  padding:6px 3px;text-align:center;
-}
-.feed b{display:block;font-size:13px;letter-spacing:.1em;}
-.feed em{display:block;font-style:normal;font-size:7px;letter-spacing:.1em;margin-top:2px;}
-.feed.is-live{background:var(--sky);color:var(--ink);}
-.feed.is-live b{color:var(--ink);}
 .signal{
   margin:8px 0 0;padding:7px 10px;text-align:center;
   border:var(--stroke) solid var(--ink);border-radius:var(--r);

@@ -57,17 +57,17 @@ Then just let them talk. Nothing on either phone tells a player what the other o
 6. **Le Faux** — *optional*, next to the safe. Two canvases, one crate, one decision, **no retry**. P1 has the paintings; P2 has Benjamin's authentication notes. The notes are ordered so a pair who stops reading after the first one can still get it wrong — note 1 is true of *both* canvases and settles nothing. Take the right one and it goes on the rank card as loot. Take the wrong one and you have carried a forgery out of the building; you find out at the end.
 7. **Le Coffre** (the safe, top left — the door P1 just released). P1 has a dial of symbols nobody has ever named, plus a plate number and the colour of the ring. P2's MANUEL is indexed by **both**, and several entries share a serial. P2 has to describe four symbols out loud, in order. *"A swirly circle. A backwards Z."*
 8. **Le Blackout** — *the twist*, **on contract two**. The instant the safe opens, the building cuts the power. The TV holds on the cut for a beat and then comes back near-black. Contract one keeps its lights on and merely kills the monitors: it is somebody's first ten minutes with two phones and a television, and taking all three away is not an opening. A contract opts in by carrying a `BLACKOUT` block and a `CLAVIER`, and opts out by marking its prize `dark`.
-   - **P1's phone dies.** Static and a d-pad. He can see the building's architecture on the TV — he has walked it — but **not one guard**. His sensory readout stops working entirely; that is the sequence, not a bug.
-   - **P2's phone stops being a floor plan and becomes the camera grid.** Emergency power runs **two feeds out of five zones**, cycling every turn, each zone lit exactly twice in five so none of them is the lucky one. Three fifths of the building is dark at any moment. Measured on the walk out: Benjamin lost him on **17 turns of 28**. The strip under the map tells him when he has lost contact.
-   - **The zones are cut for the walk out, not for the architecture.** The upper gallery is split in half, so the run for the hatch crosses a seam — visible, then not, then visible — instead of being one verdict handed down the moment he steps out of the vault.
-   - **Nobody sees past arm's length, guards included.** The cameras are gone entirely and every cone collapses to the eight squares around the man. That is not generosity, it is the compensation: the sequence has already taken Assane's sight and half of Benjamin's, and a floor where the guards could still see would be a floor you walk out of by luck. Verified from **all 48** guard phases the safe could open on — the walk from the vault to the hatch exists every time, in 23–29 turns, holding still at most 6 of them.
-   - **P1 gets two new verbs.** **COURIR** arms a run: two tiles in one turn, but it rings footsteps that stop the nearest guard and turn him toward the sound. **FIGE-TOI** costs a turn and lets a sweep pass straight over him. Neither is a skill check — arming a run is two taps, and freezing is a decision. No timing window anywhere.
+   - **Nothing happens to P1's phone.** Same readout, same d-pad, same sense line. What he loses is the television, which now shows three squares in every direction and is exactly what a man walking a dark building would notice. His phone is the last instrument he has; taking it away leaves him pressing arrows at a wall.
+   - **P2 is the one who loses his picture, and he loses all of it.** The van drops the floor completely — no plan, no patrols, no gold dot, just snow — for **one or two of Assane's moves**, then holds it for **four to six** before it can go again. About **five dropouts** on the walk out, **seven turns blind** in total, each one an event rather than weather.
+   - **That is the design correction that matters.** The first cut of this cut the building into five camera zones and lit two a turn. It measured fine and played as fog: three fifths of the floor missing at any moment, Benjamin blind more often than not, and *"I've lost you"* demoted from a thing that happens to you into the ambient condition. A dropout has to be an **event** — his screen goes to snow mid-sentence and Assane hears the voice stop.
+   - **Nobody sees past arm's length, guards included.** The cameras are gone entirely and every cone collapses to the eight squares around the man. Verified from **all 48** guard phases the safe could open on — the walk from the vault to the hatch exists every time, in 23–29 turns, holding still at most 6 of them.
+   - **The dropouts are drawn from the run's own seed** and decide only what Benjamin can *see*. They never move a guard or catch anybody, so no route is opened or closed by them, and a pinned roster replays the same night.
 9. **Le Clavier.** The way out locked itself when the power went. P1 sees a keypad with **three keys worn smooth** — he can see *which* three, never the order. The order lives in two different tabs of P2's dossier: **MANUEL** says emergency codes are the posted officer's badge reversed, and **PERSONNEL** says who is posted to the gallery the hatch is in. P1 can check P2's answer against the wear before he types it. **This is the beat where the information flow reverses** — and neither of them can get there alone.
 10. **La Sortie.** The door opens onto the street. Grade — plus a **BUTIN** line saying what actually left with you.
 
 **If P1 gets spotted, that is not a loss.** It is **La Tchatche**: P1 describes the guard's face, P2 finds him in VISAGES, reads the crack, and tells P1 which of three lines to use. Three exchanges. Two mistakes ends the job — and losing takes five seconds and gets a laugh.
 
-**The single best 20 seconds to show a room:** the first move after the lights go out. P1 has static and no idea where anything is; P2 is watching two of five feeds and about to lose him. Let them talk. *"I've lost you. Hold still. Switching feeds."* That exchange is the whole pitch, out loud, in one breath.
+**The single best 20 seconds to show a room:** the first dropout. Benjamin is mid-sentence — *"right two, then up"* — and his screen goes to snow. He has nothing. Assane is standing in a dark room he cannot see three squares of, holding a manuscript, waiting. *"I've lost you. Don't move. Don't move."* Two moves later it comes back. That exchange is the whole pitch, out loud, in one breath.
 
 If you want a second one, the camera gate before the blackout also lands: camera 1 covers the corridor mouth 1-on-1-off, camera 2 covers the safe 3-on-1-off. P2 can see the cycle; P1 cannot.
 
@@ -119,7 +119,7 @@ Per-leg, from all 80 phases:
 
 That last pair is the disguise justifying itself: skipping it more than doubles the worst-case escape. Theoretical minimum suspicion is **10** on both the lean and the greedy route, so the **S ≤ 12** threshold sits just above a perfect run either way.
 
-The blackout is also **beatable without freezing at all**, so FIGE-TOI is a tool and not a tax — but it cuts the worst case from 24 moves to 17, which is the balance you want.
+The blackout is **beatable without holding still at all** on most phases, and never needs more than six waits on any of the 48 — see the twist above.
 
 Two bugs the solver caught earlier, both the same shape: the cloakroom was first placed on a tile watched **56 of 80 turns** (moved to one watched 5), and the disguise penalty had quietly made the **exit tile** dangerous.
 
@@ -426,7 +426,7 @@ Likeness rules are already enforced in the prompts: **Omar Sy is cleared** and A
 |---|---|
 | P1 movement | the d-pad, or arrow keys / WASD |
 | P1 hold still | **ATTENDRE**, or spacebar — holding still is a real move and you will need it |
-| P1 in the dark | **COURIR** arms a two-tile run that makes noise; **FIGE-TOI** holds him still through a sweep |
+| P1 in the dark | nothing changes — same phone, same d-pad. It is P2's screen that drops |
 | P2 | the four dossier tabs; nothing ever switches them for you |
 | RECOMMENCER | restart the job |
 | SON | mute — every audio cue has a visual twin, so the whole thing is playable muted |

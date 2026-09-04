@@ -106,9 +106,13 @@
     var S = E.S, t = E.threat(layer === 'patrols' ? 'guards' : 'cameras'), s = '';
     var W = C.MAP[0].length * TT, H = C.MAP.length * TT;
 
+    /* IN THE DARK THE PLAN IS WHOLE OR IT IS GONE. It used to be quartered by
+       camera zone, two boxes lit at a time — so most of the floor was missing
+       most of the time and no single moment meant anything. The dropout is an
+       event now: while the link holds he has all of it, and while it is down
+       he has none of it and is not looking at this drawing at all. See
+       advanceLink() in the engine, and deadLink() below. */
     var night = S.blackout;
-    var live = night ? E.liveZones() : null;
-    function feed(x, y) { return !night || live.indexOf(E.zoneOf(x, y)) >= 0; }
 
     var EDGE = night ? 'var(--zinc)' : 'var(--map-edge)';
     function floorFill(x, y) {
@@ -137,10 +141,10 @@
     for (var y = 0; y < C.MAP.length; y++) {
       for (var x = 0; x < C.MAP[y].length; x++) {
         if (!open(x, y)) continue;
-        var onFeed = feed(x, y), px = x * TT, py = y * TT;
+        var px = x * TT, py = y * TT;
         floors += '<rect x="' + px + '" y="' + py + '" width="' + (TT + 0.5) + '" height="' + (TT + 0.5) +
-                  '" fill="' + floorFill(x, y) + '" opacity="' + (onFeed ? 1 : 0.25) + '"/>';
-        if (onFeed && t[x + ',' + y]) {
+                  '" fill="' + floorFill(x, y) + '"/>';
+        if (t[x + ',' + y]) {
           cones += '<rect x="' + px + '" y="' + py + '" width="' + (TT + 0.5) + '" height="' + (TT + 0.5) +
                    '" fill="var(--red)" opacity=".55"/>';
         }
@@ -149,8 +153,7 @@
           var x1 = px + (v[0] > 0 ? TT : 0), y1 = py + (v[1] > 0 ? TT : 0);
           var x2 = x1 + (v[0] === 0 ? TT : 0), y2 = y1 + (v[1] === 0 ? TT : 0);
           edges += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
-                   '" stroke="' + EDGE + '" stroke-width="1.75" stroke-linecap="square" opacity="' +
-                   (onFeed ? 0.9 : 0.28) + '"/>';
+                   '" stroke="' + EDGE + '" stroke-width="1.75" stroke-linecap="square" opacity=".9"/>';
         });
       }
     }
@@ -193,7 +196,6 @@
        nothing there for it to cover up. */
     var MK = TT * 1.5, MKOFF = (TT - MK) / 2;
     S.doors.forEach(function (d) {
-      if (!feed(d.x, d.y)) return;
       var px = d.x * TT, py = d.y * TT;
       if (d.locked) {
         s += '<rect x="' + (px + 2) + '" y="' + (py + TT / 2 - 3) + '" width="' + (TT - 4) + '" height="6" rx="1.5" fill="' + EDGE + '" opacity=".45"/>';
@@ -210,7 +212,6 @@
 
     /* gold is the player: objectives read as targets, not as furniture */
     C.MODULES.forEach(function (m) {
-      if (!feed(m.x, m.y)) return;
       var done = S.solved[m.id];
       s += '<rect x="' + (m.x * TT + 2) + '" y="' + (m.y * TT + 2) + '" width="' + (TT - 4) + '" height="' + (TT - 4) +
            '" rx="2" fill="' + (done ? 'var(--gold)' : 'var(--map-void)') + '" stroke="var(--gold)" stroke-width="1.5"/>' +
@@ -230,7 +231,7 @@
     /* the hatch: on both layers, because it is the way out */
     (function () {
       var h = E.hatchTile();
-      if (!h || !feed(h.x, h.y)) return;
+      if (!h) return;
       /* Not on the public plans — until Assane has stood where he can see it.
          The plan is the pair's shared map, so once one of them has found the
          way out it stops being a secret from the other; keeping it off forever
@@ -243,7 +244,6 @@
     S.guards.forEach(function (g) {
       if (layer !== 'patrols') return;
       var p = E.guardAt(g);
-      if (!feed(p.x, p.y)) return;
       var cx = p.x * TT + TT / 2, cy = p.y * TT + TT / 2;
       var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
       s += '<path d="M' + cx + ' ' + cy + ' L' + (cx + v[0] * 13) + ' ' + (cy + v[1] * 13) +
@@ -256,24 +256,15 @@
            ' font-family="var(--font)" fill="var(--on-color)">' + g.badge + '</text>';
     });
 
-    if (feed(S.assane.x, S.assane.y)) {
-      s += '<circle cx="' + (S.assane.x * TT + TT / 2) + '" cy="' + (S.assane.y * TT + TT / 2) +
-           '" r="8" fill="var(--gold)" stroke="var(--map-void)" stroke-width="2"/>';
-    }
+    s += '<circle cx="' + (S.assane.x * TT + TT / 2) + '" cy="' + (S.assane.y * TT + TT / 2) +
+         '" r="8" fill="var(--gold)" stroke="var(--map-void)" stroke-width="2"/>';
 
     /* Names on the rooms. The tints make them distinguishable; the labels make
        them sayable, which is what a callout actually needs. */
-    if (!night) {
+    {
       C.ROOMS.forEach(function (r) {
         s += '<text x="' + (r.x * TT + 3) + '" y="' + (r.y * TT + 9) + '" font-size="5.5" letter-spacing="0.6"' +
              ' font-weight="500" fill="var(--map-edge)" opacity=".75" font-family="var(--font)">' + r.name + '</text>';
-      });
-    }
-    if (night) {
-      C.BLACKOUT.zones.forEach(function (z) {
-        if (live.indexOf(z.id) < 0) return;
-        s += '<text x="' + (z.x * TT + 3) + '" y="' + (z.y * TT + 11) + '" font-size="8" letter-spacing="1.5"' +
-             ' font-weight="500" fill="var(--zinc-lt)" font-family="var(--font)">' + z.id + '</text>';
       });
     }
     /* THE RULER. Both displays count squares the same way — letters across,
@@ -293,23 +284,49 @@
     return s;
   }
 
-  /* which feeds are live this turn, and whether Benjamin still has him */
-  function feedStrip() {
-    var S = E.S, live = E.liveZones(), has = E.seesAssane();
-    var wrap = el('div', { style: 'margin-top:10px' });
-    var row = el('div', { class: 'feeds' });
-    C.BLACKOUT.zones.forEach(function (z) {
-      var on = live.indexOf(z.id) >= 0;
-      row.appendChild(el('span', { class: 'feed' + (on ? ' is-live' : '') }, [
-        el('b', { text: z.id }), el('em', { text: z.name })
-      ]));
-    });
-    wrap.appendChild(row);
-    wrap.appendChild(el('p', {
-      class: 'signal' + (has ? ' is-good' : ''),
-      text: has ? 'CONTACT · you have him' : 'SIGNAL LOST · tell him to hold still'
-    }));
+  /* THE VAN'S PICTURE, WHEN IT IS GONE. The snow used to be on Assane's
+     phone. It is the wrong man's screen to take: he is the one who has to
+     walk, and the television has already gone near-black on him. This is what
+     Benjamin gets instead, for the one or two moves a dropout lasts — no
+     floor, no patrols, no gold dot, and no way to answer the only question
+     Assane is asking. The pattern is drawn from the turn, so it moves. */
+  function deadLink() {
+    var S = E.S, ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 74');
+    var bg = document.createElementNS(ns, 'rect');
+    bg.setAttribute('width', '100'); bg.setAttribute('height', '74');
+    bg.setAttribute('fill', 'var(--night)');
+    svg.appendChild(bg);
+    var seed = S.turn * 9301 + 49297;
+    for (var i = 0; i < 58; i++) {
+      seed = (seed * 9301 + 49297) % 233280;
+      var r = seed / 233280;
+      var bar = document.createElementNS(ns, 'rect');
+      bar.setAttribute('x', (r * 100).toFixed(1));
+      bar.setAttribute('y', ((i * 1.29) % 74).toFixed(1));
+      bar.setAttribute('width', (2 + r * 26).toFixed(1));
+      bar.setAttribute('height', '1.4');
+      bar.setAttribute('fill', i % 3 ? 'var(--zinc)' : 'var(--zinc-lt)');
+      bar.setAttribute('opacity', (0.12 + r * 0.4).toFixed(2));
+      svg.appendChild(bar);
+    }
+    var wrap = el('div', { class: 'deadscreen' });
+    wrap.appendChild(svg);
+    wrap.appendChild(el('span', { class: 'deadscreen__line',
+      text: C.STATIC_LINES[S.turn % C.STATIC_LINES.length] }));
     return wrap;
+  }
+
+  /* whether he still has him, and for how much longer either way */
+  function linkStrip() {
+    var S = E.S, down = E.linkDown();
+    return el('p', {
+      class: 'signal' + (down ? '' : ' is-good'),
+      text: down
+        ? 'SIGNAL LOST · ' + down + (down === 1 ? ' MOVE' : ' MOVES') + ' · tell him to hold still'
+        : 'CONTACT · you have him'
+    });
   }
 
   function camCycles() {
@@ -382,8 +399,8 @@
                        '<b>Lasers</b> Sealed. Go around — unless you drop them from the van.'));
     }
     if (night) {
-      rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)" opacity=".45"/>',
-                       '<b>No feed</b> You are blind here.'));
+      rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)"/>',
+                       '<b>Dark</b> The power is out. Nobody sees past arm’s length, guards included.'));
     } else {
       if (!people && C.CAMERAS && C.CAMERAS.length) {
         rows.push(keyRow('<rect x="4" y="4" width="12" height="12" rx="1.5" fill="var(--red)" stroke="var(--map-edge)" stroke-width="2"/>',
@@ -406,7 +423,7 @@
   }
 
   function viewPlanTab() {
-    var S = E.S, night = S.blackout;
+    var S = E.S, night = S.blackout, down = E.linkDown();
     /* Benjamin is the only one who can see all of them at once, so during an
        alarm he is the one who can say which way to run. The count is the
        number of moves before they turn round and walk back. */
@@ -415,8 +432,11 @@
        fragment in a black field, the other drew the whole floor, and nothing
        said they were the same building. */
     var room = E.roomAt(S.assane.x, S.assane.y);
-    var where = night
-      ? 'The lights are out. He is only where a live feed shows him.'
+    var where = down
+      ? 'The van has lost the floor. <b>Nothing on this screen is live.</b>'
+      : night
+      ? 'The lights are out. Assane is in <b>' + (room ? room.name : 'an unmarked square') +
+        '</b>, square <b>' + E.coordOf(S.assane.x, S.assane.y) + '</b> — while you still have him.'
       : 'Assane is in <b>' + (room ? room.name : 'an unmarked square') +
         '</b>, square <b>' + E.coordOf(S.assane.x, S.assane.y) + '</b>. The television is showing him the same two words.';
     /* the building's state, said once, where the cones it changes are drawn */
@@ -433,13 +453,15 @@
         'He broke a beam. Every one of them has left his round and is walking straight at him — ' +
         'they are on this plan, off their lines. Call the way out; in ' + S.alarm +
         (S.alarm === 1 ? ' move' : ' moves') + ' they turn round and walk back.' }) : null,
-      layerBar(),
-      el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
-      night ? feedStrip() : (layer === 'electronics' ? camCycles() : null),
+      down ? null : layerBar(),
+      down ? deadLink()
+           : el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
+      night ? linkStrip() : (layer === 'electronics' ? camCycles() : null),
       night ? null : leversPanel(),
-      mapKey(night),
-      night ? el('p', { class: 'note', style: 'margin-top:10px', text:
-        'Two feeds at a time. Call the route for where the torches will be, not where they are.' }) : null
+      down ? null : mapKey(night),
+      night ? el('p', { class: 'note', style: 'margin-top:10px', text: down
+        ? 'It comes back. Keep him still until it does, or walk him from memory and hope.'
+        : 'The link drops for a move or two at a time. Say the next three squares while you have him.' }) : null
     ]);
   }
 

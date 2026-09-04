@@ -616,43 +616,36 @@
                { t: 'kids', s: 'Two children. The eldest is at school abroad.' }]
     },
 
-    /* LE TWIST. Emergency power runs two camera feeds at a time and no more,
-       so Benjamin's plan stops being a plan and becomes five boxes, three of
-       them dark on any given turn.
+    /* LE TWIST. The power goes when the safe opens, and what it takes is
+       BENJAMIN'S PICTURE OF THE FLOOR — not continuously, in bursts.
 
-       THE ZONES ARE CUT FOR THE WALK OUT, not for the architecture. The safe
-       is in A; the hatch is at the far east end of the upper gallery. Cutting
-       that gallery in half at the twelfth column means the run for the hatch
-       crosses a seam — he is visible, then he is not, then he is — instead of
-       being one long verdict made at the moment he steps out of the vault.
-       Everything below the ring is one box because he has no reason to be
-       there once he has the manuscript, and a chip on a phone that never
-       matters is a chip in the way of the four that do.
+       The first cut of this cut the building into five camera zones and lit
+       two of them a turn. It measured fine and played as fog: three fifths of
+       the floor missing at any moment, Benjamin blind more often than not, and
+       "I have lost you" reduced to the weather rather than a thing that
+       happens to you. Assane's phone was cut to static at the same time, which
+       took the only reading he had left off the one man who has to walk.
 
-       Every walkable square belongs to a zone, the row-4 doorways included: a
-       square in no zone is dark on every feed forever, which is not a rule
-       anybody could deduce from a screen.
+       So: his phone is untouched, and the van drops the whole floor for one or
+       two of Assane's moves, then holds it for four to six before it can go
+       again. Roughly four dropouts on the walk out, each one an event both of
+       them feel — Benjamin because his screen goes to snow mid-sentence,
+       Assane because the voice stops.
 
-       feedCycle runs five beats and lights each box exactly twice, so no zone
-       is ever the lucky one. A and C share beat 0 (the vault and the gallery
-       outside it — he leaves under one pair of eyes), C and D never share a
-       beat at all, so the crossing always costs him contact. */
+       These numbers decide only what Benjamin can SEE. Nothing here moves a
+       guard or catches anybody, so no route is opened or closed by them and
+       the solver does not model them. Widen `drop` to make him panic, widen
+       `delay` to make it rarer. */
     BLACKOUT: {
-      zones: [
-        { id: 'A', name: 'LA RÉSERVE',    x: 5,  y: 1,  w: 5,  h: 4 },
-        { id: 'B', name: 'BUREAU',        x: 11, y: 1,  w: 4,  h: 4 },
-        { id: 'C', name: 'GALERIE OUEST', x: 1,  y: 5,  w: 11, h: 2 },
-        { id: 'D', name: 'GALERIE EST',   x: 12, y: 5,  w: 10, h: 2 },
-        { id: 'E', name: 'LES ÉTAGES',    x: 1,  y: 7,  w: 21, h: 11 }
-      ],
-      feedCycle: [['A', 'C'], ['D', 'E'], ['B', 'C'], ['A', 'D'], ['B', 'E']]
+      drop:  [1, 2],   /* moves the van has nothing at all */
+      delay: [4, 6]    /* moves it is guaranteed before the next dropout */
     },
 
     /* LE CLAVIER. The hatch locked itself when the power went. P1 can see
        WHICH three keys are worn smooth, never the order.
 
-       5195 is posted to GALERIE OUEST/EST — the upper gallery, where the
-       hatch is; reversed that is 5915, whose digits are exactly 1, 5 and 9, so
+       5195 is posted to GALERIE HAUTE — the upper gallery, where the hatch
+       is; reversed that is 5915, whose digits are exactly 1, 5 and 9, so
        P1 can check Benjamin's answer against the wear before he types it. The
        badge belongs to the roster SLOT and never moves, so this code is the
        same every night while the name attached to it is not.

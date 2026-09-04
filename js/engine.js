@@ -155,6 +155,12 @@
       outfit: { head: null, torso: null, legs: null },
       fauxLeftIsGenuine: Math.random() < 0.5,   /* re-rolled every job */
       blackout: false,         /* Le Twist. Set when the safe opens. */
+      /* BENJAMIN'S LINK, and nobody else's. In the dark the van's picture of
+         the floor drops for a turn or two at a time and then holds. `down` is
+         how many of Assane's moves are left in the current dropout, `cool` how
+         many the picture is guaranteed for before the next one. */
+      link: { down: 0, cool: 0 },
+      linkRng: 0,
       noise: null,             /* where the last run was heard */
       clavierEntry: '',
       bureauStep: 0,           /* 0 = keypad, 1 = door release */
@@ -400,23 +406,52 @@
     return map;
   }
 
-  /* ------------------------------------------------- blackout camera feeds */
-  function zoneOf(x, y) {
-    var zs = C.BLACKOUT.zones;
-    for (var i = 0; i < zs.length; i++) {
-      var z = zs[i];
-      if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) return z.id;
+  /* ------------------------------------------------------- benjamin's link */
+  /* THE ONE WHO LOSES THE PICTURE IS BENJAMIN.
+
+     This used to be a grid of camera zones: the building was cut into five
+     boxes, emergency power lit two of them a turn, and Benjamin could only see
+     Assane where a feed happened to be pointing. It read as a clever system
+     and played as a fog: three fifths of the floor was gone at any moment, he
+     was blind more often than not, and "I have lost you" stopped being a line
+     anybody said because it was simply the weather.
+
+     A dropout is an EVENT, so it is one now. The van holds the floor, then
+     loses it completely for a turn or two, then gets it back and holds it for
+     a few more. Both men feel that: Benjamin because his screen goes to snow
+     mid-sentence, Assane because the voice guiding him stops. That is the
+     twenty seconds this contract exists for, and it happens four or five times
+     on the walk out instead of continuously.
+
+     It is drawn from the run's own seed, so a pinned roster replays the same
+     night. It decides only what Benjamin can SEE — never where a guard is or
+     whether Assane is caught — so no route is made possible or impossible by
+     it, and the solver does not have to model it. */
+  /* THE HIGH BITS, NOT THE LOW ONES. A linear congruential generator's bottom
+     bit alternates with period two, so `rng % 2` for a one-or-two-move dropout
+     returned the same answer every time it was asked in the same order: every
+     dropout came out one move long and the two-move one never happened. The
+     gaps looked fine because they draw from a span of three. Shift the useful
+     bits down before taking the remainder. */
+  function linkRoll(range) {
+    S.linkRng = (S.linkRng * 1103515245 + 12345) & 0x7fffffff;
+    var lo = range[0], hi = range[1];
+    return lo + ((S.linkRng >>> 16) % (hi - lo + 1));
+  }
+  function advanceLink() {
+    if (!S.blackout || !C.BLACKOUT) return;
+    var B = C.BLACKOUT;
+    if (S.link.down > 0) {
+      if (--S.link.down === 0) S.link.cool = linkRoll(B.delay || [4, 6]);
+    } else if (S.link.cool > 0) {
+      if (--S.link.cool === 0) S.link.down = linkRoll(B.drop || [1, 2]);
+    } else {
+      S.link.down = linkRoll(B.drop || [1, 2]);
     }
-    return null;
   }
-  /* two of four, cycling every turn — so Benjamin loses him too */
-  function liveZones() {
-    var c = C.BLACKOUT.feedCycle;
-    return c[S.camPhase % c.length];
-  }
-  function seesAssane() {
-    return liveZones().indexOf(zoneOf(S.assane.x, S.assane.y)) >= 0;
-  }
+  /* how many moves of snow are left, 0 when the picture is good */
+  function linkDown() { return S.blackout ? S.link.down : 0; }
+  function seesAssane() { return !S.blackout || S.link.down === 0; }
 
   /* what Assane can see: flood fill through open tiles, plus the walls that
      bound them, so the TV shows the shape of the room he is standing in */
@@ -540,6 +575,7 @@
       g.facing = faceOf(g);
     });
     S.camPhase++;
+    advanceLink();
   }
 
   /* BREAKING A BEAM. The building does not catch you for it — it tells
@@ -650,9 +686,13 @@
   }
 
   function senseLine() {
-    /* In the blackout his phone has stopped telling him anything at all.
-       These lines are flavour, never information — that is the sequence. */
-    if (S.blackout) return C.STATIC_LINES[S.turn % C.STATIC_LINES.length];
+    /* HIS PHONE KEEPS WORKING IN THE DARK. It used to be cut to static here,
+       on the reasoning that a power cut should cost both of them something —
+       but it cost the wrong man the wrong thing. Assane's readout is the only
+       reason he can walk at all once the television is near-black, and taking
+       it left him with a d-pad and nothing else while the screen that mattered
+       stayed lit. The thing the blackout takes is Benjamin's picture, and it
+       takes it in bursts. See advanceLink(). */
     if (S.alertNote) { var note = S.alertNote; S.alertNote = null; return note; }
     var a = S.assane, best = null, bestD = 99;
     S.guards.forEach(function (g) {
@@ -686,9 +726,13 @@
 
   /* one action = one tick. Move, run, or hold still — all three are real moves.
 
-     RUN and FIGE-TOI exist only in the blackout, and neither is a skill check:
-     running is a decision with a cost (noise), and freezing is a decision with
-     a cost (a turn). No timing window, no gesture, nothing to fumble. */
+     RUN and FIGE-TOI are NOT REACHABLE FROM EITHER PHONE right now. They lived
+     on LE BLACKOUT, the screen Assane used to get when the power went, and
+     that screen is gone — the dark takes Benjamin's picture now, not Assane's.
+     The options are left standing and still work: neither was ever a skill
+     check (running is a decision with a cost, noise; freezing is a decision
+     with a cost, a turn) and if they come back they belong on the ordinary
+     d-pad rather than on a mode. */
   function act(dx, dy, opts) {
     opts = opts || {};
     if (S.phase !== 'play') return { ok: false };
@@ -929,14 +973,17 @@
      the contracts being renumbered instead of throwing three files from here,
      and it is what will hold if a future job wants the safe without the dark. */
   function startBlackout() {
-    if (!C.BLACKOUT || !C.BLACKOUT.zones) return;
+    if (!C.BLACKOUT) return;
     S.blackout = true;
     S.blackoutAt = Date.now();
     S.guards.forEach(function (g) { g.alert = 0; });
-    /* Cut his screen on the same beat as the lights. Without this the last
-       pre-blackout reading ("footsteps, close, left of you") survives into the
-       dark and hands him exactly the information the sequence takes away. */
-    S.sense = C.STATIC_LINES[0];
+    /* the van holds the floor for a few moves first, so the first dropout
+       lands on a pair who had settled rather than on the cut itself */
+    /* +1, not `|| 1`: seed 0 and seed 1 are different nights and were being
+       given the same one */
+    S.linkRng = (S.seed + 1) * 7919 + 13;
+    S.link = { down: 0, cool: 0 };
+    S.link.cool = linkRoll((C.BLACKOUT.delay || [4, 6]));
     toast('POWER CUT', 'bad');
     U.sfx.jail();
     setObjective();
@@ -1214,7 +1261,7 @@
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth,
-    zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane, nearestCam: nearestCam,
+    seesAssane: seesAssane, linkDown: linkDown, nearestCam: nearestCam,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,

@@ -115,84 +115,23 @@
   /* His screen has given up. This panel carries no information at all — that
      is the point of the sequence, and it is why it is generated rather than
      drawn: it must never accidentally become readable. */
-  function staticPanel() {
-    var S = E.S, ns = 'http://www.w3.org/2000/svg';
-    var svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 100 56');
-    var bg = document.createElementNS(ns, 'rect');
-    bg.setAttribute('width', '100'); bg.setAttribute('height', '56');
-    bg.setAttribute('fill', 'var(--night)');
-    svg.appendChild(bg);
-    var seed = S.turn * 9301 + 49297;
-    for (var i = 0; i < 44; i++) {
-      seed = (seed * 9301 + 49297) % 233280;
-      var r = seed / 233280;
-      var bar = document.createElementNS(ns, 'rect');
-      bar.setAttribute('x', (r * 100).toFixed(1));
-      bar.setAttribute('y', ((i * 1.27) % 56).toFixed(1));
-      bar.setAttribute('width', (2 + r * 26).toFixed(1));
-      bar.setAttribute('height', '1.4');
-      bar.setAttribute('fill', i % 3 ? 'var(--zinc)' : 'var(--zinc-lt)');
-      bar.setAttribute('opacity', (0.12 + r * 0.4).toFixed(2));
-      svg.appendChild(bar);
-    }
-    var wrap = el('div', { class: 'deadscreen' });
-    wrap.appendChild(svg);
-    wrap.appendChild(el('span', { class: 'deadscreen__line', text: S.sense || '' }));
-    return wrap;
-  }
+  /* NOTHING HAPPENS ON HIS PHONE IN THE DARK.
+     There was a LE BLACKOUT screen here — a panel of snow, a d-pad, RUN and
+     FREEZE — on the reading that a power cut should take something from both
+     of them. It took it from the wrong man. Assane's phone is his only reading
+     of the building once the television goes near-black, and cutting it to
+     static left him pressing arrows at a wall while the screen that mattered
+     stayed lit. The picture that goes is the VAN'S, in bursts, and it is drawn
+     on Benjamin's phone now — deadLink() in p2.js, the snow included.
 
-  var runArmed = false;
+     So the infiltration view simply carries on: the same readout, the same
+     d-pad, the same sense line. What changes for him is the television, which
+     is exactly what a man walking a dark building would notice.
 
-  function viewBlackout() {
-    var S = E.S;
-
-    function arrow(id, dx, dy) {
-      var b = el('button', { 'aria-label': id, onclick: function () {
-        var r = E.act(dx, dy, { run: runArmed });
-        runArmed = false;
-        if (r.blocked) { b.classList.add('is-blocked'); setTimeout(function () { b.classList.remove('is-blocked'); }, 240); }
-        U.emit('render');
-      } });
-      var ic = G.icon(id); ic.style.color = 'var(--ink)';
-      b.appendChild(ic);
-      return b;
-    }
-
-    var freeze = el('button', { class: 'dpad__freeze', onclick: function () {
-      E.act(0, 0, { freeze: true }); runArmed = false; U.emit('render');
-    } }, [ el('i'), el('span', { text: 'FREEZE' }) ]);
-
-    var pad = el('div', { class: 'dpad' }, [
-      el('div', { class: 'spacer' }), arrow('aup', 0, -1), el('div', { class: 'spacer' }),
-      arrow('aleft', -1, 0), freeze, arrow('aright', 1, 0),
-      el('div', { class: 'spacer' }), arrow('adown', 0, 1), el('div', { class: 'spacer' })
-    ]);
-
-    /* Arming a run is a decision, not a gesture — two taps, no timing window.
-       It moves two tiles instead of one and rings footsteps that stop the
-       nearest guard and turn him toward the sound. */
-    var runBtn = el('button', {
-      class: 'runtoggle' + (runArmed ? ' is-armed' : ''),
-      text: runArmed ? 'RUN ARMED · 2 TILES, MAKES NOISE' : 'RUN',
-      onclick: function () { runArmed = !runArmed; U.sfx.tap(); U.emit('render'); }
-    });
-
-    return screen([
-      head('LE BLACKOUT'),
-      /* Deliberately bare. No reach panel here: in the dark his phone is
-         static and a d-pad, and the only things left are the shape of the
-         building on the TV and Benjamin's voice. Giving him a second readout
-         would hand back exactly what the sequence is built to take away. */
-      body([
-        staticPanel(),
-        S.hasManuscript ? el('div', { class: 'tag tag--gold', text: 'MANUSCRIPT · ON YOU', style: 'margin-top:12px' }) : null,
-        el('p', { class: 'note', style: 'margin-top:12px', text:
-          'Your phone is dead. You cannot see a single guard. Benjamin can — half the time.' })
-      ]),
-      foot([ runBtn, pad ])
-    ]);
-  }
+     COURIR and FIGE-TOI went with the screen. act() still takes {run} and
+     {freeze} and they still work; nothing on either phone offers them any
+     more. If they come back they belong on the ordinary d-pad, in the dark or
+     out of it. */
 
   /* ---------------------------------------------------------- LE CLAVIER */
   function viewClavier() {
@@ -963,7 +902,7 @@
     U.clear(host);
     var v;
     if (S.phase === 'plan') v = viewPlan();
-    else if (S.phase === 'play') v = S.blackout ? viewBlackout() : viewPlay();
+    else if (S.phase === 'play') v = viewPlay();
     else if (S.phase === 'module') v = S.moduleId === 'coffre' ? viewCoffre()
                                     : S.moduleId === 'grille' ? viewGrille()
                                     : S.moduleId === 'porte' ? viewPorte()
@@ -980,6 +919,6 @@
   }
 
   L.p1 = { render: render, pressure: pressure, resetTyped: function () {
-    typed = ''; runArmed = false; outfit = { head: null, torso: null, legs: null };
+    typed = ''; outfit = { head: null, torso: null, legs: null };
   } };
 })(window.DC);

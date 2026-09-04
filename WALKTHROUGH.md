@@ -9,7 +9,8 @@ Verified by typing the table below back in as data and playing it through the
 engine: ends on **V6**, **S · FANTÔME**, suspicion **7**, spotted **0**, 113
 turns, with one camera loop still in hand. The last nine rows are walked in the
 dark — the safe cuts the power — and the engine is scoring them with the
-blackout's rules, not with the lit floor's.
+blackout's rules, not with the lit floor's. Benjamin's link drops five times on
+the way out; the route below assumes he says nothing while it is down.
 
 **What does change between runs is who is on shift.** Same badges, same posts,
 same beats — different people behind them, with different children and
@@ -97,12 +98,19 @@ this route has 8 to spare before the S is gone.
 Steps 4, 13 and 25 are the moves that open a module: Assane steps onto the
 square and the phone changes under his thumb.
 
-**Step 26 is where the power goes.** The safe opens and the building answers:
-the television comes back near-black, Assane's phone becomes static and a
-d-pad, and Benjamin's plan turns into five emergency feeds with two of them
-live at a time. Rows 27 to 34 are walked blind, on Benjamin's voice, and he can
-only see Assane for about two turns in five. The guards cannot see far either —
-nobody does in the dark — which is the only reason the walk is survivable.
+**Step 26 is where the power goes.** The safe opens and the building answers.
+The television comes back near-black: Assane can see three squares in every
+direction and no further. His phone is untouched — same readout, same d-pad —
+because it is the last instrument he has.
+
+What breaks is **Benjamin's link**. The van drops the whole floor, for one or
+two moves at a time, then holds it for four to six before it can drop again. On
+this route that is **five dropouts and seven turns blind**. During one he has
+nothing at all: no plan, no patrols, no gold dot. The answer is `WAIT` until it
+comes back, which costs nothing but the pressure clock — or walking Assane on
+from memory, which is how a rehearsed pair saves four turns and how everybody
+else gets caught. The guards cannot see far either; nobody does in the dark,
+and that is the only reason the walk is survivable.
 
 The hatch at V6 has locked itself, which is step 35 and the reversal the whole
 contract is built towards: Assane can see *which* three keys are worn smooth
