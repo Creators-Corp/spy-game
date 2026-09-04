@@ -45,6 +45,14 @@ window.DC = window.DC || {};
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
+  /* One illustrated header for every phone view. */
+  function phoneHeader(player, title) {
+    return el('header', { class: 'phead phone-heading' + (title.length > 12 ? ' phone-heading--long' : '') }, [
+      el('img', { src: assetURL('art/ui/header-' + player + '.png'), alt: '', 'aria-hidden': 'true' }),
+      el('h1', { text: title })
+    ]);
+  }
+
   /* ---------- art placeholder slots ----------
      Every image in the prototype is a named slot. If art/<name>.png exists it is
      used; if not, the slot draws itself as a labelled dashed box so the layout is
@@ -196,7 +204,7 @@ window.DC = window.DC || {};
 
   L.util = {
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
-    artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
+    phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat,
     clamp: clamp, mmss: mmss, shuffle: shuffle

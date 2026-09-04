@@ -800,14 +800,6 @@
   transform:scale(calc(336 / 430));transform-origin:top left;
   background:#161B22;color:#FFEFCC;
 }
-.pscreen--infiltration .infiltration__head{
-  position:relative;display:block;margin:48px 0 18px;padding:0;height:53px;border:0;
-}
-.infiltration__head img{position:absolute;inset:0;width:430px;height:53px;}
-.infiltration__head h1{
-  position:absolute;right:16px;bottom:5px;margin:0;
-  font-size:34px;line-height:1;font-weight:800;letter-spacing:0;color:#FD6A1A;
-}
 .pscreen--infiltration .pbody{
   display:flex;flex-direction:column;gap:18px;padding:0 12px 18px;
 }
@@ -861,14 +853,6 @@
   transform:scale(calc(336 / 430));transform-origin:top left;
   background:#161B22;
 }
-.pscreen--dossier .dossier__head{
-  position:relative;display:block;margin:48px 0 18px;padding:0;height:53px;border:0;
-}
-.dossier__head img{position:absolute;inset:0;width:430px;height:53px;}
-.dossier__head h1{
-  position:absolute;right:16px;bottom:5px;margin:0;
-  font-size:34px;line-height:1;font-weight:800;letter-spacing:0;color:#FD6A1A;
-}
 .pscreen--dossier .pbody{padding:0 12px 18px;}
 .pscreen--dossier .dossier__plan{display:flex;flex-direction:column;gap:18px;}
 .pscreen--dossier .layers,
@@ -915,3 +899,88 @@
 .pscreen--dossier .lever__txt em{font-size:13px;line-height:1.35;color:#FFEFCC;}
 .pscreen--dossier .lever__cost{color:var(--red);}
 .pscreen--dossier .mapkey{margin-top:0;}
+
+/* The header scales to the same visible size on the standard 336px views
+   and on the 430px artwork canvases, without resizing their body content. */
+.pscreen{--heading-unit:calc(336px / 430);}
+.pscreen--infiltration,.pscreen--dossier{--heading-unit:1px;}
+.phone-heading{
+  position:relative;display:block;flex:none;border:0;padding:0;
+  height:calc(53 * var(--heading-unit));
+  margin:calc(48 * var(--heading-unit)) 0 calc(18 * var(--heading-unit));
+}
+.phone-heading img{position:absolute;inset:0;width:100%;height:100%;}
+.phone-heading h1{
+  position:absolute;right:calc(16 * var(--heading-unit));bottom:calc(5 * var(--heading-unit));
+  margin:0;font-size:calc(34 * var(--heading-unit));line-height:1;
+  font-weight:800;letter-spacing:0;color:#FD6A1A;white-space:nowrap;
+}
+.phone-heading--long h1{font-size:calc(27 * var(--heading-unit));}
+
+/* Plan readiness keeps its artwork and contrast while waiting. */
+.plan-ready{
+  position:relative;isolation:isolate;min-height:63px;padding:15px 12px;
+  border:0;border-radius:0;background:transparent;color:#FFEFCC;font-weight:700;
+}
+.plan-ready:hover{background:transparent;}
+.plan-ready .plan-ready__art{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;
+  pointer-events:none;user-select:none;
+}
+.plan-ready .plan-ready__art--dark{visibility:hidden;}
+.plan-ready:is(:active,.is-waiting){color:#FD6A1A;}
+.plan-ready:is(:active,.is-waiting) .plan-ready__art--light{visibility:hidden;}
+.plan-ready:is(:active,.is-waiting) .plan-ready__art--dark{visibility:visible;}
+.plan-ready[disabled]{opacity:1;}
+.plan-ready:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+
+/* Plan-only footer and role-image frames: 2px outer, 1px gap, 1px inner. */
+.pscreen--plan .pfoot{
+  position:relative;background:#0C1118;border-top:2px solid #778495;
+}
+.pscreen--plan .pfoot::before{
+  content:"";position:absolute;left:0;right:0;top:1px;height:1px;
+  background:#778495;pointer-events:none;
+}
+.pscreen--plan .role .artslot{
+  border:2px solid #778495;border-radius:0;padding:2px;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+
+/* Contract selection: framed panel with blue double-line buttons. */
+.pscreen--plan .contracts{
+  padding:12px;border:2px solid #778495;border-radius:0;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.pscreen--plan .contract{
+  --contract-fill:#0A1626;
+  border:1px solid #4C93E4;border-radius:0;
+  background:var(--contract-fill);color:#FFEFCC;
+  box-shadow:inset 0 0 0 1px var(--contract-fill),inset 0 0 0 2px #4C93E4;
+}
+.pscreen--plan .contract:is(.is-on,:active){--contract-fill:#090C11;color:#FF883D;}
+.pscreen--plan .contract span,
+.pscreen--plan .contract em{color:inherit;}
+.pscreen--plan .contract:last-child{margin-bottom:0;}
+.pscreen--plan .contract:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+
+.pscreen--plan .role__list{color:#FFEFCC;}
+
+/* A small illustrated callout replaces the flat role-label rectangle. */
+.pscreen--plan .role__job{
+  position:relative;isolation:isolate;background:transparent;padding:8px 16px;
+}
+.pscreen--plan .role__job img{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;
+  pointer-events:none;user-select:none;
+}
+
+.pscreen--plan .role__name{color:#FD6A1A;}
+
+.pscreen--dossier .lever:hover .lever__txt b,
+.pscreen--dossier .lever:hover .lever__txt em{color:#FFFFFF;}
+
+.pscreen--dossier .lever:hover .lever__cost{color:var(--red);}
+
+.pscreen--dossier .lever.is-live .lever__txt em{color:#FFEFCC;}
+.pscreen--dossier .lever.is-live .lever__cost{color:var(--red);}

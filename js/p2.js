@@ -18,12 +18,7 @@
      dossier is supposed to put on him. */
   var layer = 'patrols';
 
-  function head(now) {
-    return el('header', { class: 'phead' }, [
-      el('span', { class: 'phead__who', text: 'P2 · BENJAMIN' }),
-      el('span', { class: 'phead__now', text: now })
-    ]);
-  }
+  function head(now) { return U.phoneHeader('p2', now); }
   function screen(kids) { return el('div', { class: 'pscreen' }, kids); }
   function body(kids) { return el('div', { class: 'pbody' }, kids); }
   function foot(kids) { return el('div', { class: 'pfoot' }, kids); }
@@ -31,7 +26,7 @@
   /* ---------------------------------------------------------- LE PLAN */
   function viewRole() {
     var S = E.S;
-    return screen([
+    var view = screen([
       head('LE PLAN'),
       body([
         el('div', { class: 'contracts' }, [
@@ -53,7 +48,10 @@
         el('div', { class: 'role' }, [
           U.artSlot('p2-role-benjamin'),
           el('h2', { class: 'role__name', text: 'BENJAMIN' }),
-          el('div', { class: 'role__job', text: 'THE BRAIN' }),
+          el('div', { class: 'role__job' }, [
+            el('img', { src: U.assetURL('art/ui/callout-frame.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+            el('span', { text: 'THE BRAIN' })
+          ]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are in the van. You see the whole floor — guards, cameras, cones, doors.' }),
             el('li', { text: 'You touch nothing. Assane is your hands, and he cannot see what you can.' }),
@@ -63,13 +61,18 @@
       ]),
       foot([
         el('button', {
-          class: 'btn ' + (S.ready.p2 ? '' : 'btn--go'),
-          text: S.ready.p2 ? 'WAITING FOR ASSANE…' : 'READY',
+          class: 'btn plan-ready' + (S.ready.p2 ? ' is-waiting' : ''),
           disabled: S.ready.p2 ? '' : null,
           onclick: function () { S.ready.p2 = true; U.sfx.tap(); U.emit('ready'); }
-        })
+        }, [
+          el('img', { class: 'plan-ready__art plan-ready__art--light', src: U.assetURL('art/ui/van-action-light.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+          el('img', { class: 'plan-ready__art plan-ready__art--dark', src: U.assetURL('art/ui/van-action-dark.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+          el('span', { text: S.ready.p2 ? 'WAITING FOR ASSANE…' : 'READY' })
+        ])
       ])
     ]);
+    view.classList.add('pscreen--plan');
+    return view;
   }
 
   /* ------------------------------------------------------------- tabs */
@@ -999,10 +1002,7 @@
       ? askBoard(S.moduleId) : null;
 
     var view = screen([
-      el('header', { class: 'phead dossier__head' }, [
-        el('img', { src: U.assetURL('art/ui/header-p2.png'), alt: '' }),
-        el('h1', { text: 'DOSSIER' })
-      ]),
+      head({ plan: 'DOSSIER', porte: 'LA PORTE', manuel: 'MANUEL', personnel: 'PERSONNEL', visages: 'VISAGES' }[tab]),
       tabBar(),
       body(asking ? [asking, inner] : [inner])
     ]);

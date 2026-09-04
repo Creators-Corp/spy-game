@@ -181,7 +181,7 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 .chip--ghost{background:transparent;color:var(--zinc-lt);border-color:var(--zinc);}
 .chip--btn{background:var(--paper);color:var(--ink);}
 .chip--btn:hover{background:var(--gold);}
-.chip--btn.is-on{background:var(--gold);}
+.chip--btn.is-on{background:#FD6A1A;color:#0C1118;}
 /* WHICH ROSTER. The number is the run: pin one and every restart plays the
    same guards, which is what a rehearsed walkthrough needs. It lives next to
    RESTART because that is the button that used to throw it away. */
@@ -210,7 +210,7 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 }
 .chip--swap button + button{border-left:var(--stroke) solid var(--zinc);}
 .chip--swap button:hover{color:var(--on-color);}
-.chip--swap button.is-on{background:var(--gold);color:var(--on-gold);}
+.chip--swap button.is-on{background:#FD6A1A;color:#0C1118;}
 
 /* ---------- shared bits ---------- */
 .hair{height:var(--stroke);background:var(--ink);border:0;margin:0;}
@@ -271,4 +271,10 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
   70%{transform:translate(-2px,0)}
   80%{transform:translate(2px,0)}
   90%{transform:translate(-1px,0)}
+}
+
+/* Consistent inverted hover treatment for every interactive top setting. */
+.stage__chrome button:hover,
+.stage__chrome .chip--roster input:hover{
+  background:#FFE8C2;color:#0C1118;border-color:#FFE8C2;
 }

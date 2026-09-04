@@ -73,12 +73,7 @@
   L.face = { svg: faceSVG, portrait: facePortrait };
 
   /* =================================================================== */
-  function head(now) {
-    return el('header', { class: 'phead' }, [
-      el('span', { class: 'phead__who', text: 'P1 · ASSANE' }),
-      el('span', { class: 'phead__now', text: now })
-    ]);
-  }
+  function head(now) { return U.phoneHeader('p1', now); }
   function screen(kids) { return el('div', { class: 'pscreen' }, kids); }
   function body(kids) { return el('div', { class: 'pbody' }, kids); }
   function foot(kids) { return el('div', { class: 'pfoot' }, kids); }
@@ -86,13 +81,16 @@
   /* ------------------------------------------------------------ LE PLAN */
   function viewPlan() {
     var S = E.S;
-    return screen([
+    var view = screen([
       head('LE PLAN'),
       body([
         el('div', { class: 'role' }, [
           U.artSlot('p1-role-assane'),
           el('h2', { class: 'role__name', text: 'ASSANE' }),
-          el('div', { class: 'role__job', text: 'THE HANDS' }),
+          el('div', { class: 'role__job' }, [
+            el('img', { src: U.assetURL('art/ui/callout-frame.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+            el('span', { text: 'THE HANDS' })
+          ]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are inside the building. You move, you touch, you talk your way out.' }),
             el('li', { text: 'You see close and you see narrow. You will not see the guard until he is on you.' }),
@@ -102,13 +100,18 @@
       ]),
       foot([
         el('button', {
-          class: 'btn ' + (S.ready.p1 ? '' : 'btn--go'),
-          text: S.ready.p1 ? 'WAITING FOR BENJAMIN…' : 'READY',
+          class: 'btn plan-ready' + (S.ready.p1 ? ' is-waiting' : ''),
           disabled: S.ready.p1 ? '' : null,
           onclick: function () { S.ready.p1 = true; U.sfx.tap(); U.emit('ready'); }
-        })
+        }, [
+          el('img', { class: 'plan-ready__art plan-ready__art--light', src: U.assetURL('art/ui/van-action-light.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+          el('img', { class: 'plan-ready__art plan-ready__art--dark', src: U.assetURL('art/ui/van-action-dark.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
+          el('span', { text: S.ready.p1 ? 'WAITING FOR BENJAMIN…' : 'READY' })
+        ])
       ])
     ]);
+    view.classList.add('pscreen--plan');
+    return view;
   }
 
   /* ------------------------------------------------------ L'INFILTRATION */
@@ -603,10 +606,7 @@
     ]);
 
     var view = screen([
-      el('header', { class: 'phead infiltration__head' }, [
-        el('img', { src: U.assetURL('art/ui/header-p1.png'), alt: '' }),
-        el('h1', { text: S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION' })
-      ]),
+      head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
       body([
         S.dark ? localMap() : null,
         el('div', { class: 'nav__sense' }, [

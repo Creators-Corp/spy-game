@@ -82,8 +82,8 @@
    sits it in the room without dimming it into mud */
 .plan__bg::after{content:"";position:absolute;inset:0;background:rgba(6,9,13,.22);}
 
-.plan__eyebrow{margin:0 0 9px;font-size:10px;letter-spacing:.3em;color:var(--gold);}
-.plan__title{margin:0;font-size:38px;line-height:1;letter-spacing:.02em;color:var(--on-color);}
+.plan__eyebrow{margin:0 0 9px;font-size:10px;letter-spacing:.3em;color:#778495;}
+.plan__title{margin:0;font-size:38px;line-height:1;letter-spacing:.02em;color:#FD6A1A;}
 .plan__target{
   margin:9px 0 0;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--zinc-lt);
 }
@@ -100,7 +100,7 @@
   background:transparent;color:var(--zinc-lt);
 }
 .readylamp i{width:8px;height:8px;border-radius:999px;background:transparent;border:var(--stroke) solid var(--zinc);}
-.readylamp.is-ready{background:var(--gold);border-color:var(--gold);color:var(--on-gold);}
+.readylamp.is-ready{background:#FD6A1A;border-color:#FD6A1A;color:var(--on-gold);}
 .readylamp.is-ready i{background:var(--on-gold);border-color:var(--on-gold);}
 
 /* --- THE ROOM --- */
@@ -324,3 +324,26 @@
 .tv__screen.is-flash .tv__vignette{animation:flash .9s ease-out 1;}
 @keyframes vig{0%,100%{opacity:var(--lo)}50%{opacity:var(--hi)}}
 @keyframes flash{0%{opacity:1;background:rgba(193,55,46,.7)}100%{opacity:var(--lo)}}
+
+/* TV frame and panel dividers: 2px outside, 1px gap, 1px inside. */
+.tv__screen::after{
+  content:"";position:absolute;inset:0;z-index:20;pointer-events:none;
+  border:2px solid #778495;border-radius:3px;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.tvbar{position:relative;}
+.tvbar--top{border-bottom:2px solid #778495;}
+.tvbar--bottom{border-top:2px solid #778495;}
+.tvbar--top::after,
+.tvbar--bottom::before{
+  content:"";position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:#0C1118;
+}
+/* The top panel's outside edge is below it; the bottom panel's is above it. */
+.tvbar--top::after{bottom:0;border-top:1px solid #778495;}
+.tvbar--bottom::before{top:0;border-bottom:1px solid #778495;}
+.plan__inner{border-right:2px solid #778495;}
+.plan__inner::after{
+  content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
+  background:#0C1118;border-left:1px solid #778495;pointer-events:none;
+}
