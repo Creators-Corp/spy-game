@@ -75,24 +75,12 @@
     s += '<rect x="0" y="0" width="' + (cols * TW) + '" height="' + (rows * TH) + '" rx="26" fill="none"' +
          ' stroke="' + EDGE + '" stroke-opacity="' + (night ? 0.12 : 0.22) + '" stroke-width="10"/>';
 
-    /* THE BEAMS HE HAS FOUND. They are deliberately absent from the
-       illustrated floor — a red wash over parquet reads as damage — so he
-       learns one the way he would in the room: by standing next to it. */
-    for (var ly = 0; ly < C.MAP.length; ly++) {
-      for (var lx = 0; lx < C.MAP[ly].length; lx++) {
-        if (C.MAP[ly][lx] !== 'L') continue;
-        var near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) {
-          return !!S.seen[(lx + v[0]) + ',' + (ly + v[1])];
-        });
-        if (!near) continue;
-        var off = S.levers.laser > 0, my = ly * TH + TH / 2;
-        if (!off) s += '<rect x="' + (lx * TW) + '" y="' + (ly * TH) + '" width="' + TW + '" height="' + TH +
-                       '" fill="var(--red)" opacity="' + (night ? 0.16 : 0.22) + '"/>';
-        s += '<line x1="' + (lx * TW) + '" y1="' + my + '" x2="' + (lx * TW + TW) + '" y2="' + my +
-             '" stroke="var(--red)" stroke-width="' + (off ? 9 : 16) + '" stroke-linecap="round"' +
-             (off ? ' stroke-dasharray="26 34" opacity=".45"' : '') + '/>';
-      }
-    }
+    /* NO BEAMS ON THIS SCREEN. They were drawn here once he had stood next to
+       one, on the reasoning that he would have heard the hum — but a laser is
+       wiring, and wiring is Benjamin's half of the floor. Putting it on the
+       television handed the man with the plan a second copy of his own layer
+       and took away the reason to ask. He still learns a beam the way the
+       building teaches him: by the alarm, if he walks into it. */
 
     /* the camera he is looking at, and never one across the building */
     if (!night) S.cameras.forEach(function (c) {

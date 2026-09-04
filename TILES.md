@@ -42,7 +42,7 @@ two-tile face puts its top half.
 | vision | each guard's sightline, drawn from the artist's piece and **cut to the engine's shape**. `guard-sightline` while the lights are on, masked red because red is threat; `guard-sightline-small` with the lights cut or the power gone, left white because then it is a torch. Cameras are not drawn here — a second red pattern over the same floor could not be told from the first |
 | walls | masses, faces, bands, corners, doors |
 | props | the objectives, the desk, the window |
-| actors | guards and Assane, drawn south-most last so they overlap correctly |
+| actors | guards and Assane, **under the walls and over the floor** — the parquet is beneath them, the wall in front of them hides them. Among themselves, south-most last so a man lower on the floor stands in front of one higher up |
 | ui | the pressure ring |
 
 The vision layer sits **between the ground and the walls** on purpose: it is

@@ -579,45 +579,45 @@
       s += '</g>';
     }
 
-    /* ---- 3 & 4. THE WALLS AND THE CAST, INTERLEAVED ----
-
+    /* ---- 3. ACTORS: UNDER THE WALLS, OVER THE FLOOR ----
        A man used to be drawn on top of every wall, so he climbed the stone
-       instead of standing behind it. Putting the whole cast under the whole
-       wall layer fixed that and broke something worse: wall corners live
-       INSIDE floor tiles here — the artist's rule for a concave wall, and the
-       reason the building reads — so a walkable square can carry a lump of
-       stone, and a man standing beside a corner vanished into it completely.
+       instead of standing behind it. The parquet is under him and the walls
+       are in front of him now, which is what a floor seen from above does.
 
-       So the wall layer is split, and the split is one rule: a piece drawn
-       into a square somebody is standing on goes UNDER him; everything else
-       goes over. Under his feet that fragment is what it always was, the edge
-       of the wall he is standing next to. Over his head it is a wall he is
-       behind.
+       There was a version of this that tried to be clever, splitting the wall
+       layer so a piece landing in a man's OWN square ducked under him. It was
+       protecting against something that cannot happen: the only pieces that
+       ever land in a walkable square are top edges, face tops and corners, and
+       the heaviest of them covers 59% of a tile. Nothing can hide him.
+       block-tile, which would, is only ever drawn in stone.
 
-       Among themselves the cast still sorts south-most last, so a man lower on
-       the floor stands in front of one higher up. */
-    var cast = [];
+       Among themselves they sort south-most last, so a man lower on the floor
+       stands in front of one higher up. */
     if (on('actors')) {
+      var actors = [];
       S.guards.forEach(function (g) {
-        var gp = E.guardAt(g);
-        if (view === 'assane' && !lit(gp.x, gp.y)) return;
-        cast.push({ who: 'guard', x: gp.x, y: gp.y, dir: g.facing });
+        var p = E.guardAt(g);
+        if (view === 'assane' && !lit(p.x, p.y)) return;
+        actors.push({ who: 'guard', x: p.x, y: p.y, dir: g.facing });
       });
-      cast.push({ who: 'assane', x: S.assane.x, y: S.assane.y, dir: S.facing || 'S' });
-      cast.sort(function (a2, b2) { return a2.y - b2.y || a2.x - b2.x; });
+      actors.push({ who: 'assane', x: S.assane.x, y: S.assane.y, dir: S.facing || 'S' });
+      actors.sort(function (a2, b2) { return a2.y - b2.y || a2.x - b2.x; });
+      s += '<g class="tl-actors">';
+      actors.forEach(function (a2) {
+        var dir = { N: 'up', S: 'down', E: 'right', W: 'left' }[a2.dir] || 'down';
+        px = a2.x * W; py = a2.y * H;
+        s += '<ellipse cx="' + (px + W / 2) + '" cy="' + (py + H * 0.86) + '" rx="' + (W * 0.22) + '" ry="' + (H * 0.07) + '" fill="#000" opacity=".28"/>';
+        s += img(a2.who + '-' + dir, px + W * 0.1, py + H * 0.02, W * 0.8, H * 0.9, { keep: true });
+      });
+      s += '</g>';
     }
-    var underfoot = {};
-    cast.forEach(function (a2) { underfoot[a2.x + ',' + a2.y] = 1; });
 
-    var wUnder = '', wOver = '';
+    /* ---- 4. WALLS, LASERS, DOORS ---- */
     if (on('walls')) {
-      /* every piece knows the square it lands in, so it knows which side of
-         the cast it belongs on */
-      function put(cx, cy, tag) { if (underfoot[cx + ',' + cy]) wUnder += tag; else wOver += tag; }
-
+      s += '<g class="tl-walls">';
       /* faces first, everything else on top, so a side band can sit over a
          face end without the face erasing it */
-      var later = [], over = sheet(), hasOver = false, k2;
+      var later = '', over = sheet(), hasOver = false, k2;
       for (k2 in over) { hasOver = true; break; }
       /* a cell the sheet speaks for takes nothing from the rules */
       function owned(cx, cy) { return hasOver && over[cellName(cx, cy)] !== undefined; }
@@ -630,33 +630,29 @@
            which is the ladder of parallel lines running through the blocks.
            block-tile is the same colour with no line, and is what a mass is
            made of. */
-        if (!outside(x, y)) put(x, y, img('block-tile', x * W, y * H, W + 1, H + 1));
+        if (!outside(x, y)) s += img('block-tile', x * W, y * H, W + 1, H + 1);
         wallPieces(x, y).forEach(function (p) {
-          var lx = x + Math.round(p.dx || 0), ly = y + Math.round(p.dy || 0);
-          if (owned(lx, ly)) return;
+          if (owned(x + Math.round(p.dx || 0), y + Math.round(p.dy || 0))) return;
           var tag = p.rect
             ? '<rect x="' + ((x + p.dx) * W) + '" y="' + ((y + p.dy) * H) + '" width="' + (p.w * W + 0.5) + '" height="' + (p.h * H + 0.5) + '" fill="' + p.fill + '"/>'
             : img(p.name, (x + p.dx) * W, (y + p.dy) * H, p.w * W + 1, p.h * H + 1);
           /* faces first, bands and strips over them, pillars last of all */
-          if (!p.rect && p.name.indexOf('wall-edge') < 0) put(lx, ly, tag);
-          else later.push({ x: lx, y: ly, tag: tag });
+          if (!p.rect && p.name.indexOf('wall-edge') < 0) s += tag; else later += tag;
         });
       }
-      later.forEach(function (L) { put(L.x, L.y, L.tag); });
+      s += later;
       /* ...and then the sheet's own tiles, in the order it lists them */
       for (var oy = -1; oy < rows; oy++) for (var ox = 0; ox < cols; ox++) {
         var list = over[cellName(ox, oy)];
         if (!list || !list.length) continue;
         if (seen && !wallKnown(ox, oy)) continue;
-        list.forEach(function (name) { put(ox, oy, img(name, ox * W, oy * H, W + 1, H + 1)); });
+        list.forEach(function (name) { s += img(name, ox * W, oy * H, W + 1, H + 1); });
       }
       /* the beams are not drawn on this floor — they are Benjamin's to
          know, and on the illustrated plan they read as damage. */
 
       /* doors: gold while locked (the thing to open), grey once it is not. A
-         door in a north face stands in the face; one in a side wall swings.
-         Always over the cast: a shut door is not a square he can be on, and an
-         open one he is walking through should still swing in front of him. */
+         door in a north face stands in the face; one in a side wall swings. */
       S.doors.forEach(function (d) {
         if (!wallKnown(d.x, d.y)) return;
         var horizontal = floorLike(d.x, d.y + 1) || floorLike(d.x, d.y - 1);
@@ -664,26 +660,14 @@
         if (horizontal) {
           var name = d.locked ? 'goal-door-front' : 'prop-door-gray';
           var onBlock = floorLike(d.x, d.y - 1);        /* a partition: the door sits on the grey */
-          if (onBlock) wOver += img(name, px + W * 0.06, py - H * 0.05, W * 0.88, H * 1.08, { keep: true });
-          else wOver += img(name, px + W * 0.02, py - H * 0.1, W * 0.96, H * 1.1, { keep: true });
+          if (onBlock) s += img(name, px + W * 0.06, py - H * 0.05, W * 0.88, H * 1.08, { keep: true });
+          else s += img(name, px + W * 0.02, py - H * 0.1, W * 0.96, H * 1.1, { keep: true });
         } else {
-          wOver += img('goal-door-side', px + W * 0.2, py - H * 0.25, W * 0.6, H * 1.25, { keep: true, opacity: d.locked ? 1 : 0.85 });
+          s += img('goal-door-side', px + W * 0.2, py - H * 0.25, W * 0.6, H * 1.25, { keep: true, opacity: d.locked ? 1 : 0.85 });
         }
-      });
-    }
-
-    if (wUnder) s += '<g class="tl-walls tl-walls--under">' + wUnder + '</g>';
-    if (cast.length) {
-      s += '<g class="tl-actors">';
-      cast.forEach(function (a2) {
-        var dir = { N: 'up', S: 'down', E: 'right', W: 'left' }[a2.dir] || 'down';
-        px = a2.x * W; py = a2.y * H;
-        s += '<ellipse cx="' + (px + W / 2) + '" cy="' + (py + H * 0.86) + '" rx="' + (W * 0.22) + '" ry="' + (H * 0.07) + '" fill="#000" opacity=".28"/>';
-        s += img(a2.who + '-' + dir, px + W * 0.1, py + H * 0.02, W * 0.8, H * 0.9, { keep: true });
       });
       s += '</g>';
     }
-    if (wOver) s += '<g class="tl-walls">' + wOver + '</g>';
 
     /* ---- 5. PROPS: the objectives, the hatch, the way in ---- */
     if (on('props')) {
