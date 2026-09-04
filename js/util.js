@@ -161,6 +161,51 @@ window.DC = window.DC || {};
     heartTimer = setInterval(thump, rate);
   }
 
+  /* ---------- THE SCORE ----------
+     Two licensed tracks and one rule: SHADES loops for as long as the job is
+     still a job, and the moment the prize is in his hands it becomes CHAPTER
+     TWO and stays there until the rank card. The cut is the point — the pair
+     hear the music change before either of them has said a word about it, and
+     that is the building telling them the second half has started.
+
+       art/music-infiltration.mp3   Ziv Moran — Shades
+       art/music-escape.mp3         Monument Music — Chapter Two
+
+     Both loop, because an escape can run longer than a track and silence
+     halfway out reads as a bug. Under the sound effects at 0.34 so a wiretap
+     pulse and a guard's footstep still cut through it.
+
+     Everything here is optional: no file, no autoplay permission, no Audio at
+     all, and the game is exactly as playable. It is never load-bearing — no
+     cue in this prototype is carried by sound alone. */
+  var SCORE = { infiltration: 'art/music-infiltration.mp3', escape: 'art/music-escape.mp3' };
+  var scoreNow = null, scoreEl = null, scoreFade = null;
+  function score(track) {
+    if (track === scoreNow) { if (scoreEl && !muted && scoreEl.paused) scoreEl.play().catch(function () {}); return; }
+    scoreNow = track;
+    /* fade the old one out rather than cutting it — a hard stop under a hard
+       start is two edits where the moment only wants one */
+    if (scoreEl) {
+      var old = scoreEl;
+      clearInterval(scoreFade);
+      scoreFade = setInterval(function () {
+        old.volume = Math.max(0, old.volume - 0.08);
+        if (old.volume <= 0.001) { clearInterval(scoreFade); old.pause(); }
+      }, 40);
+      scoreEl = null;
+    }
+    if (!track || !SCORE[track] || muted) return;
+    try {
+      var a = new Audio(assetURL(SCORE[track]));
+      a.loop = true;
+      a.volume = 0.34;
+      /* a browser that has not seen a gesture yet simply refuses; the next
+         tap re-enters here through render() and it starts then */
+      a.play().then(function () { scoreEl = a; }).catch(function () { scoreNow = null; });
+      a.addEventListener('error', function () { scoreNow = null; });
+    } catch (e) { scoreNow = null; }
+  }
+
   var sfx = {
     step:  function () { tone(190, 0.05, 'square', 0.03); },
     block: function () { tone(90, 0.10, 'sawtooth', 0.04); },
@@ -177,7 +222,13 @@ window.DC = window.DC || {};
   };
   function setMuted(v) {
     muted = v;
-    if (v) { if (heartTimer) { clearInterval(heartTimer); heartTimer = null; } if (heartFile) heartFile.pause(); heartRate = 0; }
+    if (v) {
+      if (heartTimer) { clearInterval(heartTimer); heartTimer = null; }
+      if (heartFile) heartFile.pause();
+      heartRate = 0;
+      if (scoreEl) { scoreEl.pause(); scoreEl = null; }
+      scoreNow = null;                 /* so unmuting starts it again */
+    }
   }
   function isMuted() { return muted; }
 
@@ -206,7 +257,7 @@ window.DC = window.DC || {};
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
     phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
-    sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat,
+    sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);

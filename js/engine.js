@@ -438,9 +438,18 @@
     var lo = range[0], hi = range[1];
     return lo + ((S.linkRng >>> 16) % (hi - lo + 1));
   }
+  /* WHICH HALF OF THE NIGHT THE LINK BELONGS TO.
+     Both contracts end the same way from the van's side: something happens to
+     the building's power and Benjamin's picture of the floor stops being
+     reliable. Contract two cuts the power outright (S.blackout); contract one
+     kills the monitors when the dossier leaves the room (S.dark). Either one
+     is the endgame, and the dropouts belong to both — this was welded to
+     S.blackout, so contract one lost the whole beat and its escape was the
+     only leg in the game where nothing at all was at stake for P2. */
+  function linkLive() { return !!(S.blackout || S.dark) && !!C.LINK; }
   function advanceLink() {
-    if (!S.blackout || !C.BLACKOUT) return;
-    var B = C.BLACKOUT;
+    if (!linkLive()) return;
+    var B = C.LINK;
     if (S.link.down > 0) {
       if (--S.link.down === 0) S.link.cool = linkRoll(B.delay || [4, 6]);
     } else if (S.link.cool > 0) {
@@ -449,9 +458,18 @@
       S.link.down = linkRoll(B.drop || [1, 2]);
     }
   }
+  /* the van holds the floor for a few moves first, so the first dropout lands
+     on a pair who had settled rather than on the cut itself */
+  function startLink() {
+    if (!C.LINK) return;
+    /* +1, not `|| 1`: seed 0 and seed 1 are different nights */
+    S.linkRng = (S.seed + 1) * 7919 + 13;
+    S.link = { down: 0, cool: 0 };
+    S.link.cool = linkRoll(C.LINK.delay || [4, 6]);
+  }
   /* how many moves of snow are left, 0 when the picture is good */
-  function linkDown() { return S.blackout ? S.link.down : 0; }
-  function seesAssane() { return !S.blackout || S.link.down === 0; }
+  function linkDown() { return linkLive() ? S.link.down : 0; }
+  function seesAssane() { return !linkLive() || S.link.down === 0; }
 
   /* what Assane can see: flood fill through open tiles, plus the walls that
      bound them, so the TV shows the shape of the room he is standing in */
@@ -982,27 +1000,25 @@
 
   /* LE TWIST. The safe opens and the building answers.
 
-     CONTRACT TWO RUNS IT; contract one does not. A contract opts in by having
-     a BLACKOUT block and a CLAVIER, and opts out by marking its PRIZE `dark`,
-     which kills the monitors and leaves the job otherwise lit. The teaching
-     contract keeps its lights on: it is somebody's first ten minutes with two
-     phones and one television, and taking all three away is not an opening.
+     CONTRACT TWO RUNS IT; contract one takes the other fork and merely kills
+     its monitors. A contract opts out by marking its PRIZE `dark`, and opts in
+     by carrying a CLAVIER — which is also the fence below, because a power cut
+     locks the way out and a floor with no keypad has no way to unlock it.
 
-     The fence below stays. It is what let this sequence sit dormant through
-     the contracts being renumbered instead of throwing three files from here,
-     and it is what will hold if a future job wants the safe without the dark. */
+     WHAT BOTH FORKS SHARE is the van: darken() and startBlackout() each call
+     startLink(), so Benjamin's picture stutters on either ending. The teaching
+     contract keeps its lights, its cameras and Assane's phone; what it loses
+     is the same thing contract two loses, which is the certainty that the man
+     in the van can still see. */
   function startBlackout() {
-    if (!C.BLACKOUT) return;
+    /* the fence is the KEYPAD, not the link. A power cut locks the way out;
+       on a contract with no CLAVIER that strands them with no code to enter
+       and no door to enter it on. */
+    if (!C.CLAVIER) return;
     S.blackout = true;
     S.blackoutAt = Date.now();
     S.guards.forEach(function (g) { g.alert = 0; });
-    /* the van holds the floor for a few moves first, so the first dropout
-       lands on a pair who had settled rather than on the cut itself */
-    /* +1, not `|| 1`: seed 0 and seed 1 are different nights and were being
-       given the same one */
-    S.linkRng = (S.seed + 1) * 7919 + 13;
-    S.link = { down: 0, cool: 0 };
-    S.link.cool = linkRoll((C.BLACKOUT.delay || [4, 6]));
+    startLink();
     toast('POWER CUT', 'bad');
     U.sfx.jail();
     setObjective();
@@ -1140,7 +1156,11 @@
      was the door, and the walk back out is the rest of the job. */
   /* the monitors die with the prize. The room on the television goes black
      and the run out is played on the two phones alone. */
-  function darken() { S.dark = true; toast('MONITORS DEAD', 'bad'); }
+  /* THE MONITORS DIE AND THE VAN STARTS STUTTERING. Contract one's endgame:
+     no power cut, no keypad, but the feeds Benjamin has been reading all night
+     are coming off monitors that just went out. Same dropouts as contract
+     two's blackout, same numbers, same reason to talk. */
+  function darken() { S.dark = true; startLink(); toast('MONITORS DEAD', 'bad'); }
 
   function takePrize() {
     U.sfx.unlock();
@@ -1280,9 +1300,9 @@
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth,
-    seesAssane: seesAssane, linkDown: linkDown, nearestCam: nearestCam,
+    seesAssane: seesAssane, linkDown: linkDown, linkLive: linkLive, nearestCam: nearestCam,
     leverInert: leverInert,
-    startBlackout: startBlackout, clavierSubmit: clavierSubmit,
+    startBlackout: startBlackout, darken: darken, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
     coffreTap: coffreTap, bureauSubmit: bureauSubmit, bureauDoor: bureauDoor,

@@ -237,6 +237,15 @@
     /* Taking the dossier kills the monitors. The television goes dark and the
        two phones are all there is; the stairs are a floor away, and the hatch
        in the west wall ('X' on the plan) is the only way out. */
+    /* THE VAN STUTTERS HERE TOO. Taking the dossier kills the monitors, and
+       from that moment Benjamin loses the whole floor — plan, patrols, gold
+       dot — for a move or two at a time, then holds it for four to six. Same
+       numbers as contract two's blackout, different reason: no power cut and
+       no keypad here, just the feeds he has been reading all night going out
+       from under him. Without this the walk to the hatch was the one leg in
+       the game where P2 had nothing at stake. */
+    LINK: { drop: [1, 2], delay: [4, 6] },
+
     /* the way out is an alcove cut into the west wall, hand-built tile by
        tile; contract four's is a plain window on a plain wall. */
     HATCH: 'niche',
@@ -635,8 +644,13 @@
        These numbers decide only what Benjamin can SEE. Nothing here moves a
        guard or catches anybody, so no route is opened or closed by them and
        the solver does not model them. Widen `drop` to make him panic, widen
-       `delay` to make it rarer. */
-    BLACKOUT: {
+       `delay` to make it rarer.
+
+       LINK is not what opts a contract into the twist — CLAVIER is, because a
+       power cut locks the way out and a floor with no keypad has no way to
+       unlock it. Contract one has a LINK and no CLAVIER: its monitors die
+       instead, and the van stutters exactly the same way. */
+    LINK: {
       drop:  [1, 2],   /* moves the van has nothing at all */
       delay: [4, 6]    /* moves it is guaranteed before the next dropout */
     },
@@ -684,7 +698,7 @@
      that knows a venue. This function IS the "modules are grammars" argument. */
   var JOB_FIELDS = ['id', 'HATCH', 'venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
-    'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER', 'PORTE',
+    'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'LINK', 'CLAVIER', 'PORTE',
     'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ'];
 
   function loadJob(i) {

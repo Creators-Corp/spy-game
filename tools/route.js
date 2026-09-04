@@ -321,7 +321,7 @@
          meant the one leg the twist exists for was the one leg never tested. */
       if (id === 'coffre' && S.hasManuscript) {
         S.moduleId = null; S.phase = 'play';
-        if (C.PRIZE && C.PRIZE.dark) S.dark = true; else E.startBlackout();
+        if (C.PRIZE && C.PRIZE.dark) E.darken(); else E.startBlackout();
       }
       else if (id === 'clavier' && S.solved.clavier) { S.moduleId = null; S.phase = 'rank'; S.running = false; }
       else { S.solved[id] = true; S.moduleId = null; S.phase = 'play'; }

@@ -438,7 +438,14 @@
   }
 
   function viewPlanTab() {
-    var S = E.S, night = S.blackout, down = E.linkDown();
+    /* TWO DIFFERENT THINGS, AND THEY WERE ONE VARIABLE.
+       `night` is whether the BUILDING is dark — contract two's power cut, and
+       the reason the floor is drawn in night colours. `endgame` is whether the
+       VAN is unreliable, which is true on both contracts: the power cut on
+       two, the monitors dying on one. The dropout strip and the snow belong to
+       the second, so contract one gets them without its floor having to
+       pretend the lights went out. */
+    var S = E.S, night = S.blackout, endgame = E.linkLive(), down = E.linkDown();
     /* Benjamin is the only one who can see all of them at once, so during an
        alarm he is the one who can say which way to run. The count is the
        number of moves before they turn round and walk back. */
@@ -460,7 +467,7 @@
       down ? null : layerBar(),
       down ? deadLink()
            : el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
-      night ? linkStrip() : (layer === 'electronics' ? camCycles() : null),
+      endgame ? linkStrip() : (layer === 'electronics' ? camCycles() : null),
       /* THE VAN IS STILL THERE IN THE DARK. This used to be `night ? null`,
          which took the whole panel away the moment the power went — including
          CUT THE LASERS, the one lever that still does something, on the exact
@@ -468,7 +475,7 @@
          that have stopped meaning anything say so on their own faces. */
       leversPanel(),
       down ? null : mapKey(night),
-      night ? el('p', { class: 'note', style: 'margin-top:10px', text: down
+      endgame ? el('p', { class: 'note', style: 'margin-top:10px', text: down
         ? 'It comes back. Keep him still until it does, or walk him from memory and hope.'
         : 'The link drops for a move or two at a time. Say the next three squares while you have him.' }) : null
     ]);

@@ -56,14 +56,22 @@ Then just let them talk. Nothing on either phone tells a player what the other o
    - **And the trap it invites:** P2 taps a **sequence, never a tempo**. There is no timing window anywhere in it. Asking Benjamin to tap in rhythm would have turned the one module built on audio into the one module with a dexterity check, and design law #2 has no exceptions.
 6. **Le Faux** — *optional*, next to the safe. Two canvases, one crate, one decision, **no retry**. P1 has the paintings; P2 has Benjamin's authentication notes. The notes are ordered so a pair who stops reading after the first one can still get it wrong — note 1 is true of *both* canvases and settles nothing. Take the right one and it goes on the rank card as loot. Take the wrong one and you have carried a forgery out of the building; you find out at the end.
 7. **Le Coffre** (the safe, top left — the door P1 just released). P1 has a dial of symbols nobody has ever named, plus a plate number and the colour of the ring. P2's MANUEL is indexed by **both**, and several entries share a serial. P2 has to describe four symbols out loud, in order. *"A swirly circle. A backwards Z."*
-8. **Le Blackout** — *the twist*, **on contract two**. The instant the safe opens, the building cuts the power. The TV holds on the cut for a beat and then comes back near-black. Contract one keeps its lights on and merely kills the monitors: it is somebody's first ten minutes with two phones and a television, and taking all three away is not an opening. A contract opts in by carrying a `BLACKOUT` block and a `CLAVIER`, and opts out by marking its prize `dark`.
+8. **Le Blackout** — *the twist*, **on contract two**. (Benjamin's dropouts are on **both** contracts — see below. What contract two adds is the power cut itself, and the locked hatch at the end of it.) The instant the safe opens, the building cuts the power. The TV holds on the cut for a beat and then comes back near-black. Contract one keeps its lights on and merely kills the monitors: it is somebody's first ten minutes with two phones and a television, and taking all three away is not an opening. A contract opts in by carrying a `BLACKOUT` block and a `CLAVIER`, and opts out by marking its prize `dark`.
    - **Nothing happens to P1's phone.** Same readout, same d-pad, same sense line. What he loses is the television, which now shows three squares in every direction and is exactly what a man walking a dark building would notice. His phone is the last instrument he has; taking it away leaves him pressing arrows at a wall.
    - **P2 is the one who loses his picture, and he loses all of it.** The van drops the floor completely — no plan, no patrols, no gold dot, just snow — for **one or two of Assane's moves**, then holds it for **four to six** before it can go again. About **five dropouts** on the walk out, **seven turns blind** in total, each one an event rather than weather.
    - **That is the design correction that matters.** The first cut of this cut the building into five camera zones and lit two a turn. It measured fine and played as fog: three fifths of the floor missing at any moment, Benjamin blind more often than not, and *"I've lost you"* demoted from a thing that happens to you into the ambient condition. A dropout has to be an **event** — his screen goes to snow mid-sentence and Assane hears the voice stop.
    - **Nobody sees past arm's length, guards included.** The cameras are gone entirely and every cone collapses to the eight squares around the man. Verified from **all 48** guard phases the safe could open on — the walk from the vault to the hatch exists every time, in 23–29 turns, holding still at most 6 of them.
    - **The dropouts are drawn from the run's own seed** and decide only what Benjamin can *see*. They never move a guard or catch anybody, so no route is opened or closed by them, and a pinned roster replays the same night.
+   - **Contract one gets them too.** Its endgame is different — no power cut, no keypad; taking the dossier kills the monitors instead — but the feeds Benjamin has been reading all night go out from under him just the same, with the same numbers. Without this its walk to the hatch was the one leg in the game where P2 had nothing at stake. A contract carries a `LINK` block to stutter and a `CLAVIER` to run the full twist; contract one has the first and not the second.
 9. **Le Clavier.** The way out locked itself when the power went. P1 sees a keypad with **three keys worn smooth** — he can see *which* three, never the order. The order lives in two different tabs of P2's dossier: **MANUEL** says emergency codes are the posted officer's badge reversed, and **PERSONNEL** says who is posted to the gallery the hatch is in. P1 can check P2's answer against the wear before he types it. **This is the beat where the information flow reverses** — and neither of them can get there alone.
 10. **La Sortie.** The door opens onto the street. Grade — plus a **BUTIN** line saying what actually left with you.
+
+**There are two pieces of music and one cue between them.** *Shades* loops for as long as the job is still a job; the instant the prize is in Assane's hands it becomes *Chapter Two* and stays there to the rank card. The pair hear the second half start before either of them has said a word about it. Both loop, because an escape can outrun a track and going silent halfway out reads as a bug, and both sit under the effects so a wiretap pulse still cuts through. Muting kills them with everything else — nothing in this prototype is carried by sound alone.
+
+| | |
+|---|---|
+| `art/music-infiltration.mp3` | Ziv Moran — *Shades* |
+| `art/music-escape.mp3` | Monument Music — *Chapter Two* |
 
 **If P1 gets spotted, that is not a loss.** It is **La Tchatche**: P1 describes the guard's face, P2 finds him in VISAGES, reads the crack, and tells P1 which of three lines to use. Three exchanges. Two mistakes ends the job — and losing takes five seconds and gets a laugh.
 
@@ -429,7 +437,7 @@ Likeness rules are already enforced in the prompts: **Omar Sy is cleared** and A
 | P1 in the dark | nothing changes — same phone, same d-pad. It is P2's screen that drops |
 | P2 | the four dossier tabs; nothing ever switches them for you |
 | RECOMMENCER | restart the job |
-| SON | mute — every audio cue has a visual twin, so the whole thing is playable muted |
+| SON | mute — every audio cue has a visual twin, so the whole thing is playable muted, music included |
 | SLOTS | hide placeholder labels for screenshots |
 
 ---
@@ -444,7 +452,7 @@ styles/
   tv.css            the TV
   phone.css         both phones
 js/
-  util.js           DOM helpers, art slots, event bus, audio
+  util.js           DOM helpers, art slots, event bus, audio, the score
   glyphs.js         the abstract symbol set (deliberately unnameable)
   figures.js        uniforms and canvases, drawn from feature data
   content.js        THE JOB LIBRARY — two contracts plus the shared vocabulary.

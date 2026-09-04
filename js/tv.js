@@ -357,6 +357,11 @@
       (S.flash && Date.now() - S.flash < 900 ? ' is-flash' : '') +
       (live && S.lastBrush === S.turn && S.turn > 0 ? ' is-near' : '');
     U.heartbeat([0, 1800, 1100, 700][level]);
+    /* THE SCORE FOLLOWS THE PRIZE, not the phase: a module is still the job,
+       and the tchatche is still whichever half of the night you were in when
+       he got stopped. Only having the thing in his hands moves it. */
+    U.score(S.phase === 'plan' || S.phase === 'rank' || S.phase === 'jail' ? null
+          : S.hasManuscript ? 'escape' : 'infiltration');
     $('#tv-clock').textContent = U.mmss(S.elapsed);
     $('#tv-objective').textContent = S.objective;
     $('#suspicion-fill').style.width = S.suspicion + '%';
