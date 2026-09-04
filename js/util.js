@@ -172,8 +172,10 @@ window.DC = window.DC || {};
        art/music-escape.mp3         Monument Music — Chapter Two
 
      Both loop, because an escape can run longer than a track and silence
-     halfway out reads as a bug. Under the sound effects at 0.34 so a wiretap
-     pulse and a guard's footstep still cut through it.
+     halfway out reads as a bug. Well under the effects at 0.17 — halved from
+     0.34, which sat on top of the wiretap pulses and the footsteps instead of
+     under them. This is a score, not a soundtrack: two people have to hear
+     each other talk over it.
 
      Everything here is optional: no file, no autoplay permission, no Audio at
      all, and the game is exactly as playable. It is never load-bearing — no
@@ -199,7 +201,7 @@ window.DC = window.DC || {};
     try {
       var a = new Audio(assetURL(SCORE[track]));
       a.loop = true;
-      a.volume = 0.34;
+      a.volume = 0.17;
       /* a browser that has not seen a gesture yet simply refuses; the next
          tap re-enters here through render() and it starts then */
       a.play().then(function () { scoreEl = a; }).catch(function () { scoreNow = null; });
@@ -213,8 +215,17 @@ window.DC = window.DC || {};
      a recorded stinger for the moments a building system dies, which is a
      sound no oscillator here is going to fake.
 
+       art/sfx-step.wav     SoundBits — Focused Sports · Badminton Racket Swing
        art/sfx-impact.wav   Artlist Original — Epic Moments · Tech Impact
        art/sfx-caught.wav   Artlist Original — Epic Orchestral · Royal String Logo
+
+     THE STEP IS POLYPHONIC and the other two are not, which is the only real
+     complication here. A stinger fires once and restarting it is exactly what
+     you want if it somehow fires twice. A footstep fires on every move, and a
+     player holding an arrow key sends them faster than the sample is long —
+     one Audio element restarted each time chops every whoosh off at 200ms and
+     turns a run down a corridor into a stutter. Three voices, round robin, and
+     they overlap the way footsteps actually do.
 
      It is warmed when the job starts rather than fetched at the moment it is
      wanted, because the whole point of an impact is that it lands on the frame
@@ -222,17 +233,30 @@ window.DC = window.DC || {};
      stays silent and every one of these moments still has its toast, its
      phone buzz and its line on Assane's readout. Nothing is carried by sound
      alone, here least of all. */
-  var SAMPLE = { impact: 'art/sfx-impact.wav', caught: 'art/sfx-caught.wav' };
-  var samples = {};
+  var SAMPLE = {
+    /* quiet: it plays on every single move, and a footstep that demands
+       attention stops being a footstep */
+    step:   { src: 'art/sfx-step.wav',   vol: 0.30, voices: 3 },
+    impact: { src: 'art/sfx-impact.wav', vol: 0.60, voices: 1 },
+    caught: { src: 'art/sfx-caught.wav', vol: 0.60, voices: 1 }
+  };
+  var samples = {}, voiceAt = {};
   function loadSample(name) {
     if (samples[name] !== undefined) return samples[name];
     samples[name] = null;
+    var def = SAMPLE[name];
+    if (!def) return null;
     try {
-      var a = new Audio(assetURL(SAMPLE[name]));
-      a.preload = 'auto';
-      a.volume = 0.6;
-      a.addEventListener('error', function () { samples[name] = null; });
-      samples[name] = a;
+      var pool = [];
+      for (var i = 0; i < def.voices; i++) {
+        var a = new Audio(assetURL(def.src));
+        a.preload = 'auto';
+        a.volume = def.vol;
+        a.addEventListener('error', function () { samples[name] = null; });
+        pool.push(a);
+      }
+      samples[name] = pool;
+      voiceAt[name] = 0;
     } catch (e) { /* audio is optional, never load-bearing */ }
     return samples[name];
   }
@@ -241,8 +265,10 @@ window.DC = window.DC || {};
   function warmup() { for (var k in SAMPLE) loadSample(k); }
   function sample(name) {
     if (muted) return;
-    var a = loadSample(name);
-    if (!a) return;
+    var pool = loadSample(name);
+    if (!pool || !pool.length) return;
+    var a = pool[voiceAt[name] % pool.length];
+    voiceAt[name]++;
     try { a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
   }
   /* SILENCE MEANS SILENCE. The catch sting is thirteen seconds long, which is
@@ -251,13 +277,19 @@ window.DC = window.DC || {};
      job. Called wherever the score goes quiet, so the two always agree. */
   function stopSamples() {
     for (var k in samples) {
-      var a = samples[k];
-      if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} }
+      var pool = samples[k];
+      if (!pool) continue;
+      for (var i = 0; i < pool.length; i++) {
+        try { pool[i].pause(); pool[i].currentTime = 0; } catch (e) {}
+      }
     }
   }
 
   var sfx = {
-    step:  function () { tone(190, 0.05, 'square', 0.03); },
+    /* the whoosh, with the old square-wave blip as the fallback if the file
+       is not there — a step is the one cue that fires often enough for its
+       absence to feel like the game has stopped responding */
+    step:  function () { if (loadSample('step')) sample('step'); else tone(190, 0.05, 'square', 0.03); },
     block: function () { tone(90, 0.10, 'sawtooth', 0.04); },
     good:  function () { tone(660, 0.09, 'triangle', 0.06); setTimeout(function () { tone(990, 0.14, 'triangle', 0.06); }, 90); },
     bad:   function () { tone(150, 0.22, 'sawtooth', 0.06); },
