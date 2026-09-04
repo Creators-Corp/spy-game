@@ -90,7 +90,7 @@
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
     camera: { id: 'camera', icon: 'eye',  name: 'LOOP A CAMERA',  cost: 4,  turns: 4, uses: 3,
-              blurb: 'Pick one. It sees nothing for four moves, then it is back.' }
+              blurb: 'The box nearest him sees nothing for four moves, then it is back.' }
   };
 
   /* THE PRESSURE.

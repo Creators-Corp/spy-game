@@ -78,7 +78,7 @@ this route has 8 to spare before the S is gone.
 | 21 | UP ×4 | F2 |
 | 22 | DOWN | F3 |
 | 23 | RIGHT | G3 |
-| 24 | **P2 · LOOP A CAMERA → CAM 1** | G3 |
+| 24 | **P2 · LOOP A CAMERA** (takes CAM 1) | G3 |
 | 25 | RIGHT | H3 |
 | 26 | **LE COFFRE** — `trident · drop · hook · ladder` | H3 |
 | 27 | LEFT ×2 | F3 |
@@ -101,6 +101,8 @@ CAM 1 sits over the vault and **never blinks**. There is no beat to time and no
 way round it. Assane stops on its doorstep at G3 and cannot take one more step;
 the only thing that opens that square is Benjamin pulling **LOOP A CAMERA**
 from the van, which buys four moves — in, the safe, and back out past the lens.
+The lever takes the box nearest Assane and his phone names it before he pulls,
+so from G3 it is CAM 1; he is deciding whether to spend a loop, not which.
 
 Neither player can finish it alone, neither screen shows the other's half, and
 nothing about it is a reflex test. Looping costs 4 suspicion and contract two

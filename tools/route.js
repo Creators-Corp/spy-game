@@ -375,7 +375,12 @@
       /* a token beginning with * is Benjamin's, not Assane's: pulling a lever
          costs suspicion and no turn, so nothing on the floor moves for it */
       if (path[i].charAt(0) === '*') {
-        if (!E.pullLever('camera', path[i].slice(1))) return { ok: false, why: 'lever refused at token ' + (i + 1) };
+        /* no id: the lever takes the box nearest him, the same as a player's
+           tap. The token still names the camera the plan meant, and the replay
+           checks that is the one that went dark. */
+        var wantCam = path[i].slice(1), gotCam = E.nearestCam();
+        if (!E.pullLever('camera')) return { ok: false, why: 'lever refused at token ' + (i + 1) };
+        if (gotCam && gotCam.id !== wantCam) return { ok: false, why: 'looped ' + gotCam.id + ', the plan wanted ' + wantCam };
         log.push({ token: i + 1, at: E.coordOf(S.assane.x, S.assane.y), lever: path[i].slice(1) });
         continue;
       }
@@ -481,7 +486,10 @@
     var out = [], run = 1;
     for (var i = 1; i <= r.path.length; i++) {
       var here = r.path[i - 1];
-      if (here.charAt(0) === '*') { out.push('P2 · LOOP A CAMERA → ' + here.slice(1).toUpperCase()); run = 1; continue; }
+      /* he does not choose one — the lever takes the box nearest Assane, and
+         from this square that is the box named here. The name is written down
+         so the instruction can be checked, not so it can be picked. */
+      if (here.charAt(0) === '*') { out.push('P2 · LOOP A CAMERA  (takes ' + here.slice(1).toUpperCase() + ')'); run = 1; continue; }
       if (r.path[i] === here && !mark[i]) { run++; continue; }
       out.push(NAME[here] + (run > 1 ? ' ×' + run : '') + (mark[i] ? '        ⟵ ' + mark[i].toUpperCase() : ''));
       run = 1;

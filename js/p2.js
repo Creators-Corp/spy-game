@@ -12,7 +12,6 @@
   var tab = 'plan';
   var openSerial = -1, openBadge = null, pickedFace = null;
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
-  var leverOpen = null;                      /* which lever is asking for a room */
   /* THE LAYERS. The plan shows the people or the wiring, never both. Two
      things Benjamin has to hold in his head at once become two pages he has
      to flip between while Assane waits — which is exactly the load the
@@ -489,21 +488,42 @@
     list.forEach(function (L) {
       var left = S.levers.uses[L.id] || 0;
       var active = L.id === 'lights' ? S.levers.lights : L.id === 'laser' ? S.levers.laser : 0;
-      var isOpen = leverOpen === L.id;
+
+      /* THE CAMERA LEVER SAYS TWO THINGS, AND NEITHER IS A QUESTION.
+         The title names the box a tap would take — the one nearest Assane, so
+         he can see what he is buying without being asked to choose it. The
+         line under it reports the loop already running, if one is, because on
+         a floor with two boxes he can be spending the second use while the
+         first is still dark. They are separate facts and they get separate
+         lines; showing only one of them is how you get a button that promises
+         CAM 1 and loops CAM 2. */
+      var target = null, dark = [];
+      if (L.id === 'camera') {
+        S.cameras.forEach(function (c) { if (S.levers.cams[c.id] > 0) dark.push(c); });
+        /* soonest back leads: the useful fact is when a lens wakes up, not
+           which one has been asleep longest */
+        dark.sort(function (a, b) { return S.levers.cams[a.id] - S.levers.cams[b.id]; });
+        if (live && left > 0) target = E.nearestCam();
+      }
+      var darkLine = dark.length
+        ? dark.map(function (c) { return c.label + ' · ' + S.levers.cams[c.id]; }).join(', ') +
+          ' MOVE' + (S.levers.cams[dark[dark.length - 1].id] > 1 || dark.length > 1 ? 'S' : '') + ' LEFT'
+        : '';
+
       var ic = G.icon(L.icon);
       var b = el('button', {
-        class: 'lever' + (isOpen ? ' is-open' : '') + (active ? ' is-live' : ''),
+        class: 'lever' + (active || dark.length ? ' is-live' : ''),
         disabled: (!live || left <= 0) && !active ? '' : null,
         onclick: function () {
           if (active) return;
-          if (L.id === 'camera') { leverOpen = isOpen ? null : L.id; U.sfx.tap(); U.emit('render'); return; }
           if (E.pullLever(L.id)) U.emit('render');
         }
       }, [
         el('i', { class: 'lever__ic' }, [ic]),
         el('span', { class: 'lever__txt' }, [
-          el('b', { text: L.name }),
-          el('em', { text: active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT' : L.blurb })
+          el('b', { text: L.name + (target ? ' · ' + target.label : '') }),
+          el('em', { text: darkLine ? darkLine
+                        : active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT' : L.blurb })
         ]),
         el('span', { class: 'lever__side' }, [
           el('span', { class: 'lever__uses' }, usePips(left, L.uses)),
@@ -511,21 +531,6 @@
         ])
       ]);
       wrap.appendChild(b);
-      if (L.id === 'camera' && isOpen) {
-        var cams = el('div', { class: 'lever__rooms' }, [
-          el('span', { class: 'lbl', style: 'width:100%', text: 'WHICH CAMERA' })
-        ]);
-        S.cameras.forEach(function (c) {
-          var looped = S.levers.cams[c.id] > 0;
-          cams.appendChild(el('button', {
-            class: 'chip2' + (looped ? ' is-live' : ''),
-            disabled: looped ? '' : null,
-            text: c.label + (looped ? ' · ' + S.levers.cams[c.id] + ' LEFT' : ''),
-            onclick: function () { if (E.pullLever('camera', c.id)) { leverOpen = null; U.emit('render'); } }
-          }));
-        });
-        wrap.appendChild(cams);
-      }
     });
     if (S.levers.last) {
       wrap.appendChild(el('p', { class: 'lever__last', text: 'LAST · ' + S.levers.last.note }));
@@ -899,6 +904,6 @@
 
   L.p2 = { render: render, reset: function () {
     tab = 'plan'; openSerial = -1; openBadge = null; pickedFace = null;
-    tapped = []; queryResult = null; leverOpen = null; layer = 'patrols';
+    tapped = []; queryResult = null; layer = 'patrols';
   } };
 })(window.DC);

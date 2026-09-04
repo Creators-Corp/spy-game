@@ -571,6 +571,30 @@
     if (best && bd <= 8) best.alert = 2;
   }
 
+  /* THE CAMERA HE IS WALKING INTO.
+     Benjamin used to open a list and choose which box to loop. That was a
+     menu, not a decision: the answer was always the one about to see Assane,
+     he had the map in front of him to work it out from, and the choosing cost
+     a tap and a beat at the exact moment neither of them had one to spare.
+     The lever takes the nearest box now and his phone says which, so the
+     decision he is left with is the one that was always the real one — whether
+     to spend a loop at all, and when.
+
+     An already-looped camera is skipped: looping it twice buys nothing, and
+     with two boxes on a floor the second pull is meant to be the other one.
+     If they are all looped it returns the nearest anyway and the lever refuses
+     for the ordinary reason. */
+  function nearestCam() {
+    var best = null, bd = 1e9, fallback = null, fd = 1e9;
+    S.cameras.forEach(function (c) {
+      var d = Math.abs(c.x - S.assane.x) + Math.abs(c.y - S.assane.y);
+      if (d < fd) { fd = d; fallback = c; }
+      if (S.levers.cams[c.id] > 0 || S.cutCameras[c.id]) return;
+      if (d < bd) { bd = d; best = c; }
+    });
+    return best || fallback;
+  }
+
   function nearestGuard() {
     var best = null, bd = 99;
     S.guards.forEach(function (g) {
@@ -605,7 +629,12 @@
       S.sense = 'A hum in the walls stops. <em>Somewhere, a corridor just opened.</em>';
       markSeen();
     } else if (id === 'camera') {
-      var cam = S.cameras.filter(function (c) { return c.id === roomName; })[0];
+      /* Benjamin does not pick one any more — see nearestCam(). An id can
+         still be passed, and the route tool passes one, but a player taps the
+         lever and it takes the box nearest Assane. */
+      var cam = roomName
+        ? S.cameras.filter(function (c) { return c.id === roomName; })[0]
+        : nearestCam();
       if (!cam) return false;
       S.levers.cams[cam.id] = L.turns;
       note = 'LOOPED · ' + cam.label;
@@ -1183,7 +1212,7 @@
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth,
-    zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane,
+    zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane, nearestCam: nearestCam,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,

@@ -760,25 +760,19 @@
 }
 .lever:hover{background:var(--gold);color:var(--on-gold);}
 .lever[disabled]{opacity:.4;pointer-events:none;}
-.lever.is-open,.lever.is-live{background:var(--gold);color:var(--on-gold);}
+.lever.is-live{background:var(--gold);color:var(--on-gold);}
 .lever__ic{width:22px;height:22px;flex:none;display:block;}
 .lever__ic svg{width:100%;height:100%;display:block;}
 .lever__txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
 .lever__txt b{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;}
 .lever__txt em{font-style:normal;font-size:10px;line-height:1.35;color:var(--ink-soft);}
-.lever:hover .lever__txt em,.lever.is-open .lever__txt em,.lever.is-live .lever__txt em{color:var(--on-gold);}
+.lever:hover .lever__txt em,.lever.is-live .lever__txt em{color:var(--on-gold);}
 .lever__side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
 .lever__uses{display:flex;gap:3px;}
 .lever__uses i{width:8px;height:8px;border-radius:99px;border:1.5px solid currentColor;display:block;}
 .lever__uses i.is-on{background:currentColor;}
 .lever__cost{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--red);}
-.lever:hover .lever__cost,.lever.is-open .lever__cost,.lever.is-live .lever__cost{color:var(--on-gold);}
-.lever__rooms{display:flex;flex-wrap:wrap;gap:5px;margin:-2px 0 10px;}
-.chip2{
-  border:var(--stroke) solid var(--ink);border-radius:999px;background:var(--paper);
-  padding:5px 9px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
-}
-.chip2:hover{background:var(--gold);color:var(--on-gold);}
+.lever:hover .lever__cost,.lever.is-live .lever__cost{color:var(--on-gold);}
 .lever__last{margin:2px 0 4px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
 
 /* ============ THE LAYERS (P2) ============ */
@@ -794,8 +788,6 @@
 .layers button span{font-size:9px;letter-spacing:.08em;}
 .layers button:hover{background:var(--paper);}
 .layers button.is-on{background:var(--paper);color:var(--ink);}
-.chip2.is-live{background:var(--gold);color:var(--on-gold);}
-.chip2[disabled]{pointer-events:none;}
 
 /* ============ THE PRESSURE (P1) ============ */
 /* A strip under WHAT YOU SENSE. Fills gold over the thirty seconds he may

@@ -23,8 +23,8 @@ A complete, playable job — the whole filmstrip from slide 04 of the deck, end 
 
 **Two contracts, and all six modules from the library are built.** Benjamin picks the job on his phone during Le Plan — he holds the dossier, so choosing the night's work is his.
 
-- **CONTRAT No.1 — LA VENTE DE NUIT**, an auction house. A corridor job: two guards walking the same corridor in opposite directions and a camera on the only way up. The tension is timing a crossing.
-- **CONTRAT No.2 — LA COLLECTION PRIVÉE**, a private hôtel particulier. A ring job: a sealed chamber with a door at each end, a corridor that goes all the way round it, and a patrol that walks the ring one direction and never turns back. The tension is choosing which way round.
+- **CONTRAT No.1 — LA CHAMBRE 302**, a residence, third floor. A ring job: a sealed chamber with a door at each end, a corridor that goes all the way round it, and guards who never stop walking. The tension is choosing which way round.
+- **CONTRAT No.2 — LA VEILLE DE VENTE**, an auction house the night before the sale. Three floors, each behind a door and each worse than the last. The vault is released from the desk beside it, both are under cameras, and the way out is not drawn anywhere.
 
 They are not reskins. Different map, different shape, different patrol grammar, different roster, and six different module payloads. `js/content.js` is a job library and `loadJob()` swaps the data underneath the engine — **not one line of code anywhere knows a venue.** That is the deck's "modules are grammars, not levels" claim made literal rather than asserted.
  The three in brackets are **optional** — you can walk straight past all of them. That is the difficulty dial, and it is the one from the design doc: *same content, chosen risk*. A lean pair grabs the manuscript and leaves; a greedy pair takes the cloakroom, the wiretap and the canvas as well. Measured, the greedy route costs almost nothing in extra moves — the disguise and the cut camera pay their own detours back — but it keeps two people in the building longer, talking, with more chances to be seen. Both land around **6–8 minutes**.
@@ -69,6 +69,8 @@ Then just let them talk. Nothing on either phone tells a player what the other o
 **The single best 20 seconds to show a room:** the first move after the lights go out. P1 has static and no idea where anything is; P2 is watching two of four feeds and about to lose him. Let them talk. *"I've lost you. Hold still. Switching feeds."* That exchange is the whole pitch, out loud, in one breath.
 
 If you want a second one, the camera gate before the blackout also lands: camera 1 covers the corridor mouth 1-on-1-off, camera 2 covers the safe 3-on-1-off. P2 can see the cycle; P1 cannot.
+
+**LOOP A CAMERA does not ask which.** It takes the box nearest Assane, and Benjamin's phone names that box on the button before he pulls. Choosing used to be a sub-panel and a second tap, and the answer was never in doubt — the map in front of him already said which lens he was walking into. The decision the lever is actually for is whether to spend one of a very small number of them, and when.
 
 ---
 
