@@ -85,13 +85,25 @@
     if (u.visages) list.push(['visages', 'FACES']);
     return list;
   }
+  // Decorative image layers use document-relative asset URLs, like P1's controls.
+  function buttonArt(button, name) {
+    ['light', 'dark'].forEach(function (state) {
+      button.appendChild(el('img', {
+        class: 'dossier__art dossier__art--' + state,
+        src: U.assetURL('art/ui/' + name + '-' + state + '.png'),
+        alt: '', 'aria-hidden': 'true', draggable: 'false'
+      }));
+    });
+    return button;
+  }
   function tabBar() {
+    if (availableTabs().length === 1) return null;
     var bar = el('div', { class: 'tabs' });
     availableTabs().forEach(function (t) {
-      bar.appendChild(el('button', {
-        class: tab === t[0] ? 'is-on' : '', text: t[1],
+      bar.appendChild(buttonArt(el('button', {
+        class: tab === t[0] ? 'is-on' : '',
         onclick: function () { tab = t[0]; U.sfx.tap(); U.emit('render'); }
-      }));
+      }, [el('span', { text: t[1] })]), 'tab'));
     });
     return bar;
   }
@@ -427,27 +439,16 @@
     /* Benjamin is the only one who can see all of them at once, so during an
        alarm he is the one who can say which way to run. The count is the
        number of moves before they turn round and walk back. */
-    /* The same sentence the television is showing him, in the same words. The
-       two screens had no shared vocabulary at all before this: one drew a lit
-       fragment in a black field, the other drew the whole floor, and nothing
-       said they were the same building. */
-    var room = E.roomAt(S.assane.x, S.assane.y);
-    var where = down
-      ? 'The van has lost the floor. <b>Nothing on this screen is live.</b>'
-      : night
-      ? 'The lights are out. Assane is in <b>' + (room ? room.name : 'an unmarked square') +
-        '</b>, square <b>' + E.coordOf(S.assane.x, S.assane.y) + '</b> — while you still have him.'
-      : 'Assane is in <b>' + (room ? room.name : 'an unmarked square') +
-        '</b>, square <b>' + E.coordOf(S.assane.x, S.assane.y) + '</b>. The television is showing him the same two words.';
+    var where = '';
     /* the building's state, said once, where the cones it changes are drawn */
     if (!night && S.alert) {
       where += ' The building is <b>' + C.ALERT[S.alert - 1].name + '</b>: every guard sees ' +
                (S.alert === 1 ? 'one square' : S.alert + ' squares') + ' further' +
                (S.alert >= 2 ? ', and a man who stops him will search him.' : '.');
     }
-    return el('div', { class: night ? 'is-night' : '' }, [
+    return el('div', { class: 'dossier__plan' + (night ? ' is-night' : '') }, [
       S.moduleId === 'grille' && C.GRILLE ? keyBoard() : null,
-      el('p', { class: 'plan2__where', html: where }),
+      where ? el('p', { class: 'plan2__where', html: where }) : null,
       S.alarm > 0 ? el('p', { class: 'warn warn--alarm', html:
         '<b>ALARM · ' + S.alarm + (S.alarm === 1 ? ' MOVE' : ' MOVES') + '</b>' +
         'He broke a beam. Every one of them has left his round and is walking straight at him — ' +
@@ -473,11 +474,11 @@
   /* one layer at a time. Not a filter — a page turn. */
   function layerBar() {
     var bar = el('div', { class: 'layers' });
-    [['patrols', 'PATROLS', 'people'], ['electronics', 'ELECTRONICS', 'wiring']].forEach(function (L) {
-      bar.appendChild(el('button', {
+    [['patrols', 'PATROLS'], ['electronics', 'ELECTRONICS']].forEach(function (L) {
+      bar.appendChild(buttonArt(el('button', {
         class: layer === L[0] ? 'is-on' : '',
         onclick: function () { layer = L[0]; U.sfx.tap(); U.emit('render'); }
-      }, [el('b', { text: L[1] }), el('span', { text: L[2] })]));
+      }, [el('b', { text: L[1] })]), 'tab'));
     });
     return bar;
   }
@@ -573,7 +574,11 @@
     if (!list.length) return null;
     var live = S.phase === 'play';
     var wrap = el('div', { class: 'levers' }, [
-      el('p', { class: 'h', style: 'margin:0 0 8px', text: 'FROM THE VAN' })
+      el('h2', { class: 'h levers__heading' }, [
+        el('img', { src: U.assetURL('art/ui/flourish-left.png'), alt: '' }),
+        el('span', { text: 'FROM THE VAN' }),
+        el('img', { src: U.assetURL('art/ui/flourish-right.png'), alt: '' })
+      ])
     ]);
     list.forEach(function (L) {
       var left = S.levers.uses[L.id] || 0;
@@ -623,7 +628,7 @@
           el('span', { class: 'lever__cost', text: '+' + L.cost })
         ])
       ]);
-      wrap.appendChild(b);
+      wrap.appendChild(buttonArt(b, 'van-action'));
     });
     if (S.levers.last) {
       wrap.appendChild(el('p', { class: 'lever__last', text: 'LAST · ' + S.levers.last.note }));
@@ -993,11 +998,16 @@
     var asking = (S.moduleId === 'bureau' && C.BUREAU) || (S.moduleId === 'clavier' && C.CLAVIER)
       ? askBoard(S.moduleId) : null;
 
-    host.appendChild(screen([
-      head('THE DOSSIER'),
+    var view = screen([
+      el('header', { class: 'phead dossier__head' }, [
+        el('img', { src: U.assetURL('art/ui/header-p2.png'), alt: '' }),
+        el('h1', { text: 'DOSSIER' })
+      ]),
       tabBar(),
       body(asking ? [asking, inner] : [inner])
-    ]));
+    ]);
+    view.classList.add('pscreen--dossier');
+    host.appendChild(view);
   }
 
   L.p2 = { render: render, reset: function () {

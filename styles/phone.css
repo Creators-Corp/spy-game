@@ -792,3 +792,126 @@
 }
 @keyframes scan{from{background-position:0 0}to{background-position:0 60px}}
 @keyframes jitter{0%,88%,100%{transform:translateX(0)}89%{transform:translateX(3px)}91%{transform:translateX(-2px)}93%{transform:translateX(1px)}}
+
+/* Assane's navigation artwork is authored at 430px, then fitted to the
+   existing 336px phone viewport independently of the whole-stage scaling. */
+.pscreen--infiltration{
+  position:absolute;top:0;left:0;width:430px;height:calc(100% * 430 / 336);
+  transform:scale(calc(336 / 430));transform-origin:top left;
+  background:#161B22;color:#FFEFCC;
+}
+.pscreen--infiltration .infiltration__head{
+  position:relative;display:block;margin:48px 0 18px;padding:0;height:53px;border:0;
+}
+.infiltration__head img{position:absolute;inset:0;width:430px;height:53px;}
+.infiltration__head h1{
+  position:absolute;right:16px;bottom:5px;margin:0;
+  font-size:34px;line-height:1;font-weight:800;letter-spacing:0;color:#FD6A1A;
+}
+.pscreen--infiltration .pbody{
+  display:flex;flex-direction:column;gap:18px;padding:0 12px 18px;
+}
+.pscreen--infiltration .nav__sense,
+.pscreen--infiltration .pressure,
+.pscreen--infiltration .nav__controls{
+  flex:none;border:2px solid #778495;border-radius:0;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.pscreen--infiltration .nav__sense{padding:10px 12px;min-height:88px;gap:12px;}
+.pscreen--infiltration .nav__sense .h{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-size:21px;font-weight:700;line-height:1.2;letter-spacing:0;color:#FFEFCC;
+}
+.pscreen--infiltration .nav__sense .h img{width:98px;height:19px;object-fit:contain;}
+.pscreen--infiltration .nav__senseline{font-size:17px;color:#FFEFCC;}
+.pscreen--infiltration .pressure{height:38px;margin:0;padding:3px;overflow:hidden;}
+.pscreen--infiltration .pressure i{top:3px;bottom:3px;left:3px;max-width:calc(100% - 6px);background:#8E3F13;}
+.pscreen--infiltration .pressure span{font-size:17px;line-height:28px;letter-spacing:0;color:#FFEFCC;}
+.pscreen--infiltration .pressure.is-hot span{font-size:12px;}
+.pscreen--infiltration .note{margin:0;font-size:17px;line-height:1.45;color:#FFEFCC;white-space:pre-line;}
+.pscreen--infiltration .pbody .tag{margin:0 !important;}
+.pscreen--infiltration .pfoot{border:0;padding:0 12px 18px;}
+.pscreen--infiltration .nav__controls{padding:14px 12px;}
+.pscreen--infiltration .dpad{grid-template-columns:repeat(3,120px);grid-template-rows:repeat(3,100px);gap:10px;justify-content:center;}
+.pscreen--infiltration .dpad button{
+  width:120px;height:100px;padding:0;border:0;border-radius:0;
+  position:relative;isolation:isolate;background:transparent;
+  color:#FFEFCC;opacity:1;
+}
+/* Keep decoration below the arrow/label and out of pointer hit testing. */
+.pscreen--infiltration .dpad .dpad__art{
+  position:absolute;inset:0;width:120px;height:100px;z-index:-1;
+  pointer-events:none;user-select:none;visibility:hidden;
+}
+.pscreen--infiltration .dpad .dpad__art--idle{visibility:visible;}
+.pscreen--infiltration .dpad button:active .dpad__art--idle,
+.pscreen--infiltration .dpad button.is-pressed .dpad__art--idle,
+.pscreen--infiltration .dpad button:disabled .dpad__art--idle{visibility:hidden;}
+.pscreen--infiltration .dpad button:active:not(:disabled) .dpad__art--pressed,
+.pscreen--infiltration .dpad button.is-pressed:not(:disabled) .dpad__art--pressed,
+.pscreen--infiltration .dpad button:disabled .dpad__art--disabled{visibility:visible;}
+.pscreen--infiltration .dpad button:disabled{cursor:default;}
+.pscreen--infiltration .dpad button:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+.pscreen--infiltration .dpad button svg{width:48px;height:48px;}
+.pscreen--infiltration .dpad .dpad__wait{padding:0 24px;font-size:22px;line-height:1.25;letter-spacing:0;}
+
+/* Benjamin's dossier uses the same artwork scale as Assane's navigation. */
+.pscreen--dossier{
+  position:absolute;top:0;left:0;width:430px;height:calc(100% * 430 / 336);
+  transform:scale(calc(336 / 430));transform-origin:top left;
+  background:#161B22;
+}
+.pscreen--dossier .dossier__head{
+  position:relative;display:block;margin:48px 0 18px;padding:0;height:53px;border:0;
+}
+.dossier__head img{position:absolute;inset:0;width:430px;height:53px;}
+.dossier__head h1{
+  position:absolute;right:16px;bottom:5px;margin:0;
+  font-size:34px;line-height:1;font-weight:800;letter-spacing:0;color:#FD6A1A;
+}
+.pscreen--dossier .pbody{padding:0 12px 18px;}
+.pscreen--dossier .dossier__plan{display:flex;flex-direction:column;gap:18px;}
+.pscreen--dossier .layers,
+.pscreen--dossier .tabs{display:flex;gap:12px;border:0;background:transparent;margin:0;padding:0 4px;}
+.pscreen--dossier .tabs{flex-wrap:wrap;margin:0 12px 18px;}
+.pscreen--dossier .layers button,
+.pscreen--dossier .tabs button{
+  position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;
+  flex:1;min-width:0;min-height:40px;padding:8px;border:0;border-radius:0;
+  background:transparent;color:#FFEFCC;font-size:15px;font-weight:700;letter-spacing:0;
+}
+.pscreen--dossier .tabs button{flex:1 1 28%;}
+.pscreen--dossier .layers button b{font-size:15px;letter-spacing:0;}
+.pscreen--dossier .layers button.is-on,
+.pscreen--dossier .layers button:active,
+.pscreen--dossier .tabs button.is-on,
+.pscreen--dossier .tabs button:active{color:#FD6A1A;}
+.pscreen--dossier .dossier__art{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;
+  pointer-events:none;user-select:none;visibility:hidden;
+}
+.pscreen--dossier .dossier__art--light{visibility:visible;}
+.pscreen--dossier button:is(.is-on,.is-live,:active) .dossier__art--light{visibility:hidden;}
+.pscreen--dossier button:is(.is-on,.is-live,:active) .dossier__art--dark{visibility:visible;}
+.pscreen--dossier button:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
+.pscreen--dossier .plan2,
+.pscreen--dossier .levers{
+  border:2px solid #778495;border-radius:0;background:#0C1118;
+  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
+}
+.pscreen--dossier .plan2{padding:3px;}
+.pscreen--dossier .levers{margin:0;padding:10px 11px 12px;display:flex;flex-direction:column;gap:12px;}
+.pscreen--dossier .levers__heading{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;
+  font-size:18px;line-height:1.2;letter-spacing:0;font-weight:700;color:#FFEFCC;
+}
+.pscreen--dossier .levers__heading span{white-space:nowrap;}
+.pscreen--dossier .levers__heading img{width:98px;height:19px;object-fit:contain;}
+.pscreen--dossier .lever{
+  position:relative;isolation:isolate;min-height:78px;margin:0;padding:10px 12px;
+  border:0;border-radius:0;background:transparent;color:var(--ink);
+}
+.pscreen--dossier .lever__txt b{font-size:14px;letter-spacing:0;color:#FF883D;}
+.pscreen--dossier .lever__txt em{font-size:13px;line-height:1.35;color:#FFEFCC;}
+.pscreen--dossier .lever__cost{color:var(--red);}
+.pscreen--dossier .mapkey{margin-top:0;}

@@ -565,12 +565,12 @@
     paintStill();
     var box = $('#p1-pressure');
     if (!box) return;
-    if (!p || p.idle < 3) { box.className = 'pressure'; return; }
+    if (!p) { box.className = 'pressure'; return; }
     box.className = 'pressure is-on' + (p.ticking ? ' is-hot' : '');
     box.firstChild.style.width = Math.min(p.idle / p.grace, 1) * 100 + '%';
     box.lastChild.textContent = p.ticking
-      ? 'STILL · +1 SUSPICION EVERY ' + C.PRESSURE.every + 'S — MOVE'
-      : 'STILL FOR ' + Math.floor(p.idle) + 'S';
+      ? 'IDLE · +1 SUSPICION EVERY ' + C.PRESSURE.every + 'S — MOVE'
+      : 'IDLE FOR ' + Math.floor(p.idle) + ' SECONDS';
   }
 
   function viewPlay() {
@@ -583,13 +583,14 @@
       var b = el('button', {
         'aria-label': id,
         class: shut ? 'is-shut' : '',
+        disabled: shut ? '' : null,
         onclick: function () {
           var r = E.act(dx, dy);
           if (r.blocked) { b.classList.add('is-blocked'); setTimeout(function () { b.classList.remove('is-blocked'); }, 240); }
           U.emit('render');
         }
       });
-      var ic = G.icon(id); ic.style.color = 'var(--ink)';
+      var ic = G.icon(id); ic.style.color = '#FFEFCC';
       b.appendChild(ic);
       return b;
     }
@@ -601,24 +602,48 @@
       el('div', { class: 'spacer' }), arrow('adown', 0, 1), el('div', { class: 'spacer' })
     ]);
 
-    return screen([
-      head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
+    var view = screen([
+      el('header', { class: 'phead infiltration__head' }, [
+        el('img', { src: U.assetURL('art/ui/header-p1.png'), alt: '' }),
+        el('h1', { text: S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION' })
+      ]),
       body([
         S.dark ? localMap() : null,
         el('div', { class: 'nav__sense' }, [
-          el('p', { class: 'h', text: 'WHAT YOU SENSE' }),
+          el('h2', { class: 'h' }, [
+            el('img', { src: U.assetURL('art/ui/flourish-left.png'), alt: '' }),
+            el('span', { text: 'SENSES' }),
+            el('img', { src: U.assetURL('art/ui/flourish-right.png'), alt: '' })
+          ]),
           el('p', { class: 'nav__senseline', html: S.sense || '…' })
         ]),
         pressureStrip(),
         S.hasManuscript ? el('div', { class: 'tag tag--gold', text: ((C.PRIZE && C.PRIZE.name) || 'MANUSCRIPT') + ' · ON YOU', style: 'margin-top:12px' }) : null,
         /* the lights he can see for himself; the laser count is Benjamin's to say */
         S.levers.lights > 0 ? el('div', { class: 'tag tag--gold', text: 'LIGHTS DOWN · ' + S.levers.lights + ' MORE MOVE' + (S.levers.lights > 1 ? 'S' : ''), style: 'margin-top:12px' }) : null,
-        el('p', { class: 'note', style: 'margin-top:12px' , text: S.dark
+        el('p', { class: 'note', text: S.dark
           ? 'The monitors are dead. This is everything you can see. Benjamin still has the plan.'
-          : 'One tap is one step, and the guards step when you do. Holding still is a move. A greyed-out arrow is a wall.' })
+          : 'One tap is one step, for both you and the guards.\nTry not to linger, or you’ll raise suspicion.' })
       ]),
-      foot([pad])
+      foot([el('div', { class: 'nav__controls' }, [pad])])
     ]);
+    view.classList.add('pscreen--infiltration');
+    // Image sources resolve from the document, including file:// demos and
+    // the encrypted build's asset map, rather than from styles/phone.css.
+    U.$$('button', pad).forEach(function (button) {
+      if (button.classList.contains('dpad__wait')) {
+        button.textContent = '';
+        button.appendChild(el('span', { class: 'dpad__label', text: 'HOLD STILL' }));
+      }
+      ['idle', 'pressed', 'disabled'].forEach(function (state) {
+        button.appendChild(el('img', {
+          class: 'dpad__art dpad__art--' + state,
+          src: U.assetURL('art/ui/control-bttn-' + state + '.png'),
+          alt: '', 'aria-hidden': 'true', draggable: 'false', width: '120', height: '100'
+        }));
+      });
+    });
+    return view;
   }
 
   /* ---------------------------------------------------------- LE COFFRE */
@@ -915,6 +940,10 @@
     else if (S.phase === 'tchatche') v = viewTchatche();
     else v = viewEnd();
     host.appendChild(v);
+    if (S.phase === 'play' && S.running) {
+      var idle = Math.max(0, (Date.now() - S.lastActionAt) / 1000);
+      pressure({ idle: idle, grace: C.PRESSURE.grace, ticking: idle >= C.PRESSURE.grace });
+    }
     paintStill();
   }
 

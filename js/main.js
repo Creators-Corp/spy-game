@@ -86,6 +86,8 @@
 
   function boot() {
     G.build();
+    U.preloadArt(['ui/control-bttn-idle', 'ui/control-bttn-pressed', 'ui/control-bttn-disabled',
+                  'ui/header-p1', 'ui/flourish-left', 'ui/flourish-right']);
     U.preloadArt(['venue-establishing', 'p1-role-assane', 'p2-role-benjamin', 'bureau-desk',
                   'assane-standing', 'guard-standing', 'jail-slam', 'blackout-cut', 'blackout-door']);
     U.hydrateStaticSlots();
@@ -130,9 +132,18 @@
       if (!k || E.S.phase !== 'play') return;
       if (live === 'p2') return;          /* Assane's phone is blocked; so are his keys */
       ev.preventDefault();
+      if (E.isWall(E.S.assane.x + k[0], E.S.assane.y + k[1])) return;
       E.act(k[0], k[1]);
       render();
+      var id = k[1] < 0 ? 'aup' : k[1] > 0 ? 'adown' : k[0] < 0 ? 'aleft' : k[0] > 0 ? 'aright' : null;
+      var button = U.$('#p1 .dpad ' + (id ? '[aria-label="' + id + '"]' : '.dpad__wait'));
+      if (button && !button.disabled) button.classList.add('is-pressed');
     });
+    function releaseControls() {
+      U.$$('#p1 .dpad .is-pressed').forEach(function (button) { button.classList.remove('is-pressed'); });
+    }
+    window.addEventListener('keyup', releaseControls);
+    window.addEventListener('blur', releaseControls);
 
     U.$('#btn-restart').addEventListener('click', restart);
     /* a seed in the URL arrives already pinned, so a link still works */
