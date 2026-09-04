@@ -6,8 +6,10 @@ this route is the route — it does not go stale and it does not need a roster
 number.
 
 Verified by typing the table below back in as data and playing it through the
-engine: ends on **V6**, **S · FANTÔME**, suspicion **8**, spotted **0**, 113
-turns, with one camera loop still in hand.
+engine: ends on **V6**, **S · FANTÔME**, suspicion **7**, spotted **0**, 113
+turns, with one camera loop still in hand. The last nine rows are walked in the
+dark — the safe cuts the power — and the engine is scoring them with the
+blackout's rules, not with the lit floor's.
 
 **What does change between runs is who is on shift.** Same badges, same posts,
 same beats — different people behind them, with different children and
@@ -23,13 +25,14 @@ so waiting costs nothing as long as you keep tapping.
 
 ---
 
-## The three answers
+## The four answers
 
 | module | square | P2 reads | P1 enters |
 |---|---|---|---|
 | **LA PORTE** | G14 | the ring of ten symbols, in order — but not where it starts, and not the code | **7 · 1 · 8 · 0** |
 | **LE BUREAU** | M3 | badge **1184** — open that file and take the **eldest** child's birth year. The file lists them in the wrong order on purpose | **changes with the roster** — then the **trident** door |
 | **LE COFFRE** | H3 | serial `AV-2231`, ring **denim** — three rows share that serial | **trident · drop · hook · ladder** |
+| **LE CLAVIER** | V6 | **MANUAL → EMERGENCY PROCEDURES**: the release code is the badge of the officer posted to that zone, reversed. **STAFF**: one officer is posted to GALERIE HAUTE — badge **5195** | **5 · 9 · 1 · 5** |
 
 **LA PORTE takes five sentences, not one.** Assane describes the mark
 engraved under the 0 on the door — a four-pointed star — and Benjamin taps it
@@ -89,11 +92,22 @@ this route has 8 to spare before the S is gone.
 | 32 | WAIT | L7 |
 | 33 | UP | L6 |
 | 34 | RIGHT ×10 — **out through the hatch** | V6 |
+| 35 | **LE CLAVIER** — enter `5 9 1 5` | V6 |
 
 Steps 4, 13 and 25 are the moves that open a module: Assane steps onto the
-square and the phone changes under his thumb. Step 26 is also where the
-monitors die — the television goes dark from there to the hatch, and the two
-phones are all either of them has.
+square and the phone changes under his thumb.
+
+**Step 26 is where the power goes.** The safe opens and the building answers:
+the television comes back near-black, Assane's phone becomes static and a
+d-pad, and Benjamin's plan turns into five emergency feeds with two of them
+live at a time. Rows 27 to 34 are walked blind, on Benjamin's voice, and he can
+only see Assane for about two turns in five. The guards cannot see far either —
+nobody does in the dark — which is the only reason the walk is survivable.
+
+The hatch at V6 has locked itself, which is step 35 and the reversal the whole
+contract is built towards: Assane can see *which* three keys are worn smooth
+and never the order, and the order is in two different tabs of a dossier
+Benjamin has not needed until this second.
 
 ### Step 24 is the point of the whole contract
 

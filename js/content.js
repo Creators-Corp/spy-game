@@ -497,11 +497,19 @@
     ],
     /* fewer pulls than contract three. The van is further away tonight. */
     LEVIERS: [LEVER.lights, LEVER.laser, lever(LEVER.camera, { uses: 2 })],
-    PRIZE: { dark: true, name: 'MANUSCRIPT', hatchHidden: true },
+    /* NO `dark` HERE, AND THAT IS THE WHOLE OF LE TWIST.
+       A prize marked dark kills the monitors: the television goes black and
+       the job carries on. Without it the same moment runs startBlackout()
+       instead — the power goes, Assane's sight collapses to arm's length, the
+       cameras come off the plan and back as five emergency feeds, two at a
+       time. This contract is the one that earns it: the safe is three rooms
+       and two floors from the only way out. */
+    PRIZE: { name: 'MANUSCRIPT', hatchHidden: true },
     OBJ: {
       door:  'A locked door at the back of the kitchens. P1 has the keypad; P2 has the code.',
       after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
-      out:   'He has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.'
+      out:   'He has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
+      dark:  'The power is gone, and his phone with it. Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
       { x: 5,  y: 4,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
@@ -548,7 +556,13 @@
 
     PERSONNEL: [
       { badge: '4412', name: 'MOREAU, Serge',     post: 'LES CUISINES',  plate: '8021', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
-      { badge: '2071', name: 'DELACROIX, Yann',   post: 'GALERIE HAUTE', plate: '5530', kids: [] },
+      /* HIS POST IS THE EAST AISLE, and it has to be his alone. He walks it —
+         g2's beat is the aisle, not the gallery, and the file said gallery
+         because it was written before the patrol was rerouted. It also has to
+         be his alone for LE CLAVIER: the release code is the badge of the
+         officer posted to the keypad's zone, and while two men shared
+         GALERIE HAUTE that question had two answers. */
+      { badge: '2071', name: 'DELACROIX, Yann',   post: 'AILE EST',      plate: '5530', kids: [] },
       { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
       { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9083', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
@@ -602,12 +616,59 @@
                { t: 'kids', s: 'Two children. The eldest is at school abroad.' }]
     },
 
+    /* LE TWIST. Emergency power runs two camera feeds at a time and no more,
+       so Benjamin's plan stops being a plan and becomes five boxes, three of
+       them dark on any given turn.
+
+       THE ZONES ARE CUT FOR THE WALK OUT, not for the architecture. The safe
+       is in A; the hatch is at the far east end of the upper gallery. Cutting
+       that gallery in half at the twelfth column means the run for the hatch
+       crosses a seam — he is visible, then he is not, then he is — instead of
+       being one long verdict made at the moment he steps out of the vault.
+       Everything below the ring is one box because he has no reason to be
+       there once he has the manuscript, and a chip on a phone that never
+       matters is a chip in the way of the four that do.
+
+       Every walkable square belongs to a zone, the row-4 doorways included: a
+       square in no zone is dark on every feed forever, which is not a rule
+       anybody could deduce from a screen.
+
+       feedCycle runs five beats and lights each box exactly twice, so no zone
+       is ever the lucky one. A and C share beat 0 (the vault and the gallery
+       outside it — he leaves under one pair of eyes), C and D never share a
+       beat at all, so the crossing always costs him contact. */
+    BLACKOUT: {
+      zones: [
+        { id: 'A', name: 'LA RÉSERVE',    x: 5,  y: 1,  w: 5,  h: 4 },
+        { id: 'B', name: 'BUREAU',        x: 11, y: 1,  w: 4,  h: 4 },
+        { id: 'C', name: 'GALERIE OUEST', x: 1,  y: 5,  w: 11, h: 2 },
+        { id: 'D', name: 'GALERIE EST',   x: 12, y: 5,  w: 10, h: 2 },
+        { id: 'E', name: 'LES ÉTAGES',    x: 1,  y: 7,  w: 21, h: 11 }
+      ],
+      feedCycle: [['A', 'C'], ['D', 'E'], ['B', 'C'], ['A', 'D'], ['B', 'E']]
+    },
+
+    /* LE CLAVIER. The hatch locked itself when the power went. P1 can see
+       WHICH three keys are worn smooth, never the order.
+
+       5195 is posted to GALERIE OUEST/EST — the upper gallery, where the
+       hatch is; reversed that is 5915, whose digits are exactly 1, 5 and 9, so
+       P1 can check Benjamin's answer against the wear before he types it. The
+       badge belongs to the roster SLOT and never moves, so this code is the
+       same every night while the name attached to it is not.
+
+       If the roster is ever re-cut: the badge must reverse to four digits with
+       exactly three distinct values, or the worn keys stop being a check. */
+    CLAVIER: { code: '5915', worn: ['1', '5', '9'], zone: 'GALERIE HAUTE' },
+
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
       { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Crossing one is not impossible, it is announced: officers abandon their rounds for five minutes and converge. The side halls are patrolled.' },
       { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
+      { k: 'POWER FAILURE', v: 'Emergency supply runs two cameras at a time and nothing else. Interior doors hold their last state; the service hatch locks itself.' },
+      { k: 'RELEASE CODE',  v: 'Badge number of the officer posted to that zone, digits reversed.' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],
 

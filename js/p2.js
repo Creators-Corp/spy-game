@@ -181,17 +181,31 @@
        on the whole plan was the one on the door that was already open — the
        one nobody needs. Gold is the players' business here, exactly as it is
        on the television, where a locked door is the gold one; so the mark on a
-       locked door is gold and full size, the bar sits under it, and a door
-       already open keeps its mark quietly in grey. */
+       locked door is gold, the bar sits under it, and a door already open
+       keeps its mark quietly in grey.
+
+       AND IT IS DRAWN BIGGER THAN ITS DOOR. Fitted inside the tile it was
+       fourteen units of a five-hundred-unit plan — about five pixels on the
+       phone, which is enough to see that a door has a mark and nowhere near
+       enough to tell a trident from a bisect. Benjamin is asked to name it
+       twice a contract, so it is drawn at one and a half tiles and allowed to
+       spill into the wall it sits in. A door IS a hole in a wall; there is
+       nothing there for it to cover up. */
+    var MK = TT * 1.5, MKOFF = (TT - MK) / 2;
     S.doors.forEach(function (d) {
       if (!feed(d.x, d.y)) return;
       var px = d.x * TT, py = d.y * TT;
       if (d.locked) {
         s += '<rect x="' + (px + 2) + '" y="' + (py + TT / 2 - 3) + '" width="' + (TT - 4) + '" height="6" rx="1.5" fill="' + EDGE + '" opacity=".45"/>';
+        /* a disc under the glyph, so a gold line never has to be read against
+           the gold-brown of a lit floor */
+        s += '<circle cx="' + (px + TT / 2) + '" cy="' + (py + TT / 2) + '" r="' + (MK * 0.46) +
+             '" fill="var(--map-void)" opacity=".82"/>';
       }
+      var size = d.locked ? MK : TT - 6, off = d.locked ? MKOFF : 3;
       s += '<g color="' + (d.locked ? 'var(--gold)' : EDGE) + '" opacity="' + (d.locked ? 1 : 0.6) + '"' +
-           ' transform="translate(' + (px + 3) + ',' + (py + 3) +
-           ') scale(' + ((TT - 6) / 100) + ')">' + G.iconMarkup(d.mark) + '</g>';
+           ' transform="translate(' + (px + off) + ',' + (py + off) +
+           ') scale(' + (size / 100) + ')">' + G.iconMarkup(d.mark) + '</g>';
     });
 
     /* gold is the player: objectives read as targets, not as furniture */
@@ -466,6 +480,55 @@
     });
     wrap.appendChild(rows);
     return wrap;
+  }
+
+  /* -------------------------------------------------- BEING ASKED A THING */
+  /* BENJAMIN WAS NEVER TOLD HE HAD BEEN ASKED A QUESTION.
+     Assane's phone says "describe the four marks, he has the floor plan" and
+     Benjamin's said nothing whatsoever — his screen carried on reporting which
+     room Assane was standing in while Assane waited for an answer. Both halves
+     of this module are lookups on pages he already has, and neither page
+     announces itself: the badge is in STAFF, the mark is on the plan he is
+     already looking at, and nothing anywhere connected either to the desk.
+
+     So whatever has him stopped speaks up, on every tab, for exactly as long
+     as it is open. It says he has been asked and what he has been asked for.
+     It never says the answer.
+
+     HOW MUCH IT POINTS AT IS PER MODULE, and the difference is deliberate. The
+     desk names the page, because both its answers are ordinary lookups in a
+     book he has been carrying all night and hunting for the index is not the
+     puzzle. LE CLAVIER names nothing: the emergency procedures are filed under
+     the safes, nowhere near the roster they need, and finding them at the
+     moment the lights go out IS the module — see the note over the procedures
+     in viewManuel(). Telling him he is being asked something is not the same
+     as telling him where to look, and only the second one would spoil it. */
+  function askBoard(id) {
+    var S = E.S;
+
+    if (id === 'clavier') {
+      return el('div', { class: 'keyboard' }, [
+        el('p', { class: 'h', text: 'SERVICE HATCH · LOCKED' }),
+        el('p', { class: 'note', style: 'margin:0', text:
+          'The way out shut itself when the power went, and he is standing at the keypad in the ' +
+          'dark. He can see which three keys are worn smooth and he cannot see the order. ' +
+          'Everything you need to give him the order is somewhere in this dossier — you have ' +
+          'not needed it until now.' })
+      ]);
+    }
+
+    var second = S.bureauStep === 1;
+    return el('div', { class: 'keyboard' }, [
+      el('p', { class: 'h', text: second ? 'SECURITY DESK · THE RELEASE' : 'SECURITY DESK · THE TERMINAL' }),
+      el('p', { class: 'note', style: 'margin:0', html: second
+        ? 'The terminal is open and showing him four marks. One of them releases <b>' +
+          ((C.DOORS.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0] || {}).to || 'the locked room') +
+          '</b>. That door is drawn on your plan, locked and gold, with its mark on it. ' +
+          'Have him describe the four; tell him which one is on your door.'
+        : 'He is at the desk and it wants four digits. Have him read you all of it — the badge, ' +
+          'the post, and the note stuck to the screen. The note says which number the terminal is ' +
+          'asking for. Whatever it turns out to be, it is in <b>STAFF</b>.' })
+    ]);
   }
 
   /* ---------------------------------------------------------- LES LEVIERS */
@@ -895,10 +958,15 @@
               : tab === 'personnel' ? viewPersonnel()
               : viewVisages();
 
+    /* it asks from above the tabs, so it is there whichever page he happened
+       to be reading when Assane walked into the thing */
+    var asking = (S.moduleId === 'bureau' && C.BUREAU) || (S.moduleId === 'clavier' && C.CLAVIER)
+      ? askBoard(S.moduleId) : null;
+
     host.appendChild(screen([
       head('THE DOSSIER'),
       tabBar(),
-      body([inner])
+      body(asking ? [asking, inner] : [inner])
     ]));
   }
 

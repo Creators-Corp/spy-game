@@ -312,7 +312,17 @@
     /* the television holds each of these for most of a second before the room
        comes back; a replay cannot wait, so land the same end state now */
     if (S.phase === 'module') {
-      if (id === 'coffre' && S.hasManuscript) { S.moduleId = null; S.phase = 'play'; if (C.PRIZE && C.PRIZE.dark) S.dark = true; }
+      /* THE SAME FORK THE ENGINE TAKES A BEAT LATER, TAKEN NOW. A prize marked
+         dark kills the monitors; anything else cuts the power. Before this the
+         replay only ever set S.dark, and the engine's own 900ms timer fired
+         the blackout long after the replay had finished running — so the walk
+         out was scored against lit cones and LE CLAVIER was answered on a
+         floor that had never gone dark. Pessimistic rather than wrong, but it
+         meant the one leg the twist exists for was the one leg never tested. */
+      if (id === 'coffre' && S.hasManuscript) {
+        S.moduleId = null; S.phase = 'play';
+        if (C.PRIZE && C.PRIZE.dark) S.dark = true; else E.startBlackout();
+      }
       else if (id === 'clavier' && S.solved.clavier) { S.moduleId = null; S.phase = 'rank'; S.running = false; }
       else { S.solved[id] = true; S.moduleId = null; S.phase = 'play'; }
       E.setObjective();

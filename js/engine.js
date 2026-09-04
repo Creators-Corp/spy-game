@@ -917,18 +917,17 @@
     }
   }
 
-  /* LE TWIST. The safe opens and the building answers. */
-  /* LE TWIST NEEDS DATA, and right now nothing has it. BLACKOUT (the camera
-     zones and the feed cycle) and CLAVIER (the keypad on the way out) were
-     both defined only inside the two contracts that were cut, and neither
-     survivor sets S.blackout — both take the prize with PRIZE.dark, which
-     kills the monitors instead. So the whole sequence is dormant: the feeds on
-     P2, RUN and FIGE-TOI on P1, the keypad at the hatch.
+  /* LE TWIST. The safe opens and the building answers.
 
-     The code is left standing because it is a sequence worth having back, but
-     it is fenced: without the data it simply does not start, rather than
-     throwing three files away from here. Give a contract a BLACKOUT block and
-     a CLAVIER and it wakes up. */
+     CONTRACT TWO RUNS IT; contract one does not. A contract opts in by having
+     a BLACKOUT block and a CLAVIER, and opts out by marking its PRIZE `dark`,
+     which kills the monitors and leaves the job otherwise lit. The teaching
+     contract keeps its lights on: it is somebody's first ten minutes with two
+     phones and one television, and taking all three away is not an opening.
+
+     The fence below stays. It is what let this sequence sit dormant through
+     the contracts being renumbered instead of throwing three files from here,
+     and it is what will hold if a future job wants the safe without the dark. */
   function startBlackout() {
     if (!C.BLACKOUT || !C.BLACKOUT.zones) return;
     S.blackout = true;
@@ -1174,7 +1173,10 @@
      contain. */
   function setObjective() {
     var hasCloak = C.MODULES.some(function (m) { return m.id === 'deguisement'; }), O = C.OBJ || {};
-    if (S.blackout) S.objective = 'Lights out. His phone is dead. Talk him to the vestibule.';
+    /* the way out is not the same door on every floor, so the contract says
+       where — and says it without naming the square, because finding that in
+       the procedures is the beat */
+    if (S.blackout) S.objective = (C.OBJ && C.OBJ.dark) || 'Lights out. His phone is dead. Talk him to the way out.';
     else if (S.hasManuscript) S.objective = O.out ? O.out
                                          : hatchTile() ? 'He has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
                                          : C.PORTE ? 'He has it. Back round the ring and down the stairs.'
