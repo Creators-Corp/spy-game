@@ -356,7 +356,7 @@
     DEGUISEMENT: { answerBadge: '2071', targetPost: 'GALERIE NORD', conePenalty: 1 },
 
     PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',   post: 'LE VESTIAIRE', plate: '8021', kids: [] },
+      { badge: '4412', name: 'MOREAU, Serge',   post: 'LE VESTIAIRE', plate: '8028', kids: [] },
       { badge: '2071', name: 'DELACROIX, Yann', post: 'GALERIE NORD', plate: '5530', kids: [] },
       { badge: '3308', name: 'VIDAL, Nadia',    post: 'GALERIE SUD',  plate: '1147', kids: [] }
     ],
@@ -564,7 +564,7 @@
     BUREAU: { badge: '1184', mode: 'eldest', answer: '2005', doorMark: 'trident', photo: 'a boy and a girl' },
 
     PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',     post: 'LES CUISINES',  plate: '8021', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
+      { badge: '4412', name: 'MOREAU, Serge',     post: 'LES CUISINES',  plate: '8028', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
       /* HIS POST IS THE EAST AISLE, and it has to be his alone. He walks it —
          g2's beat is the aisle, not the gallery, and the file said gallery
          because it was written before the patrol was rerouted. It also has to
@@ -573,7 +573,7 @@
          GALERIE HAUTE that question had two answers. */
       { badge: '2071', name: 'DELACROIX, Yann',   post: 'AILE EST',      plate: '5530', kids: [] },
       { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
-      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9083', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
+      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
       { badge: '1184', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
@@ -658,15 +658,19 @@
     /* LE CLAVIER. The hatch locked itself when the power went. P1 can see
        WHICH three keys are worn smooth, never the order.
 
-       5195 is posted to GALERIE HAUTE — the upper gallery, where the hatch
-       is; reversed that is 5915, whose digits are exactly 1, 5 and 9, so
-       P1 can check Benjamin's answer against the wear before he types it. The
-       badge belongs to the roster SLOT and never moves, so this code is the
-       same every night while the name attached to it is not.
+       `code` and `worn` BELOW ARE PLACEHOLDERS. rollRoster() overwrites both
+       at every seed, including seed 0: the code is the vehicle plate of
+       whoever is posted to `zone` tonight, reversed. It used to be a badge
+       reversed, and badges cannot move — they key the portrait art — so the
+       one code in this game that is meant to be looked up was the same every
+       night. Plates travel with people, so it is a different four digits and a
+       different officer each roster.
 
-       If the roster is ever re-cut: the badge must reverse to four digits with
-       exactly three distinct values, or the worn keys stop being a check. */
-    CLAVIER: { code: '5915', worn: ['1', '5', '9'], zone: 'GALERIE HAUTE' },
+       `zone` is the only part that matters here, and it has to be a post
+       exactly one officer holds, or the question has two answers. Every plate
+       carries exactly three distinct digits so the worn keys stay a real
+       check — see rollPlate(). */
+    CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'GALERIE HAUTE' },
 
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
@@ -675,7 +679,7 @@
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines hold — they are on the same supply as the alarm and stay armed. Interior doors hold their last state; the service hatch locks itself.' },
-      { k: 'RELEASE CODE',  v: 'Badge number of the officer posted to that zone, digits reversed.' },
+      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, digits reversed.' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],
 
@@ -736,6 +740,64 @@
     if (!person.kids || person.kids.length < 2) return false;
     return person.kids.some(function (k) { return k.y !== person.kids[0].y; });
   }
+  function copyOf(o) { var c = {}; for (var k in o) c[k] = o[k]; return c; }
+
+  /* ------------------------------------------------------- ROLLING NUMBERS
+     THE ANSWERS CHANGE WITH THE ROSTER; the building does not. Everything
+     below is a number written on a file or a keypad — a door code, a vehicle
+     plate, a child's birth year — and none of it moves a wall, a beat or a
+     camera. A route measured against the floor stays measured; a pair who
+     played last night cannot type last night's codes.
+
+     WHAT CANNOT ROLL, and why: BADGES. They key art/face-XXXX.png, the
+     uniforms table and the gossip table, so a rolled badge is a missing
+     portrait. They stay, and so does every post. */
+  function makeRng(seed) {
+    var t = (seed >>> 0) + 0x9E3779B9;
+    return function () {
+      t = (t + 0x6D2B79F5) >>> 0;
+      var r = Math.imul(t ^ (t >>> 15), 1 | t);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function rollCode(rnd) {
+    var s2 = '';
+    for (var i = 0; i < 4; i++) s2 += Math.floor(rnd() * 10);
+    return s2;
+  }
+  function distinct(str) {
+    var seen = {}, out = [];
+    str.split('').forEach(function (d) { if (!seen[d]) { seen[d] = 1; out.push(d); } });
+    return out.sort();
+  }
+  /* EVERY PLATE HAS EXACTLY THREE DISTINCT DIGITS, and that is not decoration.
+     LE CLAVIER's code is the plate of the officer posted to the hatch's zone,
+     reversed, and Assane's only check on Benjamin is that the keypad has three
+     keys worn smooth. Four distinct digits and the check is a lie; two and it
+     gives half the code away. Since the people are dealt to the slots, ANY of
+     them can end up posted there — so all of them carry the property rather
+     than one of them being special. */
+  function rollPlate(rnd) {
+    for (var i = 0; i < 300; i++) {
+      var p = rollCode(rnd);
+      if (distinct(p).length === 3) return p;
+    }
+    return '5530';
+  }
+  /* THE ELDEST HAS TO BE ONE CHILD. deskWorks() only asks that the years are
+     not all identical, which still allows a tie at the OLDEST — and "the
+     eldest child's birth year" then has two answers and the desk cannot be
+     solved. Rolled years guarantee a unique minimum. */
+  function rollKids(kids, rnd) {
+    var out = kids.map(function (k) { return { n: k.n, y: 2001 + Math.floor(rnd() * 17) }; });
+    if (out.length > 1) {
+      var min = Math.min.apply(null, out.map(function (k) { return k.y; }));
+      var eldest = out.filter(function (k) { return k.y === min; });
+      if (eldest.length > 1) eldest[0].y = min - 1 - Math.floor(rnd() * 3);
+    }
+    return out;
+  }
 
   function rollRoster(seed) {
     var job = JOBS[L.content.jobIndex] || JOBS[0];
@@ -743,16 +805,12 @@
     if (!PRISTINE[job.id]) PRISTINE[job.id] = JSON.parse(JSON.stringify(job.PERSONNEL));
     var base = PRISTINE[job.id];
 
-    /* seed 0 is the roster as written — the one the content comments describe */
+    /* seed 0 is the roster as written — the one the content comments describe,
+       and the one the walkthrough's answers were read off */
     var order = base.map(function (_, i) { return i; });
+    var rnd = makeRng(seed);
+    var rolled = base.map(function (p) { return { plate: p.plate, kids: p.kids }; });
     if (seed) {
-      var t = (seed >>> 0) + 0x9E3779B9;
-      var rnd = function () {
-        t = (t + 0x6D2B79F5) >>> 0;
-        var r = Math.imul(t ^ (t >>> 15), 1 | t);
-        r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
       var desk = job.BUREAU ? base.map(function (b, i) { return i; })
                                   .filter(function (i) { return deskWorks(base[i], job.BUREAU.mode); }) : [];
       for (var pass = 0; pass < 40; pass++) {
@@ -763,14 +821,44 @@
         var slot = base.map(function (b) { return b.badge; }).indexOf(job.BUREAU.badge);
         if (slot < 0 || desk.indexOf(order[slot]) >= 0) break;
       }
+      /* the car and the children are the person's, so they are rolled per
+         person and travel with them into whichever slot they are dealt */
+      rolled = base.map(function (p) {
+        return { plate: rollPlate(rnd), kids: rollKids(p.kids, rnd) };
+      });
     }
 
     /* badge and post belong to the slot; the person is dealt into it */
     L.content.PERSONNEL = base.map(function (slotDef, i) {
-      var who = base[order[i]];
+      var who = base[order[i]], num = rolled[order[i]];
       return { badge: slotDef.badge, post: slotDef.post,
-               name: who.name, plate: who.plate, kids: who.kids, face: who.badge };
+               name: who.name, plate: num.plate, kids: num.kids, face: who.badge };
     });
+
+    /* THE DOOR CODE. Four digits, and every one of them is a position on a
+       ring of ten symbols — so any four work and none of them touches the
+       floor. Benjamin still cannot read it off anything: the ring is printed
+       in his dossier and the code is not. */
+    if (job.PORTE) {
+      var porte = copyOf(job.PORTE);
+      if (seed) porte.code = rollCode(rnd);
+      L.content.PORTE = porte;
+    }
+
+    /* THE RELEASE CODE, derived at every seed rather than authored at one.
+       It used to be a badge reversed, which could not move because badges
+       cannot move — so the one code in the game that is meant to be looked up
+       was the same every night. It is the PLATE of the officer posted to the
+       hatch's zone now, and plates travel with people. */
+    if (job.CLAVIER) {
+      var clav = copyOf(job.CLAVIER);
+      var posted = L.content.PERSONNEL.filter(function (x) { return x.post === clav.zone; })[0];
+      if (posted && posted.plate) {
+        clav.code = posted.plate.split('').reverse().join('');
+        clav.worn = distinct(clav.code);
+      }
+      L.content.CLAVIER = clav;
+    }
 
     if (job.BUREAU) {
       var owner = L.content.PERSONNEL.filter(function (x) { return x.badge === job.BUREAU.badge; })[0];

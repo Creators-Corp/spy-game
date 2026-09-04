@@ -1,9 +1,14 @@
 # CONTRAT No.2 — LA VEILLE DE VENTE · a rehearsed S
 
-**No seed, no setup.** Open `index.html`, pick **CONTRAT No.2 — LA VEILLE DE VENTE** on
-Benjamin's phone, both players tap READY. The guards start in the same place every run, so
-this route is the route — it does not go stale and it does not need a roster
-number.
+**Pin ROSTER 0.** Open `index.html`, pick **CONTRAT No.2 — LA VEILLE DE VENTE** on
+Benjamin's phone, type `0` into the ROSTER box and press PIN, then both players tap READY.
+
+The *route* below never goes stale — the guards start in the same place every run, so the
+moves are the moves at any roster. The *answers* do not: door codes, vehicle plates and
+children's birth years are all dealt fresh with the seed, which is the point of them. Seed 0
+is the roster as authored and the one the four answers below were read off. Play any other
+roster and the moves still hold; work the answers out of the dossier the way the two of them
+are meant to.
 
 Verified by typing the table below back in as data and playing it through the
 engine: ends on **V6**, **S · FANTÔME**, suspicion **7**, spotted **0**, 113
@@ -12,9 +17,11 @@ dark — the safe cuts the power — and the engine is scoring them with the
 blackout's rules, not with the lit floor's. Benjamin's link drops five times on
 the way out; the route below assumes he says nothing while it is down.
 
-**What does change between runs is who is on shift.** Same badges, same posts,
-same beats — different people behind them, with different children and
-different cars. That moves one answer below, and only one; it is marked.
+**What changes between runs is who is on shift, and every number on their files.**
+Same badges, same posts, same beats — different people behind them, with different
+children and different cars, and a fresh door code on top. Three of the four answers
+below move with the roster; only LE COFFRE, which is read off the safe itself rather
+than off a file, is the same every night.
 
 ---
 
@@ -30,10 +37,10 @@ so waiting costs nothing as long as you keep tapping.
 
 | module | square | P2 reads | P1 enters |
 |---|---|---|---|
-| **LA PORTE** | G14 | the ring of ten symbols, in order — but not where it starts, and not the code | **7 · 1 · 8 · 0** |
+| **LA PORTE** | G14 | the ring of ten symbols, in order — but not where it starts, and not the code | **7 · 1 · 8 · 0** *(roster 0)* |
 | **LE BUREAU** | M3 | badge **1184** — open that file and take the **eldest** child's birth year. The file lists them in the wrong order on purpose | **changes with the roster** — then the **trident** door |
 | **LE COFFRE** | H3 | serial `AV-2231`, ring **denim** — three rows share that serial | **trident · drop · hook · ladder** |
-| **LE CLAVIER** | V6 | **MANUAL → EMERGENCY PROCEDURES**: the release code is the badge of the officer posted to that zone, reversed. **STAFF**: one officer is posted to GALERIE HAUTE — badge **5195** | **5 · 9 · 1 · 5** |
+| **LE CLAVIER** | V6 | **MANUAL → EMERGENCY PROCEDURES**: the release code is the *vehicle plate* of the officer posted to that zone, reversed. **STAFF**: one officer is posted to GALERIE HAUTE — at roster 0 his plate is **9088** | **8 · 8 · 0 · 9** *(roster 0)* |
 
 **LA PORTE takes five sentences, not one.** Assane describes the mark
 engraved under the 0 on the door — a four-pointed star — and Benjamin taps it
@@ -93,7 +100,7 @@ this route has 8 to spare before the S is gone.
 | 32 | WAIT | L7 |
 | 33 | UP | L6 |
 | 34 | RIGHT ×10 — **out through the hatch** | V6 |
-| 35 | **LE CLAVIER** — enter `5 9 1 5` | V6 |
+| 35 | **LE CLAVIER** — enter `8 8 0 9` | V6 |
 
 Steps 4, 13 and 25 are the moves that open a module: Assane steps onto the
 square and the phone changes under his thumb.
@@ -115,7 +122,9 @@ and that is the only reason the walk is survivable.
 The hatch at V6 has locked itself, which is step 35 and the reversal the whole
 contract is built towards: Assane can see *which* three keys are worn smooth
 and never the order, and the order is in two different tabs of a dossier
-Benjamin has not needed until this second.
+Benjamin has not needed until this second. Every plate in the game carries
+exactly three distinct digits, so that check is real at every roster and not
+only at this one.
 
 ### Step 24 is the point of the whole contract
 
