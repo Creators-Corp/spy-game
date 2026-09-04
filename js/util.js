@@ -172,16 +172,32 @@ window.DC = window.DC || {};
        art/music-escape.mp3         Monument Music — Chapter Two
 
      Both loop, because an escape can run longer than a track and silence
-     halfway out reads as a bug. Well under the effects at 0.17 — halved from
-     0.34, which sat on top of the wiretap pulses and the footsteps instead of
-     under them. This is a score, not a soundtrack: two people have to hear
-     each other talk over it.
+     halfway out reads as a bug.
+
+     THE LEVEL IS THE SETTING MOST LIKELY TO BE WRONG in whatever room this
+     gets shown in, so it is one number with a live knob on it rather than
+     something to go hunting for. It started at 0.34, which sat on top of the
+     wiretap pulses and the footsteps instead of under them, went to 0.17, and
+     is 0.08 now — about twelve decibels down on where it began. This is a
+     score, not a soundtrack: two people have to hear each other talk over it,
+     in a room, over a television.
 
      Everything here is optional: no file, no autoplay permission, no Audio at
      all, and the game is exactly as playable. It is never load-bearing — no
-     cue in this prototype is carried by sound alone. */
+     cue in this prototype is carried by sound alone.
+
+     To find your own level without editing anything:
+         DC.util.musicVolume(0.05)     // takes effect on the playing track
+     Then put the number you settle on into MUSIC_VOL below. */
   var SCORE = { infiltration: 'art/music-infiltration.mp3', escape: 'art/music-escape.mp3' };
+  var MUSIC_VOL = 0.08;
   var scoreNow = null, scoreEl = null, scoreFade = null;
+  function musicVolume(v) {
+    if (v === undefined) return MUSIC_VOL;
+    MUSIC_VOL = Math.max(0, Math.min(1, v));
+    if (scoreEl) scoreEl.volume = MUSIC_VOL;
+    return MUSIC_VOL;
+  }
   function score(track) {
     if (track === scoreNow) { if (scoreEl && !muted && scoreEl.paused) scoreEl.play().catch(function () {}); return; }
     scoreNow = track;
@@ -190,8 +206,11 @@ window.DC = window.DC || {};
     if (scoreEl) {
       var old = scoreEl;
       clearInterval(scoreFade);
+      /* fade in TENTHS of wherever the level happens to be, not in fixed
+         steps — a 0.08 step at volume 0.08 is not a fade, it is a cut */
+      var stepDown = Math.max(0.005, old.volume / 10);
       scoreFade = setInterval(function () {
-        old.volume = Math.max(0, old.volume - 0.08);
+        old.volume = Math.max(0, old.volume - stepDown);
         if (old.volume <= 0.001) { clearInterval(scoreFade); old.pause(); }
       }, 40);
       scoreEl = null;
@@ -201,7 +220,7 @@ window.DC = window.DC || {};
     try {
       var a = new Audio(assetURL(SCORE[track]));
       a.loop = true;
-      a.volume = 0.17;
+      a.volume = MUSIC_VOL;
       /* a browser that has not seen a gesture yet simply refuses; the next
          tap re-enters here through render() and it starts then */
       a.play().then(function () { scoreEl = a; }).catch(function () { scoreNow = null; });
@@ -347,7 +366,7 @@ window.DC = window.DC || {};
     phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,
-    warmup: warmup,
+    warmup: warmup, musicVolume: musicVolume,
     clamp: clamp, mmss: mmss, shuffle: shuffle
   };
 })(window.DC);
