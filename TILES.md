@@ -39,7 +39,7 @@ two-tile face puts its top half.
 | layer | what it draws |
 |---|---|
 | ground | `floor-tile` on every walkable square |
-| vision | the guards' sightlines, hatched red, as one continuous pattern |
+| vision | the guards' sightlines, hatched red, as one continuous pattern — except with the lights cut or the power gone, when every cone collapses to the eight squares around a man and the layer lays `guard-sightline-small` over each of them instead, clipped to the squares the engine calls dangerous. White, because in the dark those are torches |
 | walls | masses, faces, bands, corners, doors |
 | props | the objectives, the desk, the window |
 | actors | guards and Assane, drawn south-most last so they overlap correctly |

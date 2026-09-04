@@ -488,6 +488,35 @@
     /* ---- 2. VISION ---- */
     if (on('vision') && threat) {
       s += '<g class="tl-vision">';
+
+      /* ARM'S LENGTH, DRAWN AS ARM'S LENGTH.
+         With the lights cut or the power gone, coneDepth() collapses to 0 and
+         a guard sees the eight squares around him and nothing else — a 3x3
+         block, which is exactly the shape the artist cut guard-sightline-small
+         to. So in that state the layer stops hatching cell by cell and lays
+         his piece over each man instead, clipped to the squares the engine
+         actually says are dangerous, so a wall still stops it. White rather
+         than red on purpose: in the dark these are torches, and the dossier
+         says as much. */
+      var armsLength = S.levers.lights > 0 || S.blackout;
+      if (armsLength) {
+        S.guards.forEach(function (g, gi) {
+          var p = E.guardAt(g);
+          if (!known(p.x, p.y) && !wallKnown(p.x, p.y)) return;
+          var mine = E.cone(p.x, p.y, g.facing, 0);
+          if (!mine.length) return;
+          var id = 'tl-torch-' + gi, clip = '';
+          mine.concat([p.x + ',' + p.y]).forEach(function (k) {
+            var c = k.split(',');
+            clip += '<rect x="' + (c[0] * W) + '" y="' + (c[1] * H) + '" width="' + (W + 1) + '" height="' + (H + 1) + '"/>';
+          });
+          s += '<clipPath id="' + id + '">' + clip + '</clipPath>';
+          s += '<g clip-path="url(#' + id + ')">' +
+               img('guard-sightline-small', (p.x - 1) * W, (p.y - 1) * H, W * 3, H * 3, { keep: true, opacity: 0.85 }) +
+               '</g>';
+        });
+        s += '</g>';
+      } else {
       var cells = {};
       for (var k in threat) cells[k] = 1;
       S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
@@ -506,6 +535,7 @@
         }
       }
       s += '</g>';
+      }
     }
 
     /* ---- 3. WALLS, LASERS, DOORS ---- */
