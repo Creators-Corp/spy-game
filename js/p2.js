@@ -229,7 +229,7 @@
 
     S.guards.forEach(function (g) {
       if (layer !== 'patrols') return;
-      var p = g.path[g.at];
+      var p = E.guardAt(g);
       if (!feed(p.x, p.y)) return;
       var cx = p.x * TT + TT / 2, cy = p.y * TT + TT / 2;
       var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
@@ -394,6 +394,9 @@
 
   function viewPlanTab() {
     var S = E.S, night = S.blackout;
+    /* Benjamin is the only one who can see all of them at once, so during an
+       alarm he is the one who can say which way to run. The count is the
+       number of moves before they turn round and walk back. */
     /* The same sentence the television is showing him, in the same words. The
        two screens had no shared vocabulary at all before this: one drew a lit
        fragment in a black field, the other drew the whole floor, and nothing
@@ -412,6 +415,11 @@
     return el('div', { class: night ? 'is-night' : '' }, [
       S.moduleId === 'grille' && C.GRILLE ? keyBoard() : null,
       el('p', { class: 'plan2__where', html: where }),
+      S.alarm > 0 ? el('p', { class: 'warn warn--alarm', html:
+        '<b>ALARM · ' + S.alarm + (S.alarm === 1 ? ' MOVE' : ' MOVES') + '</b>' +
+        'He broke a beam. Every one of them has left his round and is walking straight at him — ' +
+        'they are on this plan, off their lines. Call the way out; in ' + S.alarm +
+        (S.alarm === 1 ? ' move' : ' moves') + ' they turn round and walk back.' }) : null,
       layerBar(),
       el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
       night ? feedStrip() : (layer === 'electronics' ? camCycles() : null),

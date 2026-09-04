@@ -636,6 +636,10 @@
   background:var(--stone);padding:11px 12px;
 }
 .warn b{display:block;margin-bottom:3px;}
+/* the beam. Red, and it counts down. */
+.warn--alarm{background:var(--red);color:var(--on-color);border-color:var(--ink);
+  animation:alarmpulse .9s ease-in-out infinite;}
+@keyframes alarmpulse{0%,100%{opacity:1}50%{opacity:.72}}
 
 /* LA PORTE — an actual ring, because "count round" has to look round. */
 .ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:290px;}

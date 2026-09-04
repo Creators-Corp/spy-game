@@ -577,7 +577,7 @@
       }
     }
     S.guards.forEach(function (g) {
-      var p = g.path[g.at];
+      var p = E.guardAt(g);
       if (!vis[p.x + ',' + p.y]) return;
       var cx = (p.x - ax + Rn) * T + T / 2, cy = (p.y - ay + Rn) * T + T / 2;
       var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];

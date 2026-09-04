@@ -122,6 +122,7 @@
       cameras: C.CAMERAS.map(function (c) { return { id: c.id, x: c.x, y: c.y, depth: c.depth, cycle: c.cycle, label: c.label }; }),
       doors: C.DOORS.map(function (d) { return { x: d.x, y: d.y, locked: d.locked, mark: d.mark, to: d.to }; }),
       camPhase: 0,
+      alarm: 0,                /* moves left of a broken beam; see tripAlarm */
       turn: 0,
       elapsed: 0,
       running: false,
@@ -169,8 +170,36 @@
     return S;
   }
 
+  /* WHERE A GUARD IS STANDING.
+     Normally that is his round, path[at]. During an alarm he is off it — the
+     square he has walked to is in `away` — and everything that draws him or
+     judges his cone has to ask rather than assume. */
+  function guardAt(g) { return g.away || g.path[g.at]; }
+
+  /* One square along the shortest walkable path from a to b. A guard coming
+     for you uses the doors and corridors like anybody else; a chase that walks
+     through walls is not a chase, it is a jump scare. */
+  function stepToward(from, to) {
+    if (from.x === to.x && from.y === to.y) return null;
+    var q = [{ x: from.x, y: from.y, first: null }], seen = {};
+    seen[from.x + ',' + from.y] = 1;
+    var V = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+    while (q.length) {
+      var n = q.shift();
+      for (var i = 0; i < 4; i++) {
+        var nx = n.x + V[i][0], ny = n.y + V[i][1], k = nx + ',' + ny;
+        if (seen[k] || isWall(nx, ny)) continue;
+        seen[k] = 1;
+        var first = n.first || { x: nx, y: ny };
+        if (nx === to.x && ny === to.y) return first;
+        q.push({ x: nx, y: ny, first: first });
+      }
+    }
+    return null;                      /* no way through: he stays where he is */
+  }
+
   function faceOf(g) {
-    var a = g.path[g.at], b;
+    var a = guardAt(g), b;
     if (g.loop) b = g.path[(g.at + 1) % g.path.length];
     else b = g.path[g.at + g.dir] || g.path[g.at - g.dir];
     if (!b) return 'E';
@@ -192,7 +221,11 @@
   function isWall(x, y) {
     var c = charAt(x, y);
     if (c === '#') return true;
-    if (c === 'L') return !(S && S.levers.laser > 0);   /* a laser line is a wall until Benjamin drops it */
+    /* A LASER IS NOT A WALL. It used to be one until Benjamin dropped it,
+       which made his lever a key: no lever, no way through, no decision. You
+       can walk into a beam now — see tripAlarm() for what that costs. It does
+       not block sight either, and never did, so cone() and sightline() reach
+       across a beam exactly as visibleSet() always has. */
     var d = doorAt(x, y);
     if (d) return d.locked;
     return false;
@@ -310,7 +343,7 @@
   function threat(kind) {
     var map = {};
     if (kind !== 'cameras') S.guards.forEach(function (g) {
-      var p = g.path[g.at];
+      var p = guardAt(g);
       cone(p.x, p.y, g.facing, coneDepth(g)).forEach(function (k) { (map[k] = map[k] || []).push(g.id); });
     });
     /* the cameras are down in a blackout — emergency power runs the feeds on
@@ -430,7 +463,34 @@
          which is exactly why running is expensive */
       if (g.alert > 0) {
         g.alert--;
-        if (S.noise) g.facing = dirToward(g.path[g.at], S.noise);
+        if (S.noise) g.facing = dirToward(guardAt(g), S.noise);
+        return;
+      }
+      /* THE ALARM IS RINGING: he is not on a round, he is coming for you.
+         One square a turn, the same speed Assane moves, so distance is the
+         whole of it — a man six squares away never reaches you in five, and a
+         man two squares away does. */
+      if (S.alarm > 0) {
+        var here = guardAt(g), step = stepToward(here, S.assane);
+        if (!step) return;                          /* no way through to him */
+        g.facing = dirToward(here, step);
+        /* HE STOPS ON THE DOORSTEP, never on the square itself. cone() is a
+           man's reach and deliberately excludes the tile he is standing on, so
+           a guard who walked onto Assane would be the one guard in the game
+           who could not see him. Stopping one short puts Assane inside the
+           body ring, which is the catch. */
+        if (step.x === S.assane.x && step.y === S.assane.y) return;
+        g.away = step;
+        return;
+      }
+      /* IT HAS STOPPED: he walks back to the square he left. His round was not
+         re-planned while he was gone, so the moment he is standing on it again
+         he picks it up from exactly where it stopped. */
+      if (g.away) {
+        var post = g.path[g.at], back = stepToward(g.away, post);
+        if (!back) { g.away = null; return; }
+        g.facing = dirToward(g.away, back);
+        g.away = (back.x === post.x && back.y === post.y) ? null : back;
         return;
       }
       if (g.loop) {
@@ -445,12 +505,30 @@
     S.camPhase++;
   }
 
+  /* BREAKING A BEAM. The building does not catch you for it — it tells
+     everybody where you are and gives them five moves to get there, which on a
+     good turn is nothing and on a bad one is the end of the job. The cost is
+     paid once, at the beam; the chase is the rest of the price. */
+  function tripAlarm() {
+    var A = C.ALARM || { turns: 5, cost: 12 };
+    S.alarm = A.turns;
+    S.guards.forEach(function (g) { g.alert = 0; });   /* nobody is standing and listening now */
+    raise(A.cost);
+    toast('ALARM · BEAM BROKEN', 'bad');
+    /* through alertNote, not S.sense: act() recomputes the sense line further
+       down the same turn and would write straight over it */
+    S.alertNote = 'A bell goes off behind you. <em>Every one of them just turned round.</em>';
+    S.flash = Date.now();
+    U.sfx.spot();
+    U.buzz('both', true);
+  }
+
   /* Walking is silent. Running is not. */
   function makeNoise() {
     S.noise = { x: S.assane.x, y: S.assane.y };
     var best = null, bd = 99;
     S.guards.forEach(function (g) {
-      var p = g.path[g.at], d = Math.abs(p.x - S.assane.x) + Math.abs(p.y - S.assane.y);
+      var p = guardAt(g), d = Math.abs(p.x - S.assane.x) + Math.abs(p.y - S.assane.y);
       if (d < bd) { bd = d; best = g; }
     });
     if (best && bd <= 8) best.alert = 2;
@@ -459,7 +537,7 @@
   function nearestGuard() {
     var best = null, bd = 99;
     S.guards.forEach(function (g) {
-      var p = g.path[g.at], d = Math.abs(p.x - S.assane.x) + Math.abs(p.y - S.assane.y);
+      var p = guardAt(g), d = Math.abs(p.x - S.assane.x) + Math.abs(p.y - S.assane.y);
       if (d < bd) { bd = d; best = g; }
     });
     return best;
@@ -512,7 +590,7 @@
     if (S.alertNote) { var note = S.alertNote; S.alertNote = null; return note; }
     var a = S.assane, best = null, bestD = 99;
     S.guards.forEach(function (g) {
-      var p = g.path[g.at], d = Math.abs(p.x - a.x) + Math.abs(p.y - a.y);
+      var p = guardAt(g), d = Math.abs(p.x - a.x) + Math.abs(p.y - a.y);
       if (d < bestD) { bestD = d; best = { p: p, kind: 'guard' }; }
     });
     var t = threat(), adjacent = false;
@@ -520,6 +598,11 @@
       if (t[(a.x + dx) + ',' + (a.y + dy)]) adjacent = true;
     }
     if (adjacent) return 'The hair goes up on the back of your neck. <em>Something is looking this way.</em>';
+    /* he cannot see them coming — the television only draws what he can see —
+       so the one thing his own phone can tell him is that they are, and for
+       how much longer */
+    if (S.alarm > 0) return 'The bell is still going. <em>' + S.alarm +
+      (S.alarm === 1 ? ' move' : ' moves') + ' before they give up and go back.</em>';
     if (S.levers.lights > 0) return 'The corridor lights are still down. <em>Nobody sees past arm’s length.</em>';
     if (best && bestD <= 3) return 'Footsteps. <em>Close.</em> ' + bearing(best.p, a) + ' of you.';
     if (best && bestD <= 6) return 'Footsteps somewhere ' + bearing(best.p, a).toLowerCase() + '. Unhurried.';
@@ -569,6 +652,8 @@
     }
 
     S.turn++;
+    /* a beam he has just walked through, and the beams are live */
+    if (!(S.levers.laser > 0) && crossed.some(function (k) { return charAt(k.x, k.y) === 'L'; })) tripAlarm();
     advanceGuards();
     markSeen();
     if (S.grace > 0) S.grace--;
@@ -611,13 +696,23 @@
        Ticking before the check made "three" mean two. The lasers coming back
        on with him standing in the beam is the one way a lever can hurt him,
        and it is the reason that countdown has to be said out loud. */
+    /* five moves, counted the way the levers are: after the move that used
+       one, so the number said out loud is the number left */
+    if (S.alarm > 0 && --S.alarm === 0) {
+      toast('THEY ARE GOING BACK', null);
+      S.alertNote = 'The bell stops. <em>Footsteps, moving away from you.</em>';
+      U.buzz('both');
+    }
     if (S.levers.lights > 0) S.levers.lights--;
     if (S.levers.laser > 0) {
       S.levers.laser--;
       if (S.levers.laser === 0) {
         toast('LASERS BACK ON', 'bad');
         U.buzz('both');
-        if (charAt(S.assane.x, S.assane.y) === 'L') { getSpotted(nearestGuard().id); return { ok: true, spotted: true }; }
+        /* standing in a beam when it comes back is the same event as walking
+           into one, and it used to be an instant catch — a harsher rule than
+           the thing it is a special case of */
+        if (charAt(S.assane.x, S.assane.y) === 'L') tripAlarm();
       }
     }
     for (var cid in S.levers.cams) if (S.levers.cams[cid] > 0) S.levers.cams[cid]--;
@@ -1038,6 +1133,7 @@
     coordOf: coordOf,
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
+    guardAt: guardAt,
     zoneOf: zoneOf, liveZones: liveZones, seesAssane: seesAssane,
     startBlackout: startBlackout, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,

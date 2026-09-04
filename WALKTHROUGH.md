@@ -106,6 +106,14 @@ Neither player can finish it alone, neither screen shows the other's half, and
 nothing about it is a reflex test. Looping costs 4 suspicion and contract four
 gives Benjamin only two of them.
 
+### The beams are a door, if you want one
+
+This route never crosses a laser, because it does not have to. If a run goes
+wrong and you need a way out of the middle of the building, you can walk
+straight through one: it costs twelve suspicion and every guard leaves his
+round and comes at you for five moves before turning back. Benjamin's **CUT THE
+LASERS** buys the same crossing with nobody hearing it.
+
 ### About the waiting
 
 Steps 7 and 16 are the two long ones, and they are the floor of this building

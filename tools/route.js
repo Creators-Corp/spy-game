@@ -156,6 +156,17 @@
      So: carry on in any direction first, then hold still, and turn back the
      way you came only if nothing else works. A turn spent in place is then a
      hold — which is what it is — and it lands where it is actually needed. */
+  /* A LIVE BEAM IS A WALL TO THIS SEARCH, though it is not one to the engine.
+     Walking through a beam sets off the alarm, and an alarm takes every guard
+     off his round — which is exactly the assumption this whole model rests on.
+     A route that trips one cannot be reasoned about here at all, so it is not
+     looked for: what solve() prints is always a route through the building
+     that nobody hears. Benjamin dropping the beams first is a different
+     matter, and also not modelled. */
+  function shut(x, y) {
+    return E.isWall(x, y) || (E.charAt(x, y) === 'L' && !(E.S.levers.laser > 0));
+  }
+
   var STEPS = [[0, -1, 'N'], [0, 1, 'S'], [-1, 0, 'W'], [1, 0, 'E'], [0, 0, '.']];
   var BACK = { N: 'S', S: 'N', E: 'W', W: 'E' };
   /* Keep going the way you were going, then turn, then wait, and only turn
@@ -247,7 +258,7 @@
         var tries = order(n.path.length ? n.path[n.path.length - 1] : null);
         for (var si = 0; si < tries.length; si++) {
           var st = tries[si], nx = n.x + st[0], ny = n.y + st[1];
-          if ((st[0] || st[1]) && E.isWall(nx, ny)) continue;
+          if ((st[0] || st[1]) && shut(nx, ny)) continue;
           var turn = n.turn + 1, tm = T[turn % P][Math.min(2, n.alert)][disguised ? 1 : 0];
           if (tm[nx + ',' + ny]) continue;                 /* seen: not a route */
           var susp = n.susp;
@@ -326,7 +337,7 @@
         var steps = [];
         [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(function (v) {
           var d = { x: g.at.x + v[0], y: g.at.y + v[1] };
-          if (!E.isWall(d.x, d.y) && !alwaysWatchedBy(d, P).length) steps.push(d);
+          if (!shut(d.x, d.y) && !alwaysWatchedBy(d, P).length) steps.push(d);
         });
         if (!steps.length) return null;
         var doorstep = sweep(frontier, steps, P, T, dressed, undefined, mode, budget);

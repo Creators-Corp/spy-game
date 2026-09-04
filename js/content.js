@@ -85,7 +85,7 @@
     lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
               blurb: 'For three moves, every guard sees only the squares beside him.' },
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
-              blurb: 'The beams drop for five moves. Back on with him in one, and somebody comes.' },
+              blurb: 'The beams drop for five moves. He can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
@@ -104,6 +104,19 @@
      during the infiltration: a module open is two people talking, and that is
      not inactivity. */
   var PRESSURE = { grace: 30, every: 2 };
+
+  /* THE BEAMS.
+     A laser is not a wall. You can step over one — what you cannot do is step
+     over one quietly. Break a beam and every guard in the building drops his
+     round and comes for you, for five moves, and then walks back to the square
+     he left and picks the round up from exactly where it stopped.
+
+     That is what Benjamin's CUT THE LASERS is for now. It used to be the only
+     way through a beam at all, which made it a key; it is a way through
+     *without the building hearing*, which makes it a decision. Going through
+     loud is always available and always expensive, and on a bad turn it is
+     still the right call. */
+  var ALARM = { turns: 5, cost: 12 };
 
   /* the same lever with a different budget — contract four hands out fewer */
   function lever(base, over) {
@@ -940,7 +953,7 @@
 
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
-      { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Do not cross. The side halls are patrolled.' },
+      { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Crossing one is not impossible, it is announced: officers abandon their rounds for five minutes and converge. The side halls are patrolled.' },
       { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
@@ -1051,7 +1064,7 @@
   L.content = {
     JOBS: JOBS, loadJob: loadJob, rollRoster: rollRoster, jobIndex: 0,
     DOOR_MARKS: DOOR_MARKS, RING_COLOUR: RING_COLOUR, GARMENTS: GARMENTS,
-    LINES: LINES, TOPICS: TOPICS, RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE,
+    LINES: LINES, TOPICS: TOPICS, RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE, ALARM: ALARM,
     AMBIENT: AMBIENT, STATIC_LINES: STATIC_LINES
   };
   loadJob(0);

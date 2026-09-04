@@ -340,7 +340,11 @@
   function render() {
     var S = E.S;
     var inDark = !!S.blackout && S.phase !== 'rank' && S.phase !== 'jail';
-    $('#tv-phase').textContent = inDark ? 'LE BLACKOUT'
+    /* A BROKEN BEAM OWNS THE SCREEN while it lasts. It is the one event where
+       the building is actively coming to him, and it has to read from the
+       sofa without anybody looking at the suspicion bar. */
+    $('#tv-phase').textContent = S.alarm > 0 && S.phase === 'play' ? 'ALARME · ' + S.alarm
+      : inDark ? 'LE BLACKOUT'
       : S.hasManuscript && S.phase === 'play' ? 'LA SORTIE'
       : PHASE_LABEL[S.phase];
     $('#tv-phase').classList.toggle('is-night', inDark);
@@ -356,7 +360,7 @@
        left the two cues indistinguishable. It has its own vignette on his
        phone now; this one answers to the building. */
     var live = S.phase === 'play' || S.phase === 'module';
-    var level = S.phase === 'tchatche' ? 3 : live ? Math.min(3, S.alert) : 0;
+    var level = S.phase === 'tchatche' ? 3 : live ? Math.max(S.alarm > 0 ? 3 : 0, Math.min(3, S.alert)) : 0;
     var scr = $('#tv-screen');
     scr.className = 'tv__screen tension-' + level +
       (S.flash && Date.now() - S.flash < 900 ? ' is-flash' : '') +

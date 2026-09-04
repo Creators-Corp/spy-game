@@ -235,6 +235,40 @@ class of problem, and it found every one of the five above.
 
 ---
 
+## A BEAM IS NOT A WALL
+
+You can walk through a laser. What you cannot do is walk through one quietly:
+break a beam and every guard in the building leaves his round and comes
+straight at you for five moves, one square a turn, then walks back to the
+square he left and picks his round up from exactly where it stopped.
+
+It used to be a wall until Benjamin dropped it, which made his CUT THE LASERS a
+key — no lever, no way through, no decision. Now the lever buys the same
+crossing *without the building hearing it*, and going through loud is always
+available and always expensive: twelve suspicion at the beam, and then the
+chase is the rest of the price. On a bad turn it is still the right call, which
+is the whole point.
+
+The chase is distance and nothing else. Guards move one square a turn, the same
+as Assane, so a man six squares away never reaches him in five and a man two
+squares away does — and a man behind a locked door does not come at all. He
+stops on the doorstep rather than on Assane's square, because `cone()` is a
+man's reach and excludes the tile he stands on; a guard who walked onto him
+would be the only guard in the game who could not see him.
+
+Neither player can see the whole of it. Assane's phone tells him the bell is
+ringing and how many moves are left; the television goes to full tension and
+prints `ALARME · n`; and Benjamin — the only one who can see all of them at
+once — gets a red banner and guards drawn off their lines on his plan. Calling
+the way out is his.
+
+`tools/route.js` treats a live beam as a wall even though the engine does not.
+An alarm takes every guard off his round, which is the assumption the whole
+model rests on, so a route that trips one cannot be reasoned about there: what
+the solver prints is always a way through that nobody hears.
+
+---
+
 ## THE ROOM, SINCE THE ART LANDED
 
 The television draws the floor in the artist's tile set now — parquet, panelled

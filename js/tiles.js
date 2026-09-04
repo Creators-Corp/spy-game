@@ -490,7 +490,7 @@
       s += '<g class="tl-vision">';
       var cells = {};
       for (var k in threat) cells[k] = 1;
-      S.guards.forEach(function (g) { var p = g.path[g.at]; if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
+      S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
       for (k in cells) {
         var pr = k.split(',').map(Number);
         if (!known(pr[0], pr[1])) continue;
@@ -614,7 +614,7 @@
     if (on('actors')) {
       var actors = [];
       S.guards.forEach(function (g) {
-        var p = g.path[g.at];
+        var p = E.guardAt(g);
         if (view === 'assane' && !lit(p.x, p.y)) return;
         actors.push({ who: 'guard', x: p.x, y: p.y, dir: g.facing, alert: g.alert > 0 });
       });
