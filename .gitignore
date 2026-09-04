@@ -6,3 +6,9 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# The bench's "Export full layout" dump. It is a snapshot of what the wall
+# rules currently produce, for reading while marking a render up; nothing loads
+# it, and a stale one is worse than none. art/tiles/overrides.json is the
+# hand-written sheet and IS committed.
+art/tiles/computed.json

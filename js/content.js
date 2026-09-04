@@ -560,41 +560,50 @@
     venueArt: 'venue-particulier',
     blurb: 'One locked door, one sealed corridor, and two guards who never stop walking. Everything here is the long way round.',
 
-    /* 'L' is a laser. It reads as wall to everything that moves, but it is
+    /* THE FRAME. The plan carries a wall column down its left edge and a wall
+       row along its bottom that no route ever touches. They exist so the
+       outermost wall of the building has a cell of its own to be drawn in:
+       without them the hatch on the west face and the stair wall at the foot
+       of the map sit ON the boundary, with nothing outside them to hold the
+       band. Columns run A to X, and every square in this contract is one to
+       the right of where it used to be.
+
+       'L' is a laser. It reads as wall to everything that moves, but it is
        drawn as its own thing, and Assane cannot know it is there until he is
        standing next to it. The central corridor is the short way from the
        south to the north and it is never open — the map is a ring, and the
        shortcut through the middle is a promise it does not keep. */
     MAP: [
-      '#######################',
-      '#########.....#########',
-      '#########.....#########',
-      '#########.....#########',
-      '#.....................#',
-      '#.....................#',
-      '#..#######...#######..#',
-      '#..#######LLL#######..#',
-      'X....####.....####....#',
-      '#..#######LLL#######..#',
-      '#..#######...#######..#',
-      '#.....................#',
-      '#.....................#',
-      '###############+#######',
-      '###.................###',
-      '###.................###',
-      '###########+###########',
-      '##########.E.##########',
-      '#######################'
+      '########################',
+      '##########.....#########',
+      '##########.....#########',
+      '##########.....#########',
+      '##.....................#',
+      '##.....................#',
+      '##..#######...#######..#',
+      '##..#######LLL#######..#',
+      '#X....####.....####....#',
+      '##..#######LLL#######..#',
+      '##..#######...#######..#',
+      '##.....................#',
+      '##.....................#',
+      '################+#######',
+      '####.................###',
+      '####.................###',
+      '############+###########',
+      '###########.E.##########',
+      '###########...##########',
+      '########################'
     ],
     ROOMS: [
-      { name: 'CHAMBRE 302',     x: 9,  y: 1,  w: 5,  h: 3, tint: 'cool' },
-      { name: 'GALERIE NORD',    x: 1,  y: 4,  w: 21, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 0,  y: 6,  w: 5,  h: 5, tint: 'neutral' },
-      { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 5,  h: 5, tint: 'olive' },
-      { name: 'AILE EST',        x: 18, y: 6,  w: 4,  h: 5, tint: 'neutral' },
-      { name: 'GALERIE SUD',     x: 1,  y: 11, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LE VESTIAIRE',    x: 3,  y: 14, w: 17, h: 2, tint: 'warm' },
-      { name: 'ESCALIER',        x: 10, y: 16, w: 3,  h: 2, tint: 'warm' }
+      { name: 'CHAMBRE 302',     x: 10,  y: 1,  w: 5,  h: 3, tint: 'cool' },
+      { name: 'GALERIE NORD',    x: 2,  y: 4,  w: 21, h: 2, tint: 'neutral' },
+      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 5,  h: 5, tint: 'neutral' },
+      { name: 'COULOIR CENTRAL', x: 10,  y: 6,  w: 5,  h: 5, tint: 'olive' },
+      { name: 'AILE EST',        x: 19, y: 6,  w: 4,  h: 5, tint: 'neutral' },
+      { name: 'GALERIE SUD',     x: 2,  y: 11, w: 21, h: 2, tint: 'neutral' },
+      { name: 'LE VESTIAIRE',    x: 4,  y: 14, w: 17, h: 2, tint: 'warm' },
+      { name: 'ESCALIER',        x: 11, y: 16, w: 3,  h: 2, tint: 'warm' }
     ],
 
     /* One guard south of the door, two north of it. The first exists to be
@@ -606,48 +615,51 @@
       /* The tutorial guard. One row of the vestiaire, thirteen tiles, so his
          cycle is 24 and divides the ring's 48 — that keeps the combined patrol
          period at 48 and the whole map small enough to prove safe. */
-      { id: 'g1', badge: '4412', from: { x: 4, y: 14 }, to: { x: 16, y: 14 }, at: 0, dir: 1, depth: 1 },
+      { id: 'g1', badge: '4412', from: { x: 5, y: 14 }, to: { x: 17, y: 14 }, at: 0, dir: 1, depth: 1 },
       /* Both ring guards turn the same way — counter-clockwise: down the west
          arm, east along the south, up the east arm, west along the north. Same
          circuit, started half a lap apart, so they are always opposite each
          other and Benjamin only ever has to track one of them. */
       { id: 'g2', badge: '2071', at: 0,  dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] },
+        waypoints: [{ x: 3, y: 5 }, { x: 3, y: 11 }, { x: 21, y: 11 }, { x: 21, y: 5 }] },
       { id: 'g3', badge: '3308', at: 24, dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] }
+        waypoints: [{ x: 3, y: 5 }, { x: 3, y: 11 }, { x: 21, y: 11 }, { x: 21, y: 5 }] }
     ],
     /* Two cameras, and one of them cannot be walked around. CAM 1 hangs over
        the desk and never blinks: the prize is under it, so the prize does not
        exist without Benjamin looping it. CAM 2 watches the keypad every other
        beat — that one can be timed, if somebody in the van is counting. */
     CAMERAS: [
-      { id: 'c1', x: 11, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' },
+      { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' },
       /* on, off, on, off. Two-on/two-off left the square under it a trap on the
          beat it woke (four dead states); every other beat leaves none, and is
          the easiest rhythm there is to count out loud. */
-      { id: 'c2', x: 15, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
+      { id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
     ],
     LEVIERS: [LEVER.lights, LEVER.laser, LEVER.camera],
     /* Taking the dossier kills the monitors. The television goes dark and the
        two phones are all there is; the stairs are a floor away, and the hatch
        in the west wall ('X' on the plan) is the only way out. */
+    /* the way out is an alcove cut into the west wall, hand-built tile by
+       tile; contract four's is a plain window on a plain wall. */
+    HATCH: 'niche',
     PRIZE: { dark: true, name: 'DOSSIER' },
     DOORS: [
       /* the service gate at the foot of the stairs. Its mark is a plain lock on
          Benjamin's plan — what is stamped on the padlock is Assane's to see */
-      { x: 11, y: 16, locked: true, mark: 'lock', to: 'LE VESTIAIRE' },
-      { x: 15, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
+      { x: 12, y: 16, locked: true, mark: 'lock', to: 'LE VESTIAIRE' },
+      { x: 16, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
     ],
     MODULES: [
       /* on the square he starts on, so it opens the moment both players are
          ready — the first thing anyone does in this game is talk */
-      { id: 'grille',      x: 11, y: 17, name: 'LA GRILLE',      icon: 'lock' },
-      { id: 'deguisement', x: 12, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
-      { id: 'porte',       x: 15, y: 14, name: 'LA PORTE',       icon: 'lock' },
+      { id: 'grille',      x: 12, y: 17, name: 'LA GRILLE',      icon: 'lock' },
+      { id: 'deguisement', x: 13, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'porte',       x: 16, y: 14, name: 'LA PORTE',       icon: 'lock' },
       /* The desk. For now it hands over the dossier and nothing more —
          the full Bureau puzzle is the stretch goal, and a placeholder that
          works beats a half-built module that does not. */
-      { id: 'prize',       x: 11, y: 2,  name: 'LE BUREAU',      icon: 'desk' }
+      { id: 'prize',       x: 12, y: 2,  name: 'LE BUREAU',      icon: 'desk' }
     ],
 
     /* LA GRILLE — the handshake.
@@ -663,7 +675,7 @@
     GRILLE: {
       lock: 'trident',
       board: [{ sym: 'crescent', key: 1 }, { sym: 'trident', key: 2 }, { sym: 'ladder', key: 3 }],
-      door: { x: 11, y: 16 },
+      door: { x: 12, y: 16 },
       rattle: 3
     },
 
@@ -683,7 +695,7 @@
        key is on each phone and the puzzle does not exist until they talk. */
     PORTE: {
       code: '2549',
-      door: { x: 15, y: 13 },
+      door: { x: 16, y: 13 },
       sign: 'CHAMBRE 302',
       zero: 'hook',
       ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
@@ -741,7 +753,13 @@
       { k: 'PATROLS',      v: 'Two officers, opposite directions, outer halls only.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the study desk continuously. CAM 2 sweeps the cloakroom keypad every other beat.' },
-      { k: 'EVACUATION',   v: 'Service hatch, west wall, row 9. Not on the public plans.' }
+      /* the chambre DOES draw its hatch on Benjamin's plan — it is the
+         teaching contract and the way out is meant to be visible. The line
+         used to end "Not on the public plans", which is contract four's rule
+         copied one job too far: the dossier was contradicting the map beside
+         it. Contract four keeps that clause, and keeps the hatch off the
+         plan to go with it. */
+      { k: 'EVACUATION',   v: 'Service hatch, west wall, row 9. Marked on the plan.' }
     ],
 
     BEATS: [
@@ -770,26 +788,31 @@
     venueArt: 'venue-establishing',
     blurb: 'Three floors, each behind a door, each worse than the last. The vault is released from the desk beside it, and the way out is not drawn anywhere.',
 
+    /* THE FRAME. A wall column down the EAST edge and a wall row along the
+       bottom that no route touches: the hatch sits in the east wall, so the
+       outermost stone needs a cell of its own to be drawn in. The column goes
+       after the last one, so every square keeps the name it had. */
     MAP: [
-      '#######################',
-      '#####.....#....########',
-      '#####.....#....########',
-      '#####.....#....########',
-      '#####+#####/###########',
-      '#.....................X',
-      '#.....................#',
-      '#..######LLLLL######..#',
-      '#..######.....######..#',
-      '#..######LLLLL######..#',
-      '#.....................#',
-      '#.....................#',
-      '######+################',
-      '#.............#.......#',
-      '#.............#.......#',
-      '#............./.......#',
-      '#######.###############',
-      '#######E###############',
-      '#######################'
+      '########################',
+      '#####.....#....#########',
+      '#####.....#....#########',
+      '#####.....#....#########',
+      '#####+#####/############',
+      '#....................X##',
+      '#.....................##',
+      '#..######LLLLL######..##',
+      '#..######.....######..##',
+      '#..######LLLLL######..##',
+      '#.....................##',
+      '#.....................##',
+      '######+#################',
+      '#.....................##',
+      '#.....................##',
+      '#.....................##',
+      '######.E.###############',
+      '######...###############',
+      '########################',
+      '########################'
     ],
     ROOMS: [
       { name: 'LA RÉSERVE',      x: 5,  y: 1,  w: 5,  h: 3, tint: 'cool' },
@@ -799,23 +822,48 @@
       { name: 'COULOIR CENTRAL', x: 9,  y: 7,  w: 5,  h: 3, tint: 'olive' },
       { name: 'AILE EST',        x: 20, y: 7,  w: 2,  h: 3, tint: 'neutral' },
       { name: 'GALERIE BASSE',   x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LES CUISINES',    x: 1,  y: 13, w: 13, h: 3, tint: 'warm' },
-      { name: 'LE VESTIAIRE',    x: 15, y: 13, w: 7,  h: 3, tint: 'warm' },
-      { name: 'ESCALIER',        x: 7,  y: 16, w: 1,  h: 2, tint: 'warm' }
+      { name: 'LES CUISINES',    x: 1,  y: 13, w: 21, h: 3, tint: 'warm' },
+      { name: 'ESCALIER',        x: 6,  y: 16, w: 3,  h: 2, tint: 'warm' }
     ],
 
-    /* Band A: one guard on a beat, the lesson they already had. Band B: the
-       ring guard sees TWO squares ahead now, and the north gallery has a
-       second man on a 32-beat walk against his 48 — they are never in step,
-       so there is no "always opposite" to lean on. */
+    /* A GUARD IS THREE ROWS TALL AND THIS BUILDING'S GALLERIES ARE TWO.
+       cone() gives every man the eight squares around him, so a patrol
+       standing anywhere in a two-row corridor covers the whole height of it
+       and cannot be walked past — he is a moving plug, and the only answer to
+       a plug is to wait for it. Both galleries here are two rows, and the
+       first cut of this roster had g3 walking the upper one's door row while
+       g2's ring walked the lower one's, which put a plug across every
+       north-south crossing on the floor.
+
+       It measured badly and it played worse. The two legs that cross the
+       building averaged 81 turns against a walking distance of 46 — thirty-
+       five turns of standing still — and a solved route opened with twenty-one
+       taps of HOLD STILL before anybody moved.
+
+       Two changes, and the same three men:
+
+       · g3 walks row 7 instead of row 6. Row 6 carries both doors and the
+         hatch; leaving it clear means the crossing is a timing question rather
+         than a closed door.
+       · g2 walks the east aisle instead of ringing the whole floor. A ring is
+         a lovely shape and it is why contract three reads the way it does, but
+         here it traverses BOTH long rows, so it plugged the gallery twice a
+         lap. On the aisle he still owns the way to the hatch, which is the
+         thing on this floor most worth owning.
+
+       81 turns became 68, and a full contract went from about 120 to about 96.
+       Nobody was removed and nothing was made shallower. Put the ring back by
+       restoring the waypoints below and g3 to y:5 — the walkthrough would need
+       regenerating, and `DC.route.audit` will tell you what it cost. */
     GUARDS: [
       /* the beat stops two short of each wall: a guard who walks into the
          corner makes the corner a trap, and the scan found four dead states
          at each end when he did */
       { id: 'g1', badge: '4412', from: { x: 3, y: 14 }, to: { x: 11, y: 14 }, at: 0, dir: 1, depth: 1 },
-      { id: 'g2', badge: '2071', at: 0, dir: 1, depth: 2, loop: true,
-        waypoints: [{ x: 2, y: 5 }, { x: 2, y: 11 }, { x: 20, y: 11 }, { x: 20, y: 5 }] },
-      { id: 'g3', badge: '5195', from: { x: 5, y: 5 }, to: { x: 17, y: 5 }, at: 6, dir: -1, depth: 1 }
+      /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
+      { id: 'g2', badge: '2071', from: { x: 20, y: 5 }, to: { x: 20, y: 11 }, at: 0, dir: 1, depth: 2 },
+      /* was: y:5, the door row */
+      { id: 'g3', badge: '5195', from: { x: 5, y: 6 }, to: { x: 17, y: 6 }, at: 6, dir: -1, depth: 1 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
@@ -835,7 +883,6 @@
       { x: 5,  y: 4,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
       { x: 11, y: 4,  locked: false, mark: 'chevrons', to: 'BUREAU' },
       { x: 6,  y: 12, locked: true,  mark: 'dbar',     to: 'GALERIE BASSE' },
-      { x: 14, y: 15, locked: false, mark: 'star4',    to: 'LE VESTIAIRE' }
     ],
     MODULES: [
       { id: 'porte',       x: 6,  y: 13, name: 'LA PORTE',       icon: 'lock' },
@@ -894,7 +941,7 @@
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
       { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Do not cross. The side halls are patrolled.' },
-      { k: 'PATROLS',      v: 'One officer on the full ring, one on the upper gallery. They do not keep step.' },
+      { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
@@ -913,7 +960,7 @@
      and holds a reference to this same object, so assigning the fields here is
      all a job change takes — no reload, no rebuild, and not one line of code
      that knows a venue. This function IS the "modules are grammars" argument. */
-  var JOB_FIELDS = ['venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
+  var JOB_FIELDS = ['id', 'HATCH', 'venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'BLACKOUT', 'CLAVIER', 'PORTE',
     'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ'];
@@ -926,8 +973,83 @@
     return job;
   }
 
+  /* ------------------------------------------------------------- THE ROSTER
+     WHAT CHANGES BETWEEN RUNS IS WHO IS ON TONIGHT — never where anybody
+     stands. The beats were measured and every route, scan and walkthrough is
+     written against the building as authored; shuffling the men voids all of
+     it, and it voided it on both contracts when this was first tried.
+
+     So the badges stay where they are, the posts stay where they are, and the
+     PEOPLE behind them are dealt out fresh: a different name, a different car,
+     different children on each badge. The floor is identical and the interview
+     is not — which is the half of this game that is about reading a file
+     rather than walking a corridor.
+
+     The desk is the one slot with a requirement. LE BUREAU asks for the eldest
+     child's birth year, and the trick is that the file lists the children in
+     the wrong order — so whoever ends up on that badge has to have at least
+     two children born in different years, or the question stops being a
+     question. The deal is redone until they do. */
+  var PRISTINE = {};
+  function personOf(p) { return { name: p.name, plate: p.plate, kids: p.kids, faceOf: p.badge }; }
+  function eldestYear(kids) {
+    return String(kids.reduce(function (a, b) { return a.y <= b.y ? a : b; }).y);
+  }
+  function deskWorks(person, mode) {
+    if (mode === 'plate') return !!person.plate;
+    if (!person.kids || person.kids.length < 2) return false;
+    return person.kids.some(function (k) { return k.y !== person.kids[0].y; });
+  }
+
+  function rollRoster(seed) {
+    var job = JOBS[L.content.jobIndex] || JOBS[0];
+    if (!job.PERSONNEL) return;
+    if (!PRISTINE[job.id]) PRISTINE[job.id] = JSON.parse(JSON.stringify(job.PERSONNEL));
+    var base = PRISTINE[job.id];
+
+    /* seed 0 is the roster as written — the one the content comments describe */
+    var order = base.map(function (_, i) { return i; });
+    if (seed) {
+      var t = (seed >>> 0) + 0x9E3779B9;
+      var rnd = function () {
+        t = (t + 0x6D2B79F5) >>> 0;
+        var r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+      var desk = job.BUREAU ? base.map(function (b, i) { return i; })
+                                  .filter(function (i) { return deskWorks(base[i], job.BUREAU.mode); }) : [];
+      for (var pass = 0; pass < 40; pass++) {
+        for (var i = order.length - 1; i > 0; i--) {
+          var j = Math.floor(rnd() * (i + 1)), tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        }
+        if (!job.BUREAU) break;
+        var slot = base.map(function (b) { return b.badge; }).indexOf(job.BUREAU.badge);
+        if (slot < 0 || desk.indexOf(order[slot]) >= 0) break;
+      }
+    }
+
+    /* badge and post belong to the slot; the person is dealt into it */
+    L.content.PERSONNEL = base.map(function (slotDef, i) {
+      var who = base[order[i]];
+      return { badge: slotDef.badge, post: slotDef.post,
+               name: who.name, plate: who.plate, kids: who.kids, face: who.badge };
+    });
+
+    if (job.BUREAU) {
+      var owner = L.content.PERSONNEL.filter(function (x) { return x.badge === job.BUREAU.badge; })[0];
+      var b = {}; for (var k in job.BUREAU) b[k] = job.BUREAU[k];
+      if (owner) {
+        b.answer = b.mode === 'plate' ? owner.plate : eldestYear(owner.kids);
+        b.photo = b.mode === 'plate' ? b.photo
+                : owner.kids.length === 2 ? 'two children' : owner.kids.length + ' children';
+      }
+      L.content.BUREAU = b;
+    }
+  }
+
   L.content = {
-    JOBS: JOBS, loadJob: loadJob, jobIndex: 0,
+    JOBS: JOBS, loadJob: loadJob, rollRoster: rollRoster, jobIndex: 0,
     DOOR_MARKS: DOOR_MARKS, RING_COLOUR: RING_COLOUR, GARMENTS: GARMENTS,
     LINES: LINES, TOPICS: TOPICS, RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE,
     AMBIENT: AMBIENT, STATIC_LINES: STATIC_LINES

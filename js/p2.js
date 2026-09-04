@@ -173,14 +173,25 @@
       }
     }
 
-    /* doors carry the release mark Benjamin has to name */
+    /* DOORS CARRY THE RELEASE MARK BENJAMIN HAS TO NAME, and that mark is the
+       whole of his half of LE BUREAU: Assane reads four symbols off a screen
+       and only Benjamin can say which one is La Réserve.
+
+       It was unreadable. A locked door drew a grey bar and then drew its mark
+       in the SAME grey on top of that bar, so the only mark you could make out
+       on the whole plan was the one on the door that was already open — the
+       one nobody needs. Gold is the players' business here, exactly as it is
+       on the television, where a locked door is the gold one; so the mark on a
+       locked door is gold and full size, the bar sits under it, and a door
+       already open keeps its mark quietly in grey. */
     S.doors.forEach(function (d) {
       if (!feed(d.x, d.y)) return;
       var px = d.x * TT, py = d.y * TT;
       if (d.locked) {
-        s += '<rect x="' + (px + 2) + '" y="' + (py + TT / 2 - 3) + '" width="' + (TT - 4) + '" height="6" rx="1.5" fill="' + EDGE + '"/>';
+        s += '<rect x="' + (px + 2) + '" y="' + (py + TT / 2 - 3) + '" width="' + (TT - 4) + '" height="6" rx="1.5" fill="' + EDGE + '" opacity=".45"/>';
       }
-      s += '<g color="' + (d.locked ? EDGE : 'var(--gold)') + '" transform="translate(' + (px + 3) + ',' + (py + 3) +
+      s += '<g color="' + (d.locked ? 'var(--gold)' : EDGE) + '" opacity="' + (d.locked ? 1 : 0.6) + '"' +
+           ' transform="translate(' + (px + 3) + ',' + (py + 3) +
            ') scale(' + ((TT - 6) / 100) + ')">' + G.iconMarkup(d.mark) + '</g>';
     });
 
@@ -207,7 +218,11 @@
     (function () {
       var h = E.hatchTile();
       if (!h || !feed(h.x, h.y)) return;
-      if (C.PRIZE && C.PRIZE.hatchHidden) return;   /* not on the public plans */
+      /* Not on the public plans — until Assane has stood where he can see it.
+         The plan is the pair's shared map, so once one of them has found the
+         way out it stops being a secret from the other; keeping it off forever
+         meant the only record of it was in somebody's head. */
+      if (C.PRIZE && C.PRIZE.hatchHidden && !S.seen[h.x + ',' + h.y]) return;
       s += '<g color="var(--gold)" transform="translate(' + (h.x * TT + 2.5) + ',' + (h.y * TT + 2.5) +
            ') scale(' + ((TT - 5) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
     })();
@@ -366,7 +381,11 @@
                          '<b>Locked door</b> It needs a code or a mark.'));
       }
     }
-    if (hasChar('X') && !(C.PRIZE && C.PRIZE.hatchHidden)) {
+    /* a hatch kept off the public plans is still keyed once he has found it,
+       so the symbol that just appeared on the map has a line explaining it */
+    var hx = E.hatchTile();
+    var hatchFound = !!(hx && E.S.seen[hx.x + ',' + hx.y]);
+    if (hasChar('X') && !(C.PRIZE && C.PRIZE.hatchHidden && !hatchFound)) {
       rows.push(keyRow('<g color="var(--gold)" transform="translate(2,2) scale(0.16)">' + G.iconMarkup('hatch') + '</g>',
                        '<b>Hatch</b> The way out, once he has it.'));
     }
@@ -502,17 +521,23 @@
   }
 
   /* ------------------------------------------------------------ LA PORTE */
-  /* The page said RING and drew a table. The whole mechanic is "count round
-     from the zero", and there was nothing round on the screen — the wrap from
-     the last symbol back to the first, which is the step everybody trips on,
-     was invisible.
+  /* THE RING. The whole mechanic is "count round from the zero", and the page
+     used to say RING and draw a table, so the wrap from the last symbol back
+     to the first — the step everybody trips on — was invisible. It is a real
+     ring, and Benjamin taps the symbol Assane describes to anchor it; every
+     other symbol then labels itself with its digit.
 
-     It is a real ring now, and Benjamin can TAP the symbol Assane describes.
-     That anchors it: every other symbol labels itself with its digit and the
-     code above reads as four numbers. The lock is untouched — he still cannot
-     tap anything useful until Assane tells him which mark is on the door —
-     but the ten-position count with a wrap in the middle is gone, and that
-     was arithmetic, not conversation. */
+     WHAT BENJAMIN NO LONGER HAS IS THE CODE. This page used to print the four
+     code symbols at the top, so the moment he anchored the ring the whole
+     four-digit code appeared on his screen at once and the conversation was
+     over after one sentence: Assane named one mark and Benjamin read back four
+     numbers he had never had to look for.
+
+     The code sits on Assane's keypad now, as symbols. Benjamin holds the
+     alphabet and nothing else, so the exchange is five sentences instead of
+     one — the mark under the zero, and then each symbol in turn, with a number
+     coming back for each. That is the module: neither of them can read the
+     door alone. */
   var porteZero = null;
 
   function porteDigit(sym) {
@@ -577,22 +602,10 @@
     var wrap = el('div', {}, [
       el('p', { class: 'h', text: 'DOOR CODES · ' + K.sign }),
       U.howto([
-        'Ask Assane what is engraved under the 0 on the door.',
-        'Tap that symbol on the ring. Then read him the four digits.'
+        'Ask Assane what is engraved under the 0 on the door. Tap that symbol here — the ring numbers itself from it.',
+        'He has four more symbols on his keypad. He describes each one; you find it on the ring and tell him its number.'
       ])
     ]);
-
-    wrap.appendChild(el('p', { class: 'lbl', style: 'margin:14px 0 6px', text: 'THIS DOOR' }));
-    var code = el('div', { class: 'symrow' });
-    E.porteCodeSymbols().forEach(function (sym) {
-      var d = porteDigit(sym);
-      var cell = el('div', { class: 'symrow__cell' + (d !== null ? ' is-read' : '') });
-      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
-      cell.appendChild(ic);
-      if (d !== null) cell.appendChild(el('b', { text: String(d) }));
-      code.appendChild(cell);
-    });
-    wrap.appendChild(code);
 
     wrap.appendChild(el('p', { class: 'lbl lbl--c', style: 'margin:16px 0 0',
       text: porteZero ? 'ZERO SET · COUNTING CLOCKWISE' : 'TAP THE MARK HE DESCRIBES' }));
@@ -602,6 +615,9 @@
       wrap.appendChild(el('p', { class: 'warn', html:
         '<b>The zero is not recorded.</b> The order is right, but the file does not ' +
         'say where to start counting. Assane has that, on the door.' }));
+    } else {
+      wrap.appendChild(el('p', { class: 'note', style: 'margin-top:10px',
+        text: 'The code itself is not in this file. He is reading it off the keypad — take his symbols one at a time.' }));
     }
     return wrap;
   }

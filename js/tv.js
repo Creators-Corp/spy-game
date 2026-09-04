@@ -6,17 +6,7 @@
 (function (L) {
   'use strict';
   var U = L.util, C = L.content, E = L.engine, G = L.glyphs;
-  var $ = U.$, T = 40;
-
-  /* The tile size is derived from the map, not hardcoded, so a job can be any
-     shape it wants. Job 2 needed an extra row the moment its chamber turned
-     out to be too small to be patrolled, and a renderer that only knew 15x10
-     would have made that a code change instead of a data one. */
-  function metrics() {
-    var cols = C.MAP[0].length, rows = C.MAP.length;
-    var t = Math.min(600 / cols, 400 / rows);
-    return { t: t, ox: (600 - cols * t) / 2, oy: (400 - rows * t) / 2 };
-  }
+  var $ = U.$;
 
   var views = {};
   function view(name) {
@@ -30,30 +20,6 @@
   }
 
   /* ------------------------------------------------------------ the room */
-  function figure(x, y, fill, facing) {
-    var cx = x * T + T / 2, cy = y * T + T / 2, s = '';
-    if (facing) {
-      var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[facing];
-      var p = [v[1], v[0]];
-      s += '<path d="M' + (cx + v[0] * 20) + ' ' + (cy + v[1] * 20) +
-           ' L' + (cx + v[0] * 11 + p[0] * 8) + ' ' + (cy + v[1] * 11 + p[1] * 8) +
-           ' L' + (cx + v[0] * 11 - p[0] * 8) + ' ' + (cy + v[1] * 11 - p[1] * 8) + ' Z"' +
-           ' fill="' + fill + '" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>';
-    }
-    s += '<circle cx="' + cx + '" cy="' + cy + '" r="11" fill="' + fill + '" stroke="var(--ink)" stroke-width="2"/>';
-    s += '<circle cx="' + cx + '" cy="' + (cy - 3) + '" r="4" fill="var(--ink)"/>';
-    return s;
-  }
-
-  /* FLOOR-PLAN RENDERING.
-     The first version drew every wall as its own bordered square, which gave a
-     dense lattice of outlines — at couch distance that reads as noise, not as
-     a building. What you actually need to see is the SHAPE of the rooms, so
-     the floor is filled and the walls are drawn only as edges on the boundary
-     of that floor: one continuous outline per room and nothing inside it.
-
-     Three tones carry the fog: unseen is the bare field, walked-and-remembered
-     is a flat mid, and what he can see this instant is clearly brighter. */
   function roomToast() {
     var S = E.S, t = $('#room-toast');
     if (S.toast && Date.now() - S.toast.at < 1100) {
@@ -64,161 +30,79 @@
     }
   }
 
-  function renderRoom() {
-    var S = E.S, vis = E.visibleSet(), M = metrics();
-    T = M.t;
-    /* the monitors are dead. The frame stays — clock, objective, suspicion —
-       and the room itself is gone until he is out. */
-    $('#room-dead').classList.toggle('is-on', !!S.dark);
-    if (S.dark) { $('#room-svg').innerHTML = ''; roomToast(); return; }
-    var night = S.blackout;
+  /* THE ROOM, IN THE TILE SET.
+     The same renderer the artist's bench uses, asked for Assane's view: fog of
+     war, guards drawn only where he can actually see them, and no sightlines
+     at all — those are Benjamin's and they never appear on the shared screen.
+     DESIGN LAW #1 is unchanged by the new art; it is enforced inside the
+     renderer, by the view name.
+
+     THE TWO SCREENS ARE ONE GRID. tiles.js names a cell letter + row and so
+     does engine.coordOf, so the square under Assane on the television and the
+     square Benjamin is reading on his plan are the same string. That is the
+     whole alignment: nothing is scaled, offset or re-projected between them,
+     and the logical map stays the one in content.js that governs both.
+
+     The floor costs several hundred image tags, so it is rebuilt only when
+     something on it has moved. The clock ticks once a second and wants only
+     the ring, which lives in the HUD above it. */
+  var TW = 300, TH = 290;          /* the tile, in the art's own pixels */
+  var floorSig = null, tilesIn = false;
+  L.tiles.ready(function () { tilesIn = true; });
+
+  function signature() {
+    var S = E.S;
+    return [C.id, S.assane.x, S.assane.y, S.facing, S.turn, S.blackout ? 1 : 0,
+            Object.keys(S.seen).length,
+            S.guards.map(function (g) { return g.at + g.facing; }).join(''),
+            S.doors.map(function (d) { return d.locked ? 1 : 0; }).join(''),
+            C.MODULES.map(function (m) { return S.solved[m.id] ? 1 : 0; }).join('')].join('|');
+  }
+
+  /* what the floor underneath does not carry: the beam he has found, the
+     camera in front of him, the name of the room he is in, the clock on him */
+  function hudMarkup() {
+    var S = E.S, vis = E.visibleSet(), night = !!S.blackout, s = '';
     var EDGE = night ? 'var(--zinc)' : 'var(--map-edge)';
-    /* Rooms carry their own floor tone. In the blackout they do not — the night
-       exception is absolute, and a tinted floor would say "this is the vault"
-       at the exact moment the sequence is about him not knowing where he is. */
-    function floorFill(x, y, lit) {
-      if (night) return lit ? '#18222E' : 'var(--night-2)';
-      var r = E.roomAt(x, y), tint = (r && r.tint) || 'neutral';
-      return 'var(--floor-' + tint + (lit ? '-lit' : '') + ')';
-    }
-    view('room').classList.toggle('is-night', night);
 
-    /* part of the walkable shape he knows about. A locked door is wall. */
-    function open(x, y) {
-      if (!S.seen[x + ',' + y]) return false;
-      var ch = E.charAt(x, y);
-      if (ch === '#') return false;
-      if (ch === 'L' && !(S.levers.laser > 0)) return false;
-      var d = E.doorAt(x, y);
-      return !(d && d.locked);
-    }
-
-    var floors = '', dots = '', edges = '';
-    for (var y = 0; y < C.MAP.length; y++) {
-      for (var x = 0; x < C.MAP[y].length; x++) {
-        if (!open(x, y)) continue;
-        var lit = !!vis[x + ',' + y], px = x * T, py = y * T;
-        floors += '<rect x="' + px + '" y="' + py + '" width="' + (T + 0.5) + '" height="' + (T + 0.5) +
-                  '" fill="' + floorFill(x, y, lit) + '"/>';
-        if (lit) {
-          dots += '<circle cx="' + (px + T / 2) + '" cy="' + (py + T / 2) + '" r="1.6" fill="' + EDGE + '" opacity=".35"/>';
-        }
-        /* an edge wherever the floor stops — that is the wall */
-        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (v) {
-          if (open(x + v[0], y + v[1])) return;
-          var x1 = px + (v[0] > 0 ? T : 0), y1 = py + (v[1] > 0 ? T : 0);
-          var x2 = x1 + (v[0] === 0 ? T : 0), y2 = y1 + (v[1] === 0 ? T : 0);
-          edges += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
-                   '" stroke="' + EDGE + '" stroke-width="2.5" stroke-linecap="square" opacity="' +
-                   (lit ? 0.95 : 0.5) + '"/>';
-        });
-      }
-    }
     /* THE FOOTPRINT OF THE BUILDING, faint, and the one thing on this screen
-       Assane has not walked. The television draws only what he perceives, so
-       the explored fragment used to float in an empty black field with nothing
-       to register it against — you could not tell from the picture whether he
-       was in the north wing or the south. The fragment was always at its true
-       position; there was simply no frame to read it in, and Benjamin's plan
-       has a border while this had none.
-       It gives away the outside dimensions of a building he is standing inside,
-       and nothing else: no rooms, no walls, no guards, no contents. */
+       Assane has not walked. Without it the explored fragment floats in an
+       empty field with nothing to register it against, and you cannot tell
+       from the picture whether he is in the north wing or the south. It gives
+       away the outside dimensions of a building he is standing inside, and
+       nothing else: no rooms, no walls, no guards, no contents. */
     var cols = C.MAP[0].length, rows = C.MAP.length;
-    var shell = '<rect x="0" y="0" width="' + (cols * T) + '" height="' + (rows * T) + '" rx="3"' +
-                ' fill="var(--map-edge)" fill-opacity="' + (night ? 0.02 : 0.04) + '"' +
-                ' stroke="' + EDGE + '" stroke-opacity="' + (night ? 0.14 : 0.26) + '" stroke-width="2"/>';
+    s += '<rect x="0" y="0" width="' + (cols * TW) + '" height="' + (rows * TH) + '" rx="26" fill="none"' +
+         ' stroke="' + EDGE + '" stroke-opacity="' + (night ? 0.12 : 0.22) + '" stroke-width="10"/>';
 
-    /* Assane finds the lasers by walking up to them. They are never on his
-       screen from across the building — he is told, or he gets close enough
-       for the hum. Drawn when he has stood next to one. */
-    var lasers = '';
+    /* THE BEAMS HE HAS FOUND. They are deliberately absent from the
+       illustrated floor — a red wash over parquet reads as damage — so he
+       learns one the way he would in the room: by standing next to it. */
     for (var ly = 0; ly < C.MAP.length; ly++) {
       for (var lx = 0; lx < C.MAP[ly].length; lx++) {
         if (C.MAP[ly][lx] !== 'L') continue;
-        var near = [[1,0],[-1,0],[0,1],[0,-1]].some(function (v) {
+        var near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) {
           return !!S.seen[(lx + v[0]) + ',' + (ly + v[1])];
         });
         if (!near) continue;
-        /* down: a dashed ghost of where the beam was, so he knows what he is
-           walking through and what comes back */
-        var off = S.levers.laser > 0;
-        lasers += (off ? '' : '<rect x="' + (lx * T) + '" y="' + (ly * T) + '" width="' + T + '" height="' + T +
-                  '" fill="var(--red)" opacity="' + (night ? 0.18 : 0.26) + '"/>') +
-                  '<line x1="' + (lx * T) + '" y1="' + (ly * T + T / 2) + '" x2="' + (lx * T + T) +
-                  '" y2="' + (ly * T + T / 2) + '" stroke="var(--red)" stroke-width="3"' +
-                  (off ? ' stroke-dasharray="4 5" opacity=".4"' : '') + '/>';
+        var off = S.levers.laser > 0, my = ly * TH + TH / 2;
+        if (!off) s += '<rect x="' + (lx * TW) + '" y="' + (ly * TH) + '" width="' + TW + '" height="' + TH +
+                       '" fill="var(--red)" opacity="' + (night ? 0.16 : 0.22) + '"/>';
+        s += '<line x1="' + (lx * TW) + '" y1="' + my + '" x2="' + (lx * TW + TW) + '" y2="' + my +
+             '" stroke="var(--red)" stroke-width="' + (off ? 9 : 16) + '" stroke-linecap="round"' +
+             (off ? ' stroke-dasharray="26 34" opacity=".45"' : '') + '/>';
       }
     }
 
-    var svg = shell + floors + dots + edges + lasers;
-
-    /* doors: a locked one is a bar across the gap, an open one a swing arc */
-    S.doors.forEach(function (d) {
-      if (!S.seen[d.x + ',' + d.y]) return;
-      var px = d.x * T, py = d.y * T, lit = !!vis[d.x + ',' + d.y];
-      if (d.locked) {
-        svg += '<rect x="' + (px + 4) + '" y="' + (py + T / 2 - 4) + '" width="' + (T - 8) + '" height="8" rx="2"' +
-               ' fill="' + EDGE + '" opacity="' + (lit ? 0.95 : 0.5) + '"/>';
-      } else {
-        svg += '<path d="M' + (px + 5) + ' ' + (py + T - 5) + ' A' + (T - 10) + ' ' + (T - 10) + ' 0 0 1 ' +
-               (px + T - 5) + ' ' + (py + 5) + '" fill="none" stroke="' + EDGE +
-               '" stroke-width="2" opacity="' + (lit ? 0.7 : 0.3) + '"/>';
-      }
-    });
-
-    /* what is worth crossing a room for */
-    C.MODULES.forEach(function (m) {
-      if (!S.seen[m.x + ',' + m.y]) return;
-      var lit = !!vis[m.x + ',' + m.y], done = S.solved[m.id];
-      var px = m.x * T, py = m.y * T, pad = 6;
-      svg += '<rect x="' + (px + pad) + '" y="' + (py + pad) + '" width="' + (T - pad * 2) + '" height="' + (T - pad * 2) +
-             '" rx="3" fill="' + (done ? 'var(--gold)' : 'var(--map-void)') +
-             '" stroke="' + (done ? 'var(--gold)' : EDGE) + '" stroke-width="2" opacity="' + (lit ? 1 : 0.55) + '"/>' +
-             '<g opacity="' + (lit ? 1 : 0.55) + '" color="' + (done ? 'var(--on-gold)' : EDGE) +
-             '" transform="translate(' + (px + pad + 2) + ',' + (py + pad + 2) + ') scale(' + ((T - pad * 2 - 4) / 100) + ')">' +
-             G.iconMarkup(m.icon) + '</g>';
-    });
-
-    /* the way out */
-    (function () {
-      for (var y = 0; y < C.MAP.length; y++) {
-        var x = C.MAP[y].indexOf('E');
-        if (x < 0) continue;
-        if (!S.seen[x + ',' + y]) return;
-        var lit = !!vis[x + ',' + y];
-        svg += '<path d="M' + (x * T + 10) + ' ' + (y * T + T - 7) + ' L' + (x * T + 10) + ' ' + (y * T + 17) +
-               ' A' + (T / 2 - 10) + ' ' + (T / 2 - 10) + ' 0 0 1 ' + (x * T + T - 10) + ' ' + (y * T + 17) +
-               ' L' + (x * T + T - 10) + ' ' + (y * T + T - 7) + '"' +
-               ' fill="none" stroke="var(--gold)" stroke-width="2.5" opacity="' + (lit ? 1 : 0.55) + '"/>';
-      }
-    })();
-
-    /* the hatch, once he has stood where he can see it */
-    (function () {
-      var h = E.hatchTile();
-      if (!h || !S.seen[h.x + ',' + h.y]) return;
-      var lit = !!vis[h.x + ',' + h.y];
-      svg += '<g opacity="' + (lit ? 1 : 0.55) + '" color="var(--gold)" transform="translate(' + (h.x * T + 5) + ',' + (h.y * T + 5) +
-             ') scale(' + ((T - 10) / 100) + ')">' + G.iconMarkup('hatch') + '</g>';
-    })();
-
-    /* Cameras and guards appear ONLY where Assane can see them, and never in
-       the dark. Their cones never appear here at all — those are P2's. */
-    S.cameras.forEach(function (c) {
-      if (night) return;
+    /* the camera he is looking at, and never one across the building */
+    if (!night) S.cameras.forEach(function (c) {
       if (!vis[c.x + ',' + c.y]) return;
-      var on = !!E.cameraDir(c);
-      svg += '<circle cx="' + (c.x * T + T / 2) + '" cy="' + (c.y * T + T / 2) + '" r="7" fill="' +
-             (on ? 'var(--red)' : 'var(--map-void)') + '" stroke="' + EDGE + '" stroke-width="2"/>';
-    });
-    S.guards.forEach(function (g) {
-      if (night) return;
-      var p = g.path[g.at];
-      if (!vis[p.x + ',' + p.y]) return;
-      svg += figure(p.x, p.y, 'var(--red)', g.facing);
+      var live = !!E.cameraDir(c);
+      s += '<circle cx="' + (c.x * TW + TW / 2) + '" cy="' + (c.y * TH + TH / 2) + '" r="' + (TW * 0.15) +
+           '" fill="' + (live ? 'var(--red)' : 'var(--map-void)') + '" stroke="' + EDGE + '" stroke-width="11"/>';
     });
 
-    svg += figure(S.assane.x, S.assane.y, 'var(--gold)', null);
+    var ax = S.assane.x * TW + TW / 2, ay = S.assane.y * TH + TH * 0.86;
 
     /* THE PRESSURE, drawn on him. A ring fills over the thirty seconds he is
        allowed to stand still; when it closes it goes red and throbs, and the
@@ -227,49 +111,102 @@
     if (S.running && S.phase === 'play') {
       var idle = (Date.now() - S.lastActionAt) / 1000, P = C.PRESSURE;
       if (idle >= 3) {
-        var frac = Math.min(idle / P.grace, 1), r = 19, circ = 2 * Math.PI * r, hot = idle >= P.grace;
-        svg += '<circle class="pring' + (hot ? ' is-hot' : '') + '" cx="' + (S.assane.x * T + T / 2) + '" cy="' + (S.assane.y * T + T / 2) +
-               '" r="' + r + '" fill="none" stroke="' + (hot ? 'var(--red)' : 'var(--gold)') + '" stroke-width="3"' +
-               ' stroke-dasharray="' + (frac * circ).toFixed(1) + ' ' + circ.toFixed(1) + '"' +
-               ' transform="rotate(-90 ' + (S.assane.x * T + T / 2) + ' ' + (S.assane.y * T + T / 2) + ')"/>';
+        var r = TW * 0.3, circ = 2 * Math.PI * r, frac = Math.min(idle / P.grace, 1), hot = idle >= P.grace;
+        s += '<circle class="pring' + (hot ? ' is-hot' : '') + '" cx="' + ax + '" cy="' + ay + '" r="' + r +
+             '" fill="none" stroke="' + (hot ? 'var(--red)' : 'var(--gold)') + '" stroke-width="16" stroke-linecap="round"' +
+             ' stroke-dasharray="' + (frac * circ).toFixed(1) + ' ' + circ.toFixed(1) + '"' +
+             ' transform="rotate(-90 ' + ax + ' ' + ay + ')"/>';
       }
     }
     if (S.grace > 0) {
-      svg += '<circle cx="' + (S.assane.x * T + T / 2) + '" cy="' + (S.assane.y * T + T / 2) +
-             '" r="17" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 4"/>';
+      s += '<circle cx="' + ax + '" cy="' + ay + '" r="' + (TW * 0.36) + '" fill="none" stroke="var(--gold)"' +
+           ' stroke-width="9" stroke-dasharray="20 16"/>';
     }
     if (S.hasManuscript) {
-      svg += '<g color="var(--gold)" transform="translate(' + (S.assane.x * T + T - 16) + ',' + (S.assane.y * T + 2) +
-             ') scale(0.14)">' + G.iconMarkup('manu') + '</g>';
+      s += '<g color="var(--gold)" transform="translate(' + (S.assane.x * TW + TW * 0.6) + ',' + (S.assane.y * TH + 10) +
+           ') scale(1.05)">' + G.iconMarkup('manu') + '</g>';
     }
 
-    /* WHERE HE IS, on him.
-       This used to be printed at x=12 y=26 — the corner of the screen, pinned
-       outside the map group, as far from the man it described as the frame
-       allows. It read as a title for the television rather than as a label for
-       the room, and it was the ONLY link between this screen and Benjamin's.
-       It rides with Assane now and it carries his square as well, because
-       those two words — the room name and the coordinate — are exactly what
-       the plan on Benjamin's phone is labelled and ruled with.
-       Not in the blackout. Not knowing which room he is standing in is the
-       whole point of that sequence; there, the feeds are the anchor. */
-    var label = '';
+    /* WHERE HE IS, on him. Those two words — the room's name and the square —
+       are exactly what Benjamin's plan is labelled and ruled with, so this
+       label is the one place the two screens are visibly the same map.
+       Not in the blackout: not knowing which room he is standing in is the
+       whole point of that sequence, and there the feeds are the anchor. */
     if (!night) {
       var room = E.roomAt(S.assane.x, S.assane.y);
       var here = (room ? room.name : 'UNMARKED') + '  ·  ' + E.coordOf(S.assane.x, S.assane.y);
-      var lw = here.length * 8.4 + 22;
-      var lx = Math.max(lw / 2 + 2, Math.min(cols * T - lw / 2 - 2, S.assane.x * T + T / 2));
-      var ly = S.assane.y * T - 15;
-      if (ly < 16) ly = S.assane.y * T + T + 25;
-      label =
-        '<rect x="' + (lx - lw / 2) + '" y="' + (ly - 15) + '" width="' + lw + '" height="21" rx="4"' +
-        ' fill="var(--map-void)" fill-opacity=".92" stroke="' + EDGE + '" stroke-opacity=".55" stroke-width="1.5"/>' +
-        '<text x="' + lx + '" y="' + ly + '" text-anchor="middle" font-size="12" letter-spacing="2.2"' +
-        ' font-weight="500" font-family="var(--font)" fill="var(--map-edge)">' + here + '</text>';
+      var lw = here.length * 60 + 150;
+      var lx = Math.max(lw / 2, Math.min(cols * TW - lw / 2, S.assane.x * TW + TW / 2));
+      var ly = S.assane.y * TH - 45;
+      if (ly < TH * 0.7) ly = S.assane.y * TH + TH + 155;
+      s += '<rect x="' + (lx - lw / 2) + '" y="' + (ly - 105) + '" width="' + lw + '" height="146" rx="28"' +
+           ' fill="var(--map-void)" fill-opacity=".92" stroke="' + EDGE + '" stroke-opacity=".55" stroke-width="9"/>' +
+           '<text x="' + lx + '" y="' + ly + '" text-anchor="middle" font-size="84" letter-spacing="14"' +
+           ' font-weight="500" font-family="var(--font)" fill="var(--map-edge)">' + here + '</text>';
+    }
+    return s;
+  }
+
+  /* THE CAMERA. How many tiles tall the window is; the width follows the
+     television's shape. Small enough to read faces at couch distance, large
+     enough that a corridor's far end is on screen when he steps into it. */
+  var CAM_ROWS = 8;
+  function frame() {
+    var cam = $('#room-cam'), world = $('#room-world');
+    var bw = cam.clientWidth, bh = cam.clientHeight;
+    if (!bw || !bh) return;
+    var cols = C.MAP[0].length, rows = C.MAP.length;
+    /* the tile renderer pads the board with one cell all round, so the world
+       is two cells bigger than the map in each direction and Assane sits one
+       cell in from where his coordinate says */
+    var th = bh / CAM_ROWS, tw = th * (TW / TH);
+    var ww = (cols + 2) * tw, wh = (rows + 2) * th;
+    /* A CUT, NOT A PAN, on the first placement and whenever the board changes
+       size: the world starts at the origin, and letting it slide from there is
+       a swoop across the building every time the room opens or a contract is
+       loaded. Only a step should slide. */
+    var jump = world.style.transform === '' || world.style.width !== ww + 'px';
+    world.style.width = ww + 'px';
+    world.style.height = wh + 'px';
+    if (jump) world.style.transition = 'none';
+    function place(centre, world_, box) {
+      if (world_ <= box) return (box - world_) / 2;        /* it all fits: centre it */
+      return Math.max(box - world_, Math.min(0, box / 2 - centre));
+    }
+    world.style.transform =
+      'translate(' + place((E.S.assane.x + 1.5) * tw, ww, bw).toFixed(1) + 'px,' +
+                     place((E.S.assane.y + 1.5) * th, wh, bh).toFixed(1) + 'px)';
+    if (jump) { void world.offsetWidth; world.style.transition = ''; }
+  }
+  window.addEventListener('resize', function () { if (E.S) frame(); });
+
+  function renderRoom() {
+    var S = E.S, night = !!S.blackout;
+    var floor = $('#room-floor'), hud = $('#room-hud');
+
+    /* the monitors are dead. The frame stays — clock, objective, suspicion —
+       and the room itself is gone until he is out. */
+    $('#room-dead').classList.toggle('is-on', !!S.dark);
+    view('room').classList.toggle('is-night', night);
+    /* nothing is painted before the wall sheet lands, or the floor draws once
+       from the bare rules and visibly corrects itself a moment later */
+    if (S.dark || !tilesIn) {
+      floor.innerHTML = ''; hud.innerHTML = ''; floorSig = null;
+      roomToast();
+      return;
     }
 
-    $('#room-svg').innerHTML =
-      '<g transform="translate(' + M.ox + ',' + M.oy + ')">' + svg + label + '</g>';
+    var sig = signature();
+    if (sig !== floorSig) {
+      floorSig = sig;
+      L.tiles.render(floor, { view: 'assane', layers: { vision: false, ui: false, grid: false } });
+    }
+    /* one viewBox for both, read off the floor rather than recomputed, so the
+       HUD cannot drift out of register with the tiles if a map changes size */
+    var svg = floor.querySelector('svg');
+    if (svg) hud.setAttribute('viewBox', svg.getAttribute('viewBox'));
+    hud.innerHTML = hudMarkup();
+    frame();
 
     roomToast();
   }
@@ -287,9 +224,12 @@
       bg.appendChild(U.artSlot(C.venueArt));
       U.clear(ol);
       C.BEATS.forEach(function (b) { ol.appendChild(U.el('li', { text: b })); });
-      $('#plan-job').textContent = C.contract;
       $('#plan-target').textContent = C.target;
     }
+    /* THE ROSTER NUMBER, on the briefing where both players can see it before
+       anything starts. The guards stand somewhere else every run; this is the
+       number that says which somewhere, and ?seed=<n> plays that one again. */
+    $('#plan-job').textContent = C.contract + '  ·  ROSTER ' + S.seed;
     $('#lamp-p1').classList.toggle('is-ready', S.ready.p1);
     $('#lamp-p2').classList.toggle('is-ready', S.ready.p2);
   }
@@ -411,9 +351,12 @@
        fastest when the pressure clock is charging or he has been stopped. A
        near miss flares it for a beat; a level change or a spotting flashes it
        full. The heartbeat follows the same number. */
-    var still = S.running && S.phase === 'play' && (Date.now() - S.lastActionAt) / 1000 >= C.PRESSURE.grace;
+    /* SUSPICION ONLY. The pressure clock used to add a level here, which put
+       Assane's private problem on the screen the whole room is watching and
+       left the two cues indistinguishable. It has its own vignette on his
+       phone now; this one answers to the building. */
     var live = S.phase === 'play' || S.phase === 'module';
-    var level = S.phase === 'tchatche' ? 3 : live ? Math.min(3, S.alert + (still ? 1 : 0)) : 0;
+    var level = S.phase === 'tchatche' ? 3 : live ? Math.min(3, S.alert) : 0;
     var scr = $('#tv-screen');
     scr.className = 'tv__screen tension-' + level +
       (S.flash && Date.now() - S.flash < 900 ? ' is-flash' : '') +

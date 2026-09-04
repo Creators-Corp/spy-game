@@ -59,14 +59,65 @@
     return u;
   }
 
-  function reset() {
+  /* ---------------------------------------------------------------- roster */
+  /* THE GUARDS ARE SOMEWHERE ELSE EVERY RUN.
+     What varies is where on his round each man starts, which way he is
+     walking, and which beat the cameras are on. NOT the rounds themselves:
+     those were measured — the beat that stops two squares short of each wall
+     so the corner is not a trap, the ring that never reverses so "he is gone
+     for eleven" is a sentence Benjamin can say and be right about — and a
+     generated round throws all of that away along with every scan behind it.
+     Phase is the part a player actually reads: the same building, a different
+     set of crossings to time.
+
+     A RING GUARD NEVER GETS FLIPPED. The point of a circuit is that it does
+     not come back at you, the dossier says so in words, and reversing one
+     would make a page of the dossier a lie.
+
+     SEEDED, so a run can be played twice. The number is on the plan screen and
+     ?seed=1234 forces it for the whole session — a demo you have rehearsed is
+     worth being able to repeat. Seed 0 is the authored roster. */
+  /* a seed in the URL pins every reset; without one each run draws a new
+     four-digit roster */
+  var PINNED = (function () {
+    var m = /[?&]seed=(\d+)/.exec(window.location.search);
+    return m ? Number(m[1]) : null;
+  })();
+  function nextSeed() {
+    if (PINNED !== null) return PINNED;
+    return 1000 + Math.floor(Math.random() * 9000);
+  }
+
+  function reset(seed) {
+    if (seed === undefined || seed === null) seed = nextSeed();
+    /* the roster is who is on tonight, dealt before the state is built so the
+       guards below pick up the badges it settled on */
+    if (C.rollRoster) C.rollRoster(seed);
     S = {
+      seed: seed,
       phase: 'plan',
       ready: { p1: false, p2: false },
       assane: entryTile(),
+      facing: 'S',             /* which way Assane's sprite faces: the last direction he walked */
+      /* WHERE EVERY GUARD STARTS IS AUTHORED, AND STAYS AUTHORED.
+         An earlier version shuffled these per run. It should not have: the
+         beats were measured — the one that stops two squares short of each
+         wall, the ring that never reverses — and every dead-state scan, every
+         route and every walkthrough is written against the roster as written.
+         Move the men and all of that is void, on both contracts. What varies
+         between runs is WHO these badges belong to, not where they stand. */
       guards: C.GUARDS.map(function (g) {
-        return { id: g.id, badge: g.badge, depth: g.depth, path: guardPath(g),
-                 at: g.at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0 };
+        var path = guardPath(g), at = g.at;
+        /* a beat shortened in content.js without its start being moved back
+           leaves `at` past the end of the path, and every read of path[at]
+           after that is undefined — the game dies on the first sense line.
+           Clamp it: a data mistake should cost a wrong starting square, not
+           the contract. */
+        if (!(at >= 0 && at < path.length)) at = 0;
+        var man = { id: g.id, badge: g.badge, depth: g.depth, path: path,
+                    at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0 };
+        man.facing = faceOf(man);
+        return man;
       }),
       cameras: C.CAMERAS.map(function (c) { return { id: c.id, x: c.x, y: c.y, depth: c.depth, cycle: c.cycle, label: c.label }; }),
       doors: C.DOORS.map(function (d) { return { x: d.x, y: d.y, locked: d.locked, mark: d.mark, to: d.to }; }),
@@ -299,22 +350,66 @@
 
   /* what Assane can see: flood fill through open tiles, plus the walls that
      bound them, so the TV shows the shape of the room he is standing in */
+  /* WHAT ASSANE CAN SEE — TRUE LINE OF SIGHT.
+     Recursive shadowcasting, eight octants. A wall casts a shadow and
+     everything behind it stays dark, so stepping into a corridor shows the
+     whole length of it and nothing at all round either corner, and a doorway
+     opens a widening wedge of the room beyond as he walks up to it.
+
+     What this replaced: a three-square flood that spread along walkable
+     squares. It saw round corners — the flood simply turned — and it could
+     not see down a hall, because four squares away was four squares away
+     whether there was a wall in between or not. Both of those are exactly
+     backwards for a stealth floor.
+
+     A LASER DOES NOT BLOCK SIGHT. isWall() calls a live beam a wall because
+     you cannot walk through one; you can see straight across it, so this uses
+     its own test. A locked door does block: it is a shut door.
+
+     Radius is generous rather than infinite so one call stays bounded; on
+     these maps it reaches any wall. In the blackout it collapses to the old
+     three squares, because not being able to see is the whole sequence. */
+  function blocksSight(x, y) {
+    if (charAt(x, y) === '#') return true;
+    var d = doorAt(x, y);
+    return !!(d && d.locked);
+  }
+  /* the eight octants, as the four multipliers each needs */
+  var OCT_XX = [1, 0, 0, -1, -1, 0, 0, 1], OCT_XY = [0, 1, -1, 0, 0, -1, 1, 0],
+      OCT_YX = [0, 1, 1, 0, 0, -1, -1, 0], OCT_YY = [1, 0, 0, 1, -1, 0, 0, -1];
+
   function visibleSet(range) {
-    range = range || 3;
-    var out = {}, q = [{ x: S.assane.x, y: S.assane.y, d: 0 }], seenq = {};
-    seenq[S.assane.x + ',' + S.assane.y] = true;
-    while (q.length) {
-      var n = q.shift();
-      out[n.x + ',' + n.y] = true;
-      if (n.d >= range) continue;
-      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (v) {
-        var nx = n.x + v[0], ny = n.y + v[1], k = nx + ',' + ny;
-        if (seenq[k]) return;
-        seenq[k] = true;
-        if (isWall(nx, ny)) { out[k] = true; return; }   /* see the wall, stop there */
-        q.push({ x: nx, y: ny, d: n.d + 1 });
-      });
+    range = range || (S && S.blackout ? 3 : 26);
+    var out = {}, ox = S.assane.x, oy = S.assane.y, r2 = range * range;
+    out[ox + ',' + oy] = true;
+
+    function cast(row, start, end, oct) {
+      if (start < end) return;
+      var xx = OCT_XX[oct], xy = OCT_XY[oct], yx = OCT_YX[oct], yy = OCT_YY[oct];
+      for (var j = row; j <= range; j++) {
+        var dx = -j - 1, dy = -j, blocked = false, newStart = 0;
+        while (dx <= 0) {
+          dx++;
+          var lSlope = (dx - 0.5) / (dy + 0.5), rSlope = (dx + 0.5) / (dy - 0.5);
+          if (start < rSlope) continue;
+          if (end > lSlope) break;
+          var cx = ox + dx * xx + dy * xy, cy = oy + dx * yx + dy * yy;
+          /* the wall that stops you is itself something you can see */
+          if (dx * dx + dy * dy < r2) out[cx + ',' + cy] = true;
+          if (blocked) {
+            if (blocksSight(cx, cy)) { newStart = rSlope; continue; }
+            blocked = false;
+            start = newStart;
+          } else if (blocksSight(cx, cy) && j < range) {
+            blocked = true;
+            cast(j + 1, start, lSlope, oct);
+            newStart = rSlope;
+          }
+        }
+        if (blocked) break;
+      }
     }
+    for (var o = 0; o < 8; o++) cast(1, 1.0, 0.0, o);
     return out;
   }
   function markSeen() {
@@ -460,6 +555,7 @@
         return { ok: false, blocked: true };
       }
       crossed.push(n1);
+      S.facing = dy < 0 ? 'N' : dy > 0 ? 'S' : dx > 0 ? 'E' : 'W';
       if (opts.run) {
         var n2 = { x: n1.x + dx, y: n1.y + dy };
         if (!isWall(n2.x, n2.y)) crossed.push(n2);

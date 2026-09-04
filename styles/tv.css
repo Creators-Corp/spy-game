@@ -105,7 +105,25 @@
 
 /* --- THE ROOM --- */
 .tvview--room{align-items:center;justify-content:center;background:var(--map-void);}
-#room-svg{width:600px;height:400px;display:block;}
+/* THE ILLUSTRATED FLOOR AND ITS HUD, one on top of the other.
+   Both carry the same viewBox and both meet inside the same box, so they
+   letterbox identically and a coordinate lands on the same pixel in each. */
+/* THE CAMERA. A window on the floor, with the whole board sitting inside it
+   and moved under it. The board is drawn once at its full size and panned by a
+   transform rather than re-cut with a new viewBox each step, because a
+   transform is the one thing that can be transitioned — so the room slides to
+   follow Assane instead of jumping to him. */
+.room__cam{position:absolute;inset:0;overflow:hidden;}
+.room__world{
+  position:absolute;left:0;top:0;
+  transition:transform .34s cubic-bezier(.22,.61,.36,1);
+  will-change:transform;
+}
+.room__floor, .room__hud{position:absolute;inset:0;}
+.room__floor svg, .room__hud{width:100%;height:100%;display:block;}
+.room__hud{pointer-events:none;}
+/* the blackout: the room is still there, he just cannot read it */
+.tvview--room.is-night .room__cam{filter:brightness(.34) saturate(.25) contrast(1.1);}
 .room__vignette{position:absolute;inset:0;pointer-events:none;}
 .room__toast{
   position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
@@ -287,7 +305,13 @@
 /* ===================== TENSION =====================
    One red vignette over the whole television. Three levels, each its own
    weight and tempo, so the room can tell ATTENTIVE from ALERT from across
-   the sofa without reading the bar. Red is threat; this is threat. */
+   the sofa without reading the bar. Red is threat; this is threat.
+
+   THIS IS THE BUILDING'S SUSPICION AND NOTHING ELSE. Standing still used to
+   push it a level too, which put Assane's private problem on the screen
+   everybody is watching and made the two cues impossible to tell apart. The
+   pressure clock has its own vignette now, on his phone, where the person it
+   is nagging is already looking. */
 .tv__vignette{
   position:absolute;inset:0;pointer-events:none;z-index:8;opacity:0;
   --lo:0;--hi:0;

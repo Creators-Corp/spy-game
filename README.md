@@ -235,6 +235,120 @@ class of problem, and it found every one of the five above.
 
 ---
 
+## THE ROOM, SINCE THE ART LANDED
+
+The television draws the floor in the artist's tile set now — parquet, panelled
+walls, real doors, drawn characters — through the same renderer the bench uses
+(`js/tiles.js`, documented in `TILES.md`). It asks for Assane's view, and the
+fog of war, "guards only where he can see them" and "no sightlines, ever" are
+enforced **inside** that renderer rather than trusted to the caller, so design
+law #1 survives the change of medium.
+
+**Benjamin's plan did not change, and it is still the logical map.** One grid in
+`content.js`, read by both screens with the same coordinate function, so `H17`
+is one square on the television and on the dossier. Nothing is projected between
+them.
+
+Three things followed from putting real art on that screen:
+
+- **The camera sits close.** The window is eight tiles tall and as wide as the
+  television's shape allows, and it pans to follow him — the board is drawn once
+  and moved under a window by a transform, because a transform is the one thing
+  that can be transitioned. A step slides; opening the room or loading a
+  contract cuts.
+- **Vision is true line of sight**, by recursive shadowcasting. Step into a
+  corridor and you see the whole length of it; you see nothing at all round
+  either corner, and a doorway opens a widening wedge as he walks up to it. What
+  it replaced was a three-square flood along walkable squares, which saw round
+  corners because the flood simply turned, and could not see down a hall because
+  four squares away was four squares away whether there was a wall in the way or
+  not. Both are backwards for a stealth floor. A live laser does not block sight
+  — you can see across a beam even though you cannot walk through one. In the
+  blackout it collapses back to three squares, because not being able to see is
+  the whole sequence.
+- **The two red vignettes were pulled apart.** The building's suspicion pulses
+  on the television, where the room is watching; the pressure clock pulses on
+  Assane's phone, where the person standing still is already looking. They used
+  to be the same overlay, with stillness adding a level to alert, and neither
+  cue could be told from the other.
+
+**One screen, two private phones.** The chrome carries a `P1 ASSANE` /
+`P2 BENJAMIN` switch and a `BOTH PHONES` button. Blocking is real and not a
+label: the blocked screen is blurred past reading, sealed against the pointer,
+and Assane's arrow keys go dead while his phone is the blocked one. `BOTH PHONES`
+is the default, because that is how the prototype has always been walked through.
+
+---
+
+## THE ROSTER CHANGES EVERY RUN — THE BUILDING DOES NOT
+
+**Where every guard stands is authored, and stays authored.** The beats were
+measured — the one that stops two squares short of each wall so the corner is
+not a trap, the ring that never reverses so "he is gone for eleven" is a
+sentence Benjamin can say and be right about — and every dead-state scan, every
+route and the walkthrough are written against the roster as written. An earlier
+build shuffled the starting positions per run. It should not have: it voided
+all of that on both contracts at once, and it made a rehearsed demo impossible,
+because RESTART dealt a different building every time.
+
+**What varies is who is on shift.** Same badges, same posts, same beats — a
+different name, a different car and different children behind each one. So the
+floor is identical every run and the *interview* is not, which is the half of
+this game that is about reading a file rather than walking a corridor. LE
+BUREAU asks for the eldest child's birth year of badge 1184; who that badge
+belongs to, and therefore the answer, is dealt fresh each time. The desk slot
+is the one with a requirement — the file has to list at least two children born
+in different years, or the question stops being a question — and the deal is
+redone until it does.
+
+Seed 0 is the roster as written, the one the content comments describe. The
+number is on the plan screen, and the **ROSTER** control beside RESTART pins
+one: type it, press PIN, and every restart and every change of contract deals
+the same people. NEW goes back to a fresh shift each time. `?seed=1234` in the
+URL arrives already pinned, so a link still works.
+
+**Every roster is winnable, and cleanly.** `tools/route.js` solves a contract by
+modelling the world as what it is — periodic in the turn count, 48 on both
+contracts — and then *replaying its own answer through the real engine*, so the
+grade it reports is the one the rank card gives. Rosters are solved in batches
+after every change to a patrol; none has failed, and every one has a route that
+finishes **S**.
+
+```bash
+fetch('tools/route.js').then(r=>r.text()).then(eval)
+```
+
+then `DC.route.script(DC.route.solve({ job: 1, mode: 'quiet' }))` for a route,
+or `DC.route.audit(20, 1)` to re-run the check after touching a patrol.
+
+**`WALKTHROUGH.md`** is a rehearsed S on contract four, verified end to end and
+good for every run: thirty-four steps, the three module answers, and the one
+moment neither player can get past alone.
+
+### A guard is three rows tall and contract four's galleries were two
+
+`cone()` gives every man the eight squares around him, so a patrol standing
+anywhere in a two-row corridor covers the whole height of it and cannot be
+walked past. He is a moving plug, and the only answer to a plug is to wait.
+Both of contract four's galleries had one, on the rows carrying the doors — so
+every north-south crossing had a plug sliding across it, the two legs that
+cross the building averaged 81 turns against a walking distance of 46, and a
+solved route opened with twenty-one taps of HOLD STILL.
+
+Two changes, and the same three men: the upper guard walks row 7 instead of the
+door row, and the ring guard walks the east stair instead of lapping the whole
+floor — a ring is a lovely shape, but here it traversed *both* long rows and
+plugged the gallery twice a lap. 81 turns became 68. Nobody was removed and
+nothing was made shallower; `content.js` says how to put the ring back.
+
+About forty turns of contract four are still spent letting somebody go past.
+That is the floor of two galleries, two aisles and three patrols, and no
+reshuffling of beats gets under it — posting a guard on a short beat instead
+makes it worse, because a patrol that never walks away seals the corridor
+outright.
+
+---
+
 ## ART
 
 Every image is a **named placeholder slot**. Until a file exists it draws itself as a labelled dashed box, so the layout is already final and the art is genuinely drop-in — no code changes.

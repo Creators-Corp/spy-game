@@ -43,9 +43,19 @@
               <div class="plan__bg" id="plan-bg"></div>
             </div>
 
-            <!-- The room -->
+            <!-- The room, in the tile set. Two layers on purpose: the floor is
+                 several hundred tiles and is rebuilt only when something on it
+                 moves, while the HUD over it carries what changes on the clock
+                 — the pressure ring, the beam he is standing beside, the room
+                 he is in. Both share one viewBox, so they land on the same
+                 grid, and it is the grid Benjamin's plan is ruled with. -->
             <div class="tvview tvview--room" id="tv-view-room">
-              <svg id="room-svg" viewBox="0 0 600 400" role="img" aria-label="Top-down view of what Assane can see"></svg>
+              <div class="room__cam" id="room-cam">
+                <div class="room__world" id="room-world">
+                  <div class="room__floor" id="room-floor" role="img" aria-label="Top-down view of what Assane can see"></div>
+                  <svg class="room__hud" id="room-hud" aria-hidden="true"></svg>
+                </div>
+              </div>
               <div class="room__vignette"></div>
               <!-- the monitors are dead: nothing on this screen until he is out -->
               <div class="room__dead" id="room-dead">
@@ -128,6 +138,11 @@
       <div class="phone__body">
         <div class="phone__notch"></div>
         <div class="phone__screen" id="p1-screen"></div>
+        <div class="phone__vig" aria-hidden="true"></div>
+        <div class="phone__block" aria-hidden="true">
+          <b>BLOCKED</b>
+          <span>Benjamin has the stage. Hand the phone over.</span>
+        </div>
       </div>
     </section>
 
@@ -137,6 +152,10 @@
       <div class="phone__body">
         <div class="phone__notch"></div>
         <div class="phone__screen" id="p2-screen"></div>
+        <div class="phone__block" aria-hidden="true">
+          <b>BLOCKED</b>
+          <span>Assane has the stage. Hand the phone over.</span>
+        </div>
       </div>
     </section>
 
@@ -145,7 +164,18 @@
       <span class="chip chip--ghost">One TV · Two phones · One heist</span>
       <button class="chip chip--btn" id="btn-mute" type="button">SOUND: ON</button>
       <button class="chip chip--btn" id="btn-restart" type="button">RESTART</button>
+      <span class="chip chip--roster" id="roster">
+        <b>ROSTER</b>
+        <input id="roster-num" type="text" inputmode="numeric" maxlength="4" size="4" aria-label="Roster number">
+        <button id="roster-pin" type="button">PIN</button>
+        <button id="roster-new" type="button">NEW</button>
+      </span>
       <button class="chip chip--btn" id="btn-art" type="button">SLOTS: ON</button>
+      <span class="chip chip--swap" id="phone-swap" role="group" aria-label="Which phone is live">
+        <button type="button" data-live="p1">P1 ASSANE</button>
+        <button type="button" data-live="p2">P2 BENJAMIN</button>
+      </span>
+      <button class="chip chip--btn" id="btn-both" type="button">BOTH PHONES</button>
     </div>
 
   </div>
@@ -156,6 +186,7 @@
 <script src="js/figures.js"></script>
 <script src="js/content.js"></script>
 <script src="js/engine.js"></script>
+<script src="js/tiles.js"></script>
 <script src="js/tv.js"></script>
 <script src="js/p1.js"></script>
 <script src="js/p2.js"></script>

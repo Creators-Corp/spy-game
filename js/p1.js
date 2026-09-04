@@ -290,8 +290,29 @@
   function viewPorte() {
     var S = E.S, K = C.PORTE;
 
-    var readout = el('div', { class: 'readout',
-      text: S.porteEntry ? S.porteEntry.split('').join(' ') : '· · · ·' });
+    /* THE CODE IS ON THIS SCREEN, AND IT IS UNREADABLE FROM HERE.
+       It used to be four dots: Assane named the one mark under the zero and
+       Benjamin read four numbers straight off his own page, which made the
+       module one sentence long and gave Assane nothing to do but type.
+
+       The four symbols of the code are engraved on the keypad instead. Assane
+       can see them and cannot turn them into numbers — the ring that does that
+       is in the dossier. So he describes one, Benjamin answers with a digit,
+       he taps it, and they do that four times. The digit he taps lands under
+       the symbol it answered, so the pair can see how far along they are
+       without either of them counting out loud. */
+    var codeSyms = E.porteCodeSymbols();
+    var readout = el('div', { class: 'symrow symrow--code' });
+    codeSyms.forEach(function (sym, i) {
+      var typedD = S.porteEntry.charAt(i);
+      var cell = el('div', { class: 'symrow__cell'
+        + (typedD ? ' is-read' : '')
+        + (i === S.porteEntry.length ? ' is-next' : '') });
+      var ic = G.icon(sym); ic.style.color = 'var(--ink)';
+      cell.appendChild(ic);
+      cell.appendChild(el('b', { text: typedD || '·' }));
+      readout.appendChild(cell);
+    });
     if (S.porteFails > 0 && !S.porteEntry) readout.classList.add('is-bad');
 
     var pad = el('div', { class: 'keypad' });
@@ -332,8 +353,8 @@
       head('LA PORTE'),
       body([
         U.howto([
-          'Describe the mark under the 0 to Benjamin.',
-          'He will read you four digits. Tap them.'
+          'Describe the mark under the 0 to Benjamin. It tells him where the ring starts.',
+          'Then describe the four symbols on the keypad, one at a time. He answers each with a number — tap it.'
         ]),
         plate,
         readout,
@@ -575,7 +596,23 @@
   function pressureStrip() {
     return el('div', { class: 'pressure', id: 'p1-pressure' }, [el('i'), el('span')]);
   }
+  /* THE PRESSURE VIGNETTE. Same three steps the strip reads out, as light on
+     the glass, so the nag lands even when he is not reading the words. It is
+     here and not on the television because standing still is his problem
+     alone and the shared screen is already carrying the building's suspicion. */
+  function paintStill() {
+    var sec = $('#p1');
+    if (!sec) return;
+    var S = E.S, lv = 0;
+    if (S.running && S.phase === 'play' && !S.blackout) {
+      var idle = (Date.now() - S.lastActionAt) / 1000, g = C.PRESSURE.grace;
+      lv = idle >= g ? 3 : idle >= g * 0.6 ? 2 : idle >= 3 ? 1 : 0;
+    }
+    [1, 2, 3].forEach(function (n) { sec.classList.toggle('is-still-' + n, lv === n); });
+  }
+
   function pressure(p) {
+    paintStill();
     var box = $('#p1-pressure');
     if (!box) return;
     if (!p || p.idle < 3) { box.className = 'pressure'; return; }
@@ -928,6 +965,7 @@
     else if (S.phase === 'tchatche') v = viewTchatche();
     else v = viewEnd();
     host.appendChild(v);
+    paintStill();
   }
 
   L.p1 = { render: render, pressure: pressure, resetTyped: function () {

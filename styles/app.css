@@ -181,6 +181,36 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 .chip--ghost{background:transparent;color:var(--zinc-lt);border-color:var(--zinc);}
 .chip--btn{background:var(--paper);color:var(--ink);}
 .chip--btn:hover{background:var(--gold);}
+.chip--btn.is-on{background:var(--gold);}
+/* WHICH ROSTER. The number is the run: pin one and every restart plays the
+   same guards, which is what a rehearsed walkthrough needs. It lives next to
+   RESTART because that is the button that used to throw it away. */
+.chip--roster{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 12px;
+  background:transparent;border-color:var(--zinc);color:var(--zinc-lt);}
+.chip--roster b{font-size:11px;letter-spacing:.16em;}
+.chip--roster.is-pinned{border-color:var(--gold);color:var(--gold);}
+.chip--roster input{
+  width:52px;font:inherit;font-family:var(--mono);font-size:12px;letter-spacing:.08em;
+  text-align:center;color:var(--on-color);background:var(--night-2);
+  border:var(--stroke) solid var(--zinc);border-radius:var(--r);padding:4px 2px;
+}
+.chip--roster.is-pinned input{color:var(--gold);border-color:var(--gold);}
+.chip--roster button{
+  font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 9px;border-radius:999px;color:var(--ink);background:var(--paper);
+  border:var(--stroke) solid var(--ink);
+}
+.chip--roster button:hover{background:var(--gold);}
+
+/* the two-position switch: which player is holding the stage */
+.chip--swap{display:inline-flex;padding:0;overflow:hidden;background:transparent;border-color:var(--zinc);}
+.chip--swap button{
+  font:inherit;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 12px;background:transparent;color:var(--zinc-lt);border:0;
+}
+.chip--swap button + button{border-left:var(--stroke) solid var(--zinc);}
+.chip--swap button:hover{color:var(--on-color);}
+.chip--swap button.is-on{background:var(--gold);color:var(--on-gold);}
 
 /* ---------- shared bits ---------- */
 .hair{height:var(--stroke);background:var(--ink);border:0;margin:0;}

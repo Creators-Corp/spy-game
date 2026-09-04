@@ -24,6 +24,49 @@
   display:flex;flex-direction:column;
 }
 
+/* ---- THE PRESSURE, ON THE PHONE THAT CAUSES IT ----
+   Standing still is Assane's problem and nobody else's, so the cue for it
+   belongs on the device the person standing still is holding. Three steps,
+   winding up: a slow breath once the clock starts, quicker past halfway, and
+   a hard fast pulse with a red rim the moment it is actually costing him
+   suspicion. Its own keyframes rather than the television's, so this file
+   does not depend on the load order of another one. */
+.phone__vig{
+  position:absolute;inset:12px;border-radius:24px;z-index:4;pointer-events:none;
+  opacity:0;--lo:0;--hi:0;
+  background:radial-gradient(ellipse at center, rgba(193,55,46,0) 42%, rgba(193,55,46,.8) 100%);
+}
+.phone.is-still-1 .phone__vig{--lo:.12;--hi:.42;animation:pvig 2s ease-in-out infinite;}
+.phone.is-still-2 .phone__vig{--lo:.28;--hi:.72;animation:pvig 1s ease-in-out infinite;}
+.phone.is-still-3 .phone__vig{--lo:.5;--hi:1;animation:pvig .4s ease-in-out infinite;
+  box-shadow:inset 0 0 0 3px var(--red);}
+@keyframes pvig{0%,100%{opacity:var(--lo)}50%{opacity:var(--hi)}}
+
+/* ---- ONE PHONE AT A TIME ----
+   The prototype fakes three devices on one display, so both phones are
+   legible at once and the asymmetry the whole design rests on is on show to
+   the room. Blocking a phone has to be real, not a label: the screen is
+   blurred past reading AND sealed against the pointer, and main.js drops
+   Assane's keys while his phone is the blocked one. Otherwise a demo can
+   cheat by reading the half it is not holding. */
+.phone__block{
+  position:absolute;inset:12px;border-radius:24px;z-index:6;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:0 28px;text-align:center;
+  background:rgba(12,16,22,.72);
+  backdrop-filter:blur(2px);
+}
+.phone__block b{
+  font-size:13px;letter-spacing:.4em;text-transform:uppercase;color:var(--on-color);
+  border:var(--stroke) solid var(--zinc);border-radius:999px;padding:8px 18px;
+}
+.phone__block span{font-size:12px;line-height:1.6;color:var(--zinc-lt);max-width:220px;}
+.phone.is-blocked .phone__block{display:flex;}
+.phone.is-blocked .phone__screen{filter:blur(11px) saturate(.3) brightness(.75);pointer-events:none;user-select:none;}
+.phone.is-blocked .phone__vig{display:none;}
+.phone.is-blocked .phone__label{color:var(--zinc);}
+.phone.is-blocked .phone__label b{color:var(--zinc-lt);}
+
 /* ---- shared phone furniture ---- */
 .pscreen{display:flex;flex-direction:column;height:100%;}
 .phead{
@@ -150,6 +193,29 @@
   padding:10px;margin-top:12px;min-height:50px;
 }
 .readout.is-bad{background:var(--red);color:var(--on-color);}
+
+/* THE DOOR CODE ON ASSANE'S KEYPAD: four engraved symbols, and under each the
+   digit Benjamin gave back for it. The one being asked about is ringed, so
+   neither player has to count out loud to know where they are. */
+.symrow--code{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0 0;
+}
+.symrow--code .symrow__cell{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:9px 0 6px;border-radius:var(--r);
+  background:var(--stone);border:var(--stroke) solid var(--ink);
+}
+.symrow--code .symrow__cell svg{width:30px;height:30px;}
+.symrow--code .symrow__cell b{
+  /* the base cell pins its digit to the bottom-right corner, which is right
+     for a symbol that IS its digit and wrong for one waiting to be told */
+  position:static;
+  font-family:var(--mono);font-size:15px;letter-spacing:.06em;color:var(--ink-soft);
+}
+.symrow--code .symrow__cell.is-read{background:var(--gold);}
+.symrow--code .symrow__cell.is-read b{color:var(--on-gold);}
+.symrow--code .symrow__cell.is-next{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);}
+.symrow--code.is-bad .symrow__cell{border-color:var(--red);}
 .doorgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px;}
 .doorgrid button{
   border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);

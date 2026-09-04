@@ -1,0 +1,137 @@
+# CONTRAT No.4 — LA VEILLE DE VENTE · a rehearsed S
+
+**No seed, no setup.** Open `index.html`, pick **CONTRAT No.4** on Benjamin's
+phone, both players tap READY. The guards start in the same place every run, so
+this route is the route — it does not go stale and it does not need a roster
+number.
+
+Verified by typing the table below back in as data and playing it through the
+engine: ends on **V6**, **S · FANTÔME**, suspicion **8**, spotted **0**, 113
+turns, with one camera loop still in hand.
+
+**What does change between runs is who is on shift.** Same badges, same posts,
+same beats — different people behind them, with different children and
+different cars. That moves one answer below, and only one; it is marked.
+
+---
+
+## Before you start
+
+Assane is in the stairwell at **H17**. Everything is P1's d-pad unless it says
+P2. `WAIT` is the HOLD STILL button — every press restarts the pressure clock,
+so waiting costs nothing as long as you keep tapping.
+
+---
+
+## The three answers
+
+| module | square | P2 reads | P1 enters |
+|---|---|---|---|
+| **LA PORTE** | G14 | the ring of ten symbols, in order — but not where it starts, and not the code | **7 · 1 · 8 · 0** |
+| **LE BUREAU** | M3 | badge **1184** — open that file and take the **eldest** child's birth year. The file lists them in the wrong order on purpose | **changes with the roster** — then the **trident** door |
+| **LE COFFRE** | H3 | serial `AV-2231`, ring **denim** — three rows share that serial | **trident · drop · hook · ladder** |
+
+**LA PORTE takes five sentences, not one.** Assane describes the mark
+engraved under the 0 on the door — a four-pointed star — and Benjamin taps it
+on his ring, which numbers itself from there. Then Assane reads him the four
+symbols on the keypad one at a time, ladder · spiral · backz · star, and
+Benjamin answers each with a digit: 7, 1, 8, 0. Neither of them has both
+halves. Benjamin's file does not contain the code and Assane cannot turn a
+symbol into a number.
+
+The bureau is the one that moves. Tonight it might be KOFFI with Awa (2012) and
+Noé (2005), and the answer is `2005`; on another shift it is somebody else's
+desk and somebody else's children. That is the point of it — P2 has to read the
+file rather than remember a number, which is the difference between a puzzle
+and a password.
+
+The safe's manual has another `AV-2231` row in a different ring colour.
+Reading the colour is the whole puzzle; the wrong row costs 15 suspicion, and
+this route has 8 to spare before the S is gone.
+
+---
+
+## The route
+
+| # | do this | ends on |
+|---|---|---|
+| 1 | DOWN | H18 |
+| 2 | WAIT ×3 | H18 |
+| 3 | LEFT | G18 |
+| 4 | UP ×4 | G14 |
+| 5 | **LA PORTE** — see below; enter `7 1 8 0` | G14 |
+| 6 | UP ×3 | G11 |
+| 7 | WAIT ×14 — *the gallery patrol clears the west aisle* | G11 |
+| 8 | LEFT ×4 | C11 |
+| 9 | UP ×5 | C6 |
+| 10 | RIGHT ×9 | L6 |
+| 11 | UP ×3 | L3 |
+| 12 | WAIT | L3 |
+| 13 | RIGHT | M3 |
+| 14 | **LE BUREAU** — the eldest child's year, then the **trident** door | M3 |
+| 15 | RIGHT ×2 | O3 |
+| 16 | WAIT ×11 — *inside the bureau, off the gallery* | O3 |
+| 17 | DOWN | O4 |
+| 18 | LEFT ×3 | L4 |
+| 19 | DOWN ×2 | L6 |
+| 20 | LEFT ×6 | F6 |
+| 21 | UP ×4 | F2 |
+| 22 | DOWN | F3 |
+| 23 | RIGHT | G3 |
+| 24 | **P2 · LOOP A CAMERA → CAM 1** | G3 |
+| 25 | RIGHT | H3 |
+| 26 | **LE COFFRE** — `trident · drop · hook · ladder` | H3 |
+| 27 | LEFT ×2 | F3 |
+| 28 | DOWN ×3 | F6 |
+| 29 | RIGHT ×6 | L6 |
+| 30 | UP ×4 | L2 |
+| 31 | DOWN ×5 | L7 |
+| 32 | WAIT | L7 |
+| 33 | UP | L6 |
+| 34 | RIGHT ×10 — **out through the hatch** | V6 |
+
+Steps 4, 13 and 25 are the moves that open a module: Assane steps onto the
+square and the phone changes under his thumb. Step 26 is also where the
+monitors die — the television goes dark from there to the hatch, and the two
+phones are all either of them has.
+
+### Step 24 is the point of the whole contract
+
+CAM 1 sits over the vault and **never blinks**. There is no beat to time and no
+way round it. Assane stops on its doorstep at G3 and cannot take one more step;
+the only thing that opens that square is Benjamin pulling **LOOP A CAMERA**
+from the van, which buys four moves — in, the safe, and back out past the lens.
+
+Neither player can finish it alone, neither screen shows the other's half, and
+nothing about it is a reflex test. Looping costs 4 suspicion and contract four
+gives Benjamin only two of them.
+
+### About the waiting
+
+Steps 7 and 16 are the two long ones, and they are the floor of this building
+rather than a flaw in the route: two galleries two rows tall, two aisles, three
+patrols, and a guard's body covers the eight squares around him — so a patrol
+in a two-row corridor cannot be walked past at all. Both of those waits are
+spent somewhere safe watching a man walk away.
+
+---
+
+## Re-deriving it
+
+`tools/route.js` solves a contract and replays its own answer through the real
+engine before printing it, so what it prints is what the rank card will say.
+With the game open:
+
+```bash
+fetch('tools/route.js').then(r=>r.text()).then(eval)
+```
+
+then
+
+```bash
+DC.route.script(DC.route.solve({ job: 1, mode: 'quiet' }))
+```
+
+`mode: 'quiet'` hunts the cleanest route — this one, S with room to spare. Drop
+it and it hunts the shortest route that still clears the grade you name: one
+turn quicker here, and it finishes on 34 suspicion of the 40 an A allows.

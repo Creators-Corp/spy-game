@@ -31,6 +31,7 @@
     L.tv.render();
     L.p1.render();
     L.p2.render();
+    paintRoster();
 
     Object.keys(keep).forEach(function (sel) {
       var b = U.$(sel + ' .pbody');
@@ -45,11 +46,42 @@
     if (since < 1800) setTimeout(function () { L.tv.render(); }, 1800 - since + 30);
   }
 
+  /* which phone is live: 'p1', 'p2', or 'both'. Held here rather than in the
+     engine because it is about the room the prototype is being shown in, not
+     about the heist. */
+  var live = 'both';
+  function setLive(next) {
+    live = next;
+    ['p1', 'p2'].forEach(function (who) {
+      U.$('#' + who).classList.toggle('is-blocked', live !== 'both' && live !== who);
+    });
+    U.$$('#phone-swap button').forEach(function (b) {
+      b.classList.toggle('is-on', b.getAttribute('data-live') === live);
+    });
+    U.$('#btn-both').classList.toggle('is-on', live === 'both');
+  }
+
+  /* THE PINNED ROSTER.
+     Guards start somewhere new every run, which is the point — but a rehearsed
+     walkthrough needs the run it was written against, and until now the only
+     way to ask for one was to hand-edit the URL, while RESTART threw it away
+     again. Pin a number here and every restart, and every change of contract,
+     plays those guards. NEW goes back to a fresh roster each time. */
+  var pinned = null;
+  function paintRoster() {
+    var box = U.$('#roster'), input = U.$('#roster-num');
+    if (!box) return;
+    box.classList.toggle('is-pinned', pinned !== null);
+    if (document.activeElement !== input) input.value = E.S.seed;
+    U.$('#roster-pin').textContent = pinned === null ? 'PIN' : 'PINNED';
+  }
+
   function restart() {
-    E.reset();
+    E.reset(pinned);
     L.p1.resetTyped();
     L.p2.reset();
     render();
+    paintRoster();
   }
 
   function boot() {
@@ -96,17 +128,43 @@
     window.addEventListener('keydown', function (ev) {
       var k = KEYS[ev.key];
       if (!k || E.S.phase !== 'play') return;
+      if (live === 'p2') return;          /* Assane's phone is blocked; so are his keys */
       ev.preventDefault();
       E.act(k[0], k[1]);
       render();
     });
 
     U.$('#btn-restart').addEventListener('click', restart);
+    /* a seed in the URL arrives already pinned, so a link still works */
+    if (/[?&]seed=\d+/.test(window.location.search)) pinned = E.S.seed;
+    U.$('#roster-pin').addEventListener('click', function () {
+      var v = U.$('#roster-num').value.replace(/\D/g, '');
+      pinned = v === '' ? E.S.seed : Number(v);
+      restart();
+    });
+    U.$('#roster-new').addEventListener('click', function () {
+      pinned = null;
+      restart();
+    });
+    U.$('#roster-num').addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') U.$('#roster-pin').click();
+    });
+    paintRoster();
     U.$('#btn-mute').addEventListener('click', function () {
       var m = !U.isMuted();
       U.setMuted(m);
       this.textContent = 'SOUND: ' + (m ? 'OFF' : 'ON');
     });
+    /* ---- ONE PHONE AT A TIME ----
+       The switch hands the stage to one player and BLOCKS the other; BOTH
+       PHONES puts them back side by side for a walkthrough, which is the
+       default because it is how the prototype has always demonstrated. */
+    U.$$('#phone-swap button').forEach(function (b) {
+      b.addEventListener('click', function () { setLive(b.getAttribute('data-live')); });
+    });
+    U.$('#btn-both').addEventListener('click', function () { setLive('both'); });
+    setLive('both');
+
     U.$('#btn-art').addEventListener('click', function () {
       document.body.classList.toggle('hide-slots');
       this.textContent = 'SLOTS: ' + (document.body.classList.contains('hide-slots') ? 'OFF' : 'ON');
@@ -114,7 +172,10 @@
 
     fit();
     window.addEventListener('resize', fit);
-    render();
+    /* the wall sheet arrives over the wire, and ready() fires straight away if
+       it is already in. Painting the room first shows the floor drawn from the
+       bare rules and then visibly correcting itself. */
+    L.tiles.ready(render);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
