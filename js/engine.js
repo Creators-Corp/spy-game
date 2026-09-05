@@ -1273,11 +1273,11 @@
     /* the way out is not the same door on every floor, so the contract says
        where — and says it without naming the square, because finding that in
        the procedures is the beat */
-    if (S.blackout) S.objective = (C.OBJ && C.OBJ.dark) || 'Lights out. His phone is dead. Talk him to the way out.';
+    if (S.blackout) S.objective = (C.OBJ && C.OBJ.dark) || 'Lights out. Talk Assane to the way out.';
     else if (S.hasManuscript) S.objective = O.out ? O.out
-                                         : hatchTile() ? 'He has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
-                                         : C.PORTE ? 'He has it. Back round the ring and down the stairs.'
-                                                     : 'La Sortie. He has the manuscript. Get him out through the vestibule.';
+                                         : hatchTile() ? 'Assane has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
+                                         : C.PORTE ? 'Assane has it. Back round the ring and down the stairs.'
+                                                     : 'La Sortie. Assane has the manuscript. Get him out through the vestibule.';
     else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = 'The cloakroom first — or go in as you are, and be seen from further away.';
     else if (C.PORTE && !S.solved.porte) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
     else if (C.PORTE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';

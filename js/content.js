@@ -85,12 +85,12 @@
     lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
               blurb: 'For three moves, every guard sees only the squares beside him.' },
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
-              blurb: 'The beams drop for five moves. He can cross one without them, but it sets off the alarm.' },
+              blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
     camera: { id: 'camera', icon: 'eye',  name: 'LOOP A CAMERA',  cost: 4,  turns: 4, uses: 3,
-              blurb: 'The box nearest him sees nothing for four moves, then it is back.' }
+              blurb: 'The box nearest Assane sees nothing for four moves, then it is back.' }
   };
 
   /* THE PRESSURE.
@@ -517,8 +517,8 @@
     OBJ: {
       door:  'A locked door at the back of the kitchens. P1 has the keypad; P2 has the code.',
       after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
-      out:   'He has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
-      dark:  'The power is gone, and his phone with it. Benjamin has the procedures — the way out is in them.'
+      out:   'Assane has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
+      dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
       { x: 5,  y: 4,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },

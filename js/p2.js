@@ -339,8 +339,8 @@
     return el('p', {
       class: 'signal' + (down ? '' : ' is-good'),
       text: down
-        ? 'SIGNAL LOST · ' + down + (down === 1 ? ' MOVE' : ' MOVES') + ' · tell him to hold still'
-        : 'CONTACT · you have him'
+        ? 'SIGNAL LOST · ' + down + (down === 1 ? ' MOVE' : ' MOVES') + ' · tell Assane to hold still'
+        : 'CONTACT · you have Assane'
     });
   }
 
@@ -397,7 +397,7 @@
     if (C.MODULES && C.MODULES.length) {
       rows.push(keyRow('<rect x="3" y="3" width="14" height="14" rx="2" fill="var(--map-void)" stroke="var(--gold)" stroke-width="2"/>' +
                        '<circle cx="10" cy="10" r="3" fill="var(--gold)"/>',
-                       '<b>Objective</b> Something he has to reach.'));
+                       '<b>Objective</b> Something Assane has to reach.'));
     }
     var people = layer === 'patrols';
     if (people && E.S.guards.length) {
@@ -432,7 +432,7 @@
     var hatchFound = !!(hx && E.S.seen[hx.x + ',' + hx.y]);
     if (hasChar('X') && !(C.PRIZE && C.PRIZE.hatchHidden && !hatchFound)) {
       rows.push(keyRow('<g color="var(--gold)" transform="translate(2,2) scale(0.16)">' + G.iconMarkup('hatch') + '</g>',
-                       '<b>Hatch</b> The way out, once he has it.'));
+                       '<b>Hatch</b> The way out, once Assane has it.'));
     }
     return el('div', { class: 'mapkey' }, rows);
   }
@@ -454,14 +454,14 @@
     if (!night && S.alert) {
       where += ' The building is <b>' + C.ALERT[S.alert - 1].name + '</b>: every guard sees ' +
                (S.alert === 1 ? 'one square' : S.alert + ' squares') + ' further' +
-               (S.alert >= 2 ? ', and a man who stops him will search him.' : '.');
+               (S.alert >= 2 ? ', and a man who stops Assane will search him.' : '.');
     }
     return el('div', { class: 'dossier__plan' + (night ? ' is-night' : '') }, [
       S.moduleId === 'grille' && C.GRILLE ? keyBoard() : null,
       where ? el('p', { class: 'plan2__where', html: where }) : null,
       S.alarm > 0 ? el('p', { class: 'warn warn--alarm', html:
         '<b>ALARM · ' + S.alarm + (S.alarm === 1 ? ' MOVE' : ' MOVES') + '</b>' +
-        'He broke a beam. Every one of them has left his round and is walking straight at him — ' +
+        'Assane broke a beam. Every one of them has left his round and is walking straight at him — ' +
         'they are on this plan, off their lines. Call the way out; in ' + S.alarm +
         (S.alarm === 1 ? ' move' : ' moves') + ' they turn round and walk back.' }) : null,
       down ? null : layerBar(),
@@ -476,8 +476,8 @@
       leversPanel(),
       down ? null : mapKey(night),
       endgame ? el('p', { class: 'note', style: 'margin-top:10px', text: down
-        ? 'It comes back. Keep him still until it does, or walk him from memory and hope.'
-        : 'The link drops for a move or two at a time. Say the next three squares while you have him.' }) : null
+        ? 'It comes back. Keep Assane still until it does, or walk him from memory and hope.'
+        : 'The link drops for a move or two at a time. Give Assane his next three squares while you still have him.' }) : null
     ]);
   }
 
@@ -548,7 +548,7 @@
       return el('div', { class: 'keyboard' }, [
         el('p', { class: 'h', text: 'SERVICE HATCH · LOCKED' }),
         el('p', { class: 'note', style: 'margin:0', text:
-          'The way out shut itself when the power went, and he is standing at the keypad in the ' +
+          'The way out shut itself when the power went, and Assane is standing at the keypad in the ' +
           'dark. He can see which three keys are worn smooth and he cannot see the order. ' +
           'Everything you need to give him the order is somewhere in this dossier — you have ' +
           'not needed it until now.' })
@@ -559,11 +559,11 @@
     return el('div', { class: 'keyboard' }, [
       el('p', { class: 'h', text: second ? 'SECURITY DESK · THE RELEASE' : 'SECURITY DESK · THE TERMINAL' }),
       el('p', { class: 'note', style: 'margin:0', html: second
-        ? 'The terminal is open and showing him four marks. One of them releases <b>' +
+        ? 'The terminal is open and showing Assane four marks. One of them releases <b>' +
           ((C.DOORS.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0] || {}).to || 'the locked room') +
           '</b>. That door is drawn on your plan, locked and gold, with its mark on it. ' +
           'Have him describe the four; tell him which one is on your door.'
-        : 'He is at the desk and it wants four digits. Have him read you all of it — the badge, ' +
+        : 'Assane is at the desk and it wants four digits. Have him read you all of it — the badge, ' +
           'the post, and the note stuck to the screen. The note says which number the terminal is ' +
           'asking for. Whatever it turns out to be, it is in <b>STAFF</b>.' })
     ]);
@@ -729,7 +729,7 @@
       el('p', { class: 'h', text: 'DOOR CODES · ' + K.sign }),
       U.howto([
         'Ask Assane what is engraved under the 0 on the door. Tap that symbol here — the ring numbers itself from it.',
-        'He has four more symbols on his keypad. He describes each one; you find it on the ring and tell him its number.'
+        'Assane has four more symbols on his keypad. He describes each one; you find it on the ring and tell him its number.'
       ])
     ]);
 
@@ -743,7 +743,7 @@
         'say where to start counting. Assane has that, on the door.' }));
     } else {
       wrap.appendChild(el('p', { class: 'note', style: 'margin-top:10px',
-        text: 'The code itself is not in this file. He is reading it off the keypad — take his symbols one at a time.' }));
+        text: 'The code itself is not in this file. Assane is reading it off the keypad — take his symbols one at a time.' }));
     }
     return wrap;
   }
@@ -754,7 +754,7 @@
       el('p', { class: 'h', text: 'SAFES · OPENING SEQUENCES' }),
       U.howto([
         'Ask Assane for the number on the safe door and the colour of the ring around the dial. The same number is in here more than once — only the colour separates them.',
-        'Open the matching row and describe its four symbols to him, in order. They have no names. Invent them.'
+        'Open the matching row and describe its four symbols to Assane, in order. They have no names. Invent them.'
       ])
     ]);
     C.COFFRE.manual.forEach(function (m, i) {
@@ -873,7 +873,7 @@
        anything. */
     if (E.S.moduleId === 'deguisement' && C.DEGUISEMENT) {
       wrap.appendChild(el('p', { class: 'warn', style: 'margin:0 0 12px', html:
-        'He is heading for <b>' + C.DEGUISEMENT.targetPost + '</b>. Find the one uniform ' +
+        'Assane is heading for <b>' + C.DEGUISEMENT.targetPost + '</b>. Find the one uniform ' +
         'he can actually build from that rack whose owner is posted there.' }));
     }
     C.PERSONNEL.forEach(function (p) {
@@ -921,7 +921,7 @@
       el('p', { class: 'h', text: 'FACES · NIGHT SHIFT' }),
       U.howto([
         'Assane describes the guard standing in front of him. Tap that face.',
-        'His file opens underneath. Read Assane the one fact that is lit up, and he will find something to say about it.'
+        'The guard’s file opens underneath. Read Assane the one fact that is lit up, and he will find something to say about it.'
       ])
     ]);
     var grid = el('div', { class: 'faces' });
@@ -962,7 +962,7 @@
       });
       dirt.appendChild(ul);
       if (!t) dirt.appendChild(el('p', { class: 'note', style: 'margin-top:8px',
-        text: 'Nothing opens until somebody stops him.' }));
+        text: 'Nothing opens until somebody stops Assane.' }));
       wrap.appendChild(dirt);
     }
     return wrap;
@@ -977,8 +977,8 @@
         el('div', { class: 'waiting' }, [
           el('span', { class: 'waiting__dot' }),
           el('p', { class: 'note', text: done
-            ? 'He is out. Close the dossier.'
-            : 'They have him. Get the van moving.' })
+            ? 'Assane is out. Close the dossier.'
+            : 'They have Assane. Get the van moving.' })
         ])
       ]),
       foot([ el('button', { class: 'btn btn--brand', text: 'RECOMMENCER',

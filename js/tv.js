@@ -251,7 +251,7 @@
       ['head', 'torso', 'legs'].forEach(function (k) {
         pips.appendChild(U.el('i', { class: S.outfit && S.outfit[k] ? 'is-set' : '' }));
       });
-      line = S.solved.deguisement ? 'He looks like somebody who works here.'
+      line = S.solved.deguisement ? 'Assane looks like somebody who works here.'
            : 'A rack. Nine pieces. Nothing is labelled.';
     } else if (S.moduleId === 'ecoute') {
       C.ECOUTE.transmission.forEach(function (p, i) {
@@ -262,8 +262,8 @@
     } else if (S.moduleId === 'faux') {
       pips.appendChild(U.el('i', { class: S.solved.faux ? 'is-set' : '' }));
       line = !S.solved.faux ? 'Two canvases. One crate. Only one leaves.'
-           : S.loot.tableau ? 'The real one goes with him.'
-           : 'He takes the forgery. He does not know it yet.';
+           : S.loot.tableau ? 'The real one goes with Assane.'
+           : 'Assane takes the forgery. He does not know it yet.';
     } else if (S.moduleId === 'grille') {
       pips.appendChild(U.el('i', { class: S.solved.grille ? 'is-set' : '' }));
       line = S.solved.grille ? 'The gate swings open.'
@@ -295,8 +295,8 @@
     }
     var s = $('#tch-line');
     s.textContent = t.strikes === 0
-      ? 'He is not moving. He is waiting to hear what you say.'
-      : 'He is looking at you differently now. One more slip and it is over.';
+      ? 'The guard is not moving. He is waiting to hear what you say.'
+      : 'The guard is looking at you differently now. One more slip and it is over.';
     $('#tch-spark').style.opacity = t.strikes ? 0.4 : 1;
   }
 

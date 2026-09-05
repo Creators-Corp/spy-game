@@ -177,7 +177,7 @@
         readout,
         pad
       ]),
-      foot([ el('p', { class: 'note', text: 'Tell him which keys are worn. He has the procedure — and he has to find who is posted here tonight.' }) ])
+      foot([ el('p', { class: 'note', text: 'Tell Benjamin which keys are worn. He has the procedure — and he has to find who is posted here tonight.' }) ])
     ]);
   }
 
@@ -230,7 +230,7 @@
       body([
         U.howto([
           'Describe the mark stamped on the padlock to Benjamin.',
-          'He has the three keys drawn on his card and will describe the one that fits. Tap it on the ring.'
+          'Benjamin has the three keys drawn on his card and will describe the one that fits. Tap it on the ring.'
         ]),
         padlock,
         el('p', { class: 'lbl lbl--c', style: 'margin:10px 0 6px', text: 'TAP THE KEY HE DESCRIBES' }),
@@ -307,7 +307,7 @@
       body([
         U.howto([
           'Describe the mark under the 0 to Benjamin. It tells him where the ring starts.',
-          'Then describe the four symbols on the keypad, one at a time. He answers each with a number — tap it.'
+          'Then describe the four symbols on the keypad, one at a time. Benjamin answers each with a number — tap it.'
         ]),
         plate,
         readout,
@@ -329,7 +329,7 @@
       body([
         el('div', { class: 'waiting' }, [
           (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
-          el('p', { class: 'note', text: 'It is on the desk, exactly where he said it would be. Take it and get back to the stairs.' })
+          el('p', { class: 'note', text: 'It is on the desk, exactly where Benjamin said it would be. Take it and get back to the stairs.' })
         ])
       ]),
       foot([ el('button', { class: 'btn btn--go', text: 'TAKE IT',
@@ -385,7 +385,7 @@
         el('div', { class: 'mirrorwrap' }, [
           mirror,
           el('p', { class: 'note', style: 'margin:0', text:
-            'The staff cloakroom. Describe all nine to him — he knows whose is whose, and who is posted where you are going.' })
+            'The staff cloakroom. Describe all nine to Benjamin — he knows whose is whose, and who is posted where you are going.' })
         ]),
         racks
       ]),
@@ -441,7 +441,7 @@
       head('LE FAUX'),
       body([
         el('p', { class: 'note', style: 'margin:0 0 10px', text:
-          'Two canvases, one crate. Describe them both to him — everything, not just what you think matters. He has the authentication notes.' }),
+          'Two canvases, one crate. Describe them both to Benjamin — everything, not just what you think matters. He has the authentication notes.' }),
         el('div', { class: 'canvases' }, [
           canvas(left ? C.FAUX.genuine : C.FAUX.forgery, 'A', left),
           canvas(left ? C.FAUX.forgery : C.FAUX.genuine, 'B', !left)
@@ -503,14 +503,14 @@
       head('L’ÉCOUTE'),
       body([
         el('p', { class: 'note', style: 'margin:0 0 10px', text:
-          'Hold it to your ear. The line repeats the same five pulses. Read them to him — short and long, in order.' }),
+          'Hold it to your ear. The line repeats the same five pulses. Read them to Benjamin — short and long, in order.' }),
         train,
         el('button', { class: 'btn btn--go', style: 'margin-top:10px',
           text: 'PLAY THE LINE AGAIN', onclick: play }),
         el('div', { class: 'rule' }),
         el('p', { class: 'h', style: 'margin-bottom:6px', text: 'CUT A CIRCUIT' }),
         el('p', { class: 'note', style: 'margin:0 0 10px', text:
-          'He has the code book, and it will only answer him if he can reproduce the rhythm.' }),
+          'Benjamin has the code book, and it will only answer him if he can reproduce the rhythm.' }),
         circuits
       ]),
       foot([
@@ -728,7 +728,7 @@
       body([
         U.howto([
           'Read Benjamin the number and the colour below. He needs both — his book lists this safe more than once.',
-          'He will describe four symbols. Tap them on the door, in the order he gives them.'
+          'Benjamin will describe four symbols. Tap them on the door, in the order he gives them.'
         ]),
         el('div', { class: 'safe__plate' }, [
           el('span', {}, [
@@ -781,7 +781,7 @@
           el('p', { class: 'note', text: 'The computer is open. Four doors on the release schedule, four marks. Only one of them is La Réserve — and only Benjamin can see which.' }),
           grid
         ]),
-        foot([ el('p', { class: 'note', text: 'Describe the four marks. He has the floor plan.' }) ])
+        foot([ el('p', { class: 'note', text: 'Describe the four marks. Benjamin has the floor plan.' }) ])
       ]);
     }
 
@@ -834,7 +834,7 @@
     return screen([
       head('LE BUREAU'),
       body([ desk, readout, pad ]),
-      foot([ el('p', { class: 'note', text: 'Tell him what is on the desk. All of it. He has the staff files.' }) ])
+      foot([ el('p', { class: 'note', text: 'Tell Benjamin what is on the desk. All of it. He has the staff files.' }) ])
     ]);
   }
 
@@ -872,23 +872,23 @@
         el('div', { class: 'tchp1__top' }, [
           face,
           el('div', { class: 'tchp1__desc', html:
-            '<b>He has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
+            '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
         ]),
         U.howto([
           'Describe this face out loud — head, hair, glasses, any marks. Benjamin has the night shift on file.',
-          'He finds the man and tells you one thing about his life. Tap the line that brings it up.'
+          'Benjamin finds the man and tells you one thing about his life. Tap the line that brings it up.'
         ]),
         el('div', { class: 'tch__meter' }, [
           el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
           el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
         ]),
         t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:
-          t.last === 'good' ? 'That landed. He is still talking.'
-                            : 'Wrong man, or wrong subject. He is looking at you harder now.' }) : null,
+          t.last === 'good' ? 'That landed. The guard is still talking.'
+                            : 'Wrong man, or wrong subject. The guard is looking at you harder now.' }) : null,
         lines
       ]),
       foot([ el('p', { class: 'note', text: max === 1
-        ? 'The building is on alert. One mistake and he searches you. Nothing here is timed.'
+        ? 'The building is on alert. One mistake and the guard searches you. Nothing here is timed.'
         : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
     ]);
     view.classList.add('pscreen--tchatche');
