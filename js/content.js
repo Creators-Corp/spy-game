@@ -674,11 +674,11 @@
 
     PROCEDURES: [
       { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked. Two attempts, then a call.' },
-      { k: 'LASER LINES',  v: 'The central corridor is protected between rounds. Crossing one is not impossible, it is announced: officers abandon their rounds for five minutes and converge. The side halls are patrolled.' },
+      { k: 'LASER LINES',  v: 'The central corridor is beamed between rounds. Crossing one is not impossible, it is announced: every officer drops his round and converges for five minutes.' },
       { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
-      { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines hold — they are on the same supply as the alarm and stay armed. Interior doors hold their last state; the service hatch locks itself.' },
+      { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
       { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, digits reversed.' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],
@@ -785,6 +785,77 @@
     }
     return '5530';
   }
+  /* THE SAFE, DEALT LIKE EVERYTHING ELSE ON A FILE.
+     The dial, the serial, the ring colour and the four symbols were all
+     authored, so the one module that looks the most like a combination lock
+     was the one whose combination never changed. It is rolled now, and the
+     shape of the puzzle is rolled with it rather than around it.
+
+     WHAT THE MANUAL HAS TO KEEP DOING is force Benjamin to read two things.
+     Six rows: three share the safe's serial and differ by ring colour, three
+     share its colour and differ by serial, and exactly one row is in both
+     groups. Match on the serial alone and there are three answers; match on
+     the colour alone and there are three answers; the row is only unique when
+     Assane has read out both, which is the whole exchange.
+
+     The decoy serials are DIGIT PERMUTATIONS of the real one — AV-2231
+     against AV-2213 and AV-3221 — so telling them apart is reading rather
+     than glancing. That needs at least three distinct digits to have
+     permutations to spend, which is what the serial roll insists on. */
+  function shuffled(list, rnd) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rnd() * (i + 1)), t = a[i];
+      a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function rollSerial(rnd) {
+    for (var i = 0; i < 300; i++) {
+      var d = rollCode(rnd);
+      if (distinct(d).length >= 3) return d;      /* permutations to spend */
+    }
+    return '2231';
+  }
+  function permsOf(digits, rnd, want, notThis) {
+    var seen = {}, out = [];
+    seen[notThis] = 1;
+    for (var i = 0; i < 400 && out.length < want; i++) {
+      var p = shuffled(digits.split(''), rnd).join('');
+      if (seen[p]) continue;
+      seen[p] = 1; out.push(p);
+    }
+    while (out.length < want) out.push(notThis);   /* degenerate, never in practice */
+    return out;
+  }
+  function rollCoffre(job, rnd) {
+    var c = copyOf(job.COFFRE);
+    var digits = rollSerial(rnd);
+    var serials = permsOf(digits, rnd, 3, digits);
+    var rings = shuffled(Object.keys(RING_COLOUR), rnd);
+    c.serial = 'AV-' + digits;
+    c.ring = rings[0];
+    c.code = shuffled(c.dial, rnd).slice(0, 4);
+
+    function otherSeq(used) {
+      for (var i = 0; i < 200; i++) {
+        var seq = shuffled(c.dial, rnd).slice(0, 4).join(' ');
+        if (used.indexOf(seq) < 0) { used.push(seq); return seq.split(' '); }
+      }
+      return shuffled(c.dial, rnd).slice(0, 4);
+    }
+    var used = [c.code.join(' ')];
+    c.manual = shuffled([
+      { serial: c.serial,             ring: c.ring,   seq: c.code },
+      { serial: c.serial,             ring: rings[1], seq: otherSeq(used) },
+      { serial: c.serial,             ring: rings[2], seq: otherSeq(used) },
+      { serial: 'AV-' + serials[0],   ring: c.ring,   seq: otherSeq(used) },
+      { serial: 'AV-' + serials[1],   ring: c.ring,   seq: otherSeq(used) },
+      { serial: 'AV-' + serials[2],   ring: rings[3], seq: otherSeq(used) }
+    ], rnd);
+    return c;
+  }
+
   /* THE ELDEST HAS TO BE ONE CHILD. deskWorks() only asks that the years are
      not all identical, which still allows a tie at the OLDEST — and "the
      eldest child's birth year" then has two answers and the desk cannot be
@@ -844,6 +915,10 @@
       if (seed) porte.code = rollCode(rnd);
       L.content.PORTE = porte;
     }
+
+    /* THE SAFE. Rolled whole — serial, colour, combination and the five decoy
+       rows that make Benjamin read both halves. See rollCoffre(). */
+    if (job.COFFRE && seed) L.content.COFFRE = rollCoffre(job, rnd);
 
     /* THE RELEASE CODE, derived at every seed rather than authored at one.
        It used to be a badge reversed, which could not move because badges

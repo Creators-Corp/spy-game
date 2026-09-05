@@ -19,9 +19,9 @@ the way out; the route below assumes he says nothing while it is down.
 
 **What changes between runs is who is on shift, and every number on their files.**
 Same badges, same posts, same beats — different people behind them, with different
-children and different cars, and a fresh door code on top. Three of the four answers
-below move with the roster; only LE COFFRE, which is read off the safe itself rather
-than off a file, is the same every night.
+children and different cars, a fresh door code, and a fresh safe — serial, ring
+colour, combination and all five decoy rows in the manual. **Every answer below moves
+with the roster.** So does which of the two canvases in LE FAUX is the real one.
 
 ---
 
@@ -39,7 +39,7 @@ so waiting costs nothing as long as you keep tapping.
 |---|---|---|---|
 | **LA PORTE** | G14 | the ring of ten symbols, in order — but not where it starts, and not the code | **7 · 1 · 8 · 0** *(roster 0)* |
 | **LE BUREAU** | M3 | badge **1184** — open that file and take the **eldest** child's birth year. The file lists them in the wrong order on purpose | **changes with the roster** — then the **trident** door |
-| **LE COFFRE** | H3 | serial `AV-2231`, ring **denim** — three rows share that serial | **trident · drop · hook · ladder** |
+| **LE COFFRE** | H3 | serial `AV-2231`, ring **denim** — three rows share that serial and three share that colour, so neither alone answers it | **trident · drop · hook · ladder** *(roster 0)* |
 | **LE CLAVIER** | V6 | **MANUAL → EMERGENCY PROCEDURES**: the release code is the *vehicle plate* of the officer posted to that zone, reversed. **STAFF**: one officer is posted to GALERIE HAUTE — at roster 0 his plate is **9088** | **8 · 8 · 0 · 9** *(roster 0)* |
 
 **LA PORTE takes five sentences, not one.** Assane describes the mark

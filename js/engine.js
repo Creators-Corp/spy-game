@@ -153,7 +153,22 @@
       disguised: false,        /* out of uniform every cone reaches further */
       loot: { manuscrit: false, tableau: false },
       outfit: { head: null, torso: null, legs: null },
-      fauxLeftIsGenuine: Math.random() < 0.5,   /* re-rolled every job */
+      /* WHICH CANVAS IS THE REAL ONE, off the seed rather than off Math.random.
+         It was the one thing left in the game that a pinned roster could not
+         reproduce: same seed, same guards, same codes — and a coin toss on the
+         only module with no second attempt. */
+      fauxLeftIsGenuine: (function (n) {
+        /* MIX IT PROPERLY. The first cut of this multiplied the seed by an odd
+           constant and took the low bit — and multiplying by an odd number
+           preserves parity, so it was seed % 2 wearing a hat: every even
+           roster put the real canvas on the left. A player who noticed that
+           once would never look at the paintings again. Murmur3's finalizer,
+           which actually avalanches. */
+        n = (n + 0x9E3779B9) >>> 0;
+        n = Math.imul(n ^ (n >>> 16), 0x85EBCA6B) >>> 0;
+        n = Math.imul(n ^ (n >>> 13), 0xC2B2AE35) >>> 0;
+        return ((n ^ (n >>> 16)) >>> 0) % 2 === 0;
+      })(seed >>> 0),
       blackout: false,         /* Le Twist. Set when the safe opens. */
       /* BENJAMIN'S LINK, and nobody else's. In the dark the van's picture of
          the floor drops for a turn or two at a time and then holds. `down` is
