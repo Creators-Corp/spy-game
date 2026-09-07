@@ -1,0 +1,41 @@
+# Deux Complices, hosted — for the demo where the second player is not in the
+# room. Render reads this on "New > Blueprint"; every other host wants the same
+# three facts, so it doubles as the instructions for Fly, a VPS, or anything
+# else that can run a Python process.
+#
+#   build:  seal the prototype with the passphrase, exactly as CI does
+#   run:    serve.py, which serves the SEALED build and relays the second seat
+#
+# WHAT MUST BE SET BY HAND, because neither belongs in a repository:
+#
+#   PROTOTYPE_PASSWORD   the passphrase the build is encrypted with, and the
+#                        one anybody opening the site has to type. Same secret
+#                        as the GitHub Actions one.
+#   SEAT_TOKEN           a second, different secret. Without it the relay is
+#                        open to whoever finds the address, and the first
+#                        stranger to poll becomes Assane.
+#
+# THE FREE PLAN WILL EMBARRASS YOU. It sleeps after about fifteen minutes and
+# takes the better part of a minute to wake, which is a long silence with a
+# room watching. Starter stays warm.
+#
+# ONE INSTANCE, DELIBERATELY. The relay holds the seat in memory, so a second
+# instance would be a second game nobody can reach. Do not scale it.
+
+services:
+  - type: web
+    name: deux-complices
+    runtime: python
+    plan: starter
+    numInstances: 1
+    buildCommand: |
+      pip install --disable-pip-version-check cryptography segno
+      python tools/pack.py
+    startCommand: python serve.py
+    envVars:
+      - key: PROTOTYPE_PASSWORD
+        sync: false          # set it in the dashboard, never here
+      - key: SEAT_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12"

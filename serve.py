@@ -27,21 +27,42 @@ get it.
     /qr.svg        the join address, for pointing a phone at
 
 WHY IT BINDS TO EVERY INTERFACE. 127.0.0.1 is unreachable from the next desk,
-which is the whole point of the exercise. That does mean anyone on the same
-network can open it, so this is a demo tool and not a way to publish the
-prototype — the sealed build in tools/pack.py is still the only thing that
-should leave the building.
+which is the whole point of the exercise.
+
+RUNNING IT SOMEWHERE ELSE. The same file is a deployable web service — Render,
+Fly, a box under a desk — which is what makes a second seat possible when the
+other player is not in the room. Three environment variables and it behaves:
+
+    PORT              what to listen on. Render sets this; default 8080.
+    PUBLIC_URL        the address a guest can reach, for the QR code. Render
+                      sets RENDER_EXTERNAL_URL and that is used automatically.
+    SEAT_TOKEN        if set, /link/* refuses anything without ?t=<token>, and
+                      the join address carries it. Unset locally, so a demo in
+                      a room stays frictionless.
+
+AND THE ONE RULE THAT KEEPS THE NDA INTACT. Deployed, this serves dist/ — the
+sealed build — and never the working tree. Serving the repository over a public
+address would publish the prototype in the clear to anyone who guessed the URL,
+which is the exact thing tools/pack.py exists to prevent. It refuses to start
+rather than do it, so the mistake cannot be made quietly at four in the
+afternoon before a pitch.
 """
+import os
+
 import http.server
 import socketserver
 import json
-import os
 import socket
 import sys
 import threading
 import time
 
-PORT = 8080
+PORT = int(os.environ.get("PORT") or 8080)
+# Render sets RENDER, and sets RENDER_EXTERNAL_URL to the public address
+HOSTED = bool(os.environ.get("RENDER") or os.environ.get("PUBLIC_URL"))
+PUBLIC_URL = (os.environ.get("PUBLIC_URL")
+              or os.environ.get("RENDER_EXTERNAL_URL") or "").rstrip("/")
+SEAT_TOKEN = os.environ.get("SEAT_TOKEN") or ""
 
 # ------------------------------------------------------------------ le relais
 # One guest, one presenter, everything in memory, nothing on disk. A version
@@ -116,9 +137,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return bit[len(key) + 1:]
         return ""
 
+    def _allowed(self):
+        """On a public address the relay needs a shared secret, or the first
+        stranger to find the URL is Assane. Off by default: in a room, on a
+        laptop, a token is friction with nothing to protect against."""
+        return not SEAT_TOKEN or self._query("t") == SEAT_TOKEN
+
     # ------------------------------------------------------------------- GET
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+
+        if path.startswith("/link/") and not self._allowed():
+            return self.send_error(403, "no token")
 
         if path == "/link/status":
             return self._json({"relay": True, "guest": guest_here(), "join": JOIN_URL})
@@ -165,6 +195,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         path = self.path.split("?", 1)[0]
 
+        if path.startswith("/link/") and not self._allowed():
+            return self.send_error(403, "no token")
+
         if path == "/link/state":
             payload = self._read()
             with LOCK:
@@ -192,19 +225,41 @@ class Threaded(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 def main():
     global JOIN_URL
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    ip = lan_ip()
-    JOIN_URL = "http://%s:%d/?role=p1" % (ip, PORT)
+    root = os.path.dirname(os.path.abspath(__file__))
+
+    if HOSTED:
+        # SEALED OR NOTHING. See the note at the top: a public address must
+        # never be handed the working tree.
+        dist = os.path.join(root, "dist")
+        if not os.path.isfile(os.path.join(dist, "index.html")):
+            sys.stderr.write(
+                "refusing to start: hosted, but dist/ is not built.\n"
+                "  PROTOTYPE_PASSWORD=... python tools/pack.py\n"
+                "and deploy that, or the prototype goes out in the clear.\n")
+            raise SystemExit(2)
+        os.chdir(dist)
+        base = PUBLIC_URL or "http://0.0.0.0:%d" % PORT
+    else:
+        os.chdir(root)
+        base = "http://%s:%d" % (lan_ip(), PORT)
+
+    JOIN_URL = base + "/?role=p1" + (("&t=" + SEAT_TOKEN) if SEAT_TOKEN else "")
 
     with Threaded(("0.0.0.0", PORT), Handler) as httpd:
-        print("prototype   ->  http://127.0.0.1:%d/index.html" % PORT)
+        if HOSTED:
+            print("sealed build on %s  (port %d)" % (base, PORT))
+        else:
+            print("prototype   ->  http://127.0.0.1:%d/index.html" % PORT)
         print("second seat ->  %s" % JOIN_URL)
+        if SEAT_TOKEN:
+            print("               the relay needs that token; without it nobody joins")
         try:
             import segno  # noqa: F401
             print("               the same address is on screen as a QR code")
         except ImportError:
             print("               pip install segno for the on-screen QR code")
-        print("no-cache, so a plain reload always picks up your edits")
+        if not HOSTED:
+            print("no-cache, so a plain reload always picks up your edits")
         print("ctrl-c to stop")
         try:
             httpd.serve_forever()

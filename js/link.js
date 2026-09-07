@@ -45,6 +45,17 @@
   var ROLE = /[?&]role=p1\b/.test(window.location.search) ? 'guest' : 'host';
   var POLL = 220;                    /* ms between polls; turn-based, so plenty */
 
+  /* THE TOKEN, WHEN THERE IS ONE. Hosted somewhere public, serve.py can be
+     given a SEAT_TOKEN and will then refuse any relay call without it — or the
+     first stranger to find the address is Assane. It rides in the page's own
+     URL, so the presenter and the guest both already carry it and neither has
+     to type anything. Locally there is no token and this appends nothing. */
+  var TOKEN = (/[?&]t=([^&]+)/.exec(window.location.search) || [])[1] || '';
+  function wire(path) {
+    if (!TOKEN) return path;
+    return path + (path.indexOf('?') >= 0 ? '&' : '?') + 't=' + encodeURIComponent(TOKEN);
+  }
+
   /* the only things a guest may ask the presenter's engine to do. Benjamin's
      verbs are deliberately absent: the levers are the presenter's half, and a
      whitelist here is the difference between a second seat and a second
@@ -70,7 +81,7 @@
   };
 
   function post(path, body) {
-    return fetch(path, {
+    return fetch(wire(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -98,7 +109,7 @@
 
     function pullIntents() {
       if (!link.wanted) return;
-      fetch('/link/intent').then(function (r) { return r.json(); }).then(function (r) {
+      fetch(wire('/link/intent')).then(function (r) { return r.json(); }).then(function (r) {
         setGuest(!!(r && r.guest));
         (r.intents || []).forEach(function (m) {
           if (!m || !ALLOWED[m.call] || typeof E[m.call] !== 'function') return;
@@ -137,7 +148,7 @@
     });
 
     function poll() {
-      fetch('/link/state?since=' + v).then(function (r) { return r.json(); }).then(function (r) {
+      fetch(wire('/link/state?since=' + v)).then(function (r) { return r.json(); }).then(function (r) {
         if (!r || r.payload === undefined || r.payload === null) return;
         v = r.v;
         var p = r.payload;
@@ -185,7 +196,7 @@
     link.wanted = !link.wanted;
     if (link.wanted) {
       var img = document.getElementById('seat-qr');
-      if (img) img.setAttribute('src', '/qr.svg?t=' + Date.now());
+      if (img) img.setAttribute('src', '/qr.svg?cb=' + Date.now());
       var url = document.getElementById('seat-url');
       if (url) url.textContent = link.join || '';
     }
@@ -195,7 +206,7 @@
 
   /* ----------------------------------------------------------------- the boot */
   function boot() {
-    fetch('/link/status').then(function (r) { return r.json(); }).then(function (r) {
+    fetch(wire('/link/status')).then(function (r) { return r.json(); }).then(function (r) {
       link.relay = !!(r && r.relay);
       link.join = (r && r.join) || '';
       if (!link.relay) return;
