@@ -102,7 +102,7 @@
         el('button', {
           class: 'btn plan-ready' + (S.ready.p1 ? ' is-waiting' : ''),
           disabled: S.ready.p1 ? '' : null,
-          onclick: function () { S.ready.p1 = true; U.sfx.tap(); U.emit('ready'); }
+          onclick: function () { E.ready('p1'); U.sfx.tap(); U.emit('ready'); }
         }, [
           el('img', { class: 'plan-ready__art plan-ready__art--light', src: U.assetURL('art/ui/van-action-light.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
           el('img', { class: 'plan-ready__art plan-ready__art--dark', src: U.assetURL('art/ui/van-action-dark.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),

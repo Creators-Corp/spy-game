@@ -28,6 +28,12 @@
       if (b) keep[sel] = b.scrollTop;
     });
 
+    /* A GUEST IS ONE PHONE. It has no television and no dossier to draw, and
+       drawing them would be drawing the presenter's half out of a state that
+       arrived over the wire a moment ago. link.js redraws P1 on its own when
+       new state lands. */
+    if (L.link && L.link.role === 'guest') { L.p1.render(); return; }
+
     L.tv.render();
     L.p1.render();
     L.p2.render();
@@ -104,15 +110,17 @@
       L.content.loadJob(i);
       restart();
     });
-    U.on('ready', function () {
-      var S = E.S;
-      if (S.ready.p1 && S.ready.p2) E.begin();
-      render();
-    });
+    /* ready() starts the job itself once both have tapped, wherever they
+       tapped from, so this only has to put it on screen */
+    U.on('ready', function () { render(); });
 
     /* the clock ticks on its own, but only the clock re-draws —
        a full pass every second would fight with what the players are reading */
     setInterval(function () {
+      /* the clock belongs to whoever owns the game. A guest running its own
+         would charge Assane suspicion twice — once here and once on the
+         presenter's machine, whose answer is the one that counts. */
+      if (L.link && L.link.role === 'guest') return;
       if (!E.S.running) return;
       E.S.elapsed++;
       var c = U.$('#tv-clock');

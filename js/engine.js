@@ -1306,6 +1306,19 @@
     return C.RANKS[C.RANKS.length - 1];
   }
 
+  /* TAPPING READY IS AN INPUT LIKE ANY OTHER. Both phones used to reach into
+     S and set their own flag, which worked precisely as long as both phones
+     were the same browser. A second seat on another machine would have set it
+     on its own copy and the presenter would have waited forever for a player
+     who had already pressed the button. */
+  function ready(who) {
+    if (who !== 'p1' && who !== 'p2') return false;
+    if (S.phase !== 'plan' || S.ready[who]) return false;
+    S.ready[who] = true;
+    if (S.ready.p1 && S.ready.p2) begin();
+    return true;
+  }
+
   function begin() {
     S.phase = 'play';
     S.running = true;
@@ -1320,7 +1333,14 @@
 
   L.engine = {
     get S() { return S; },
-    reset: reset, begin: begin, act: act,
+    /* THE GUEST'S MIRROR, and the only way anything outside this file writes
+       to S. A second player on another machine runs no rules: link.js hands
+       the state over as it arrives from the presenter and p1.js draws it. The
+       engine here is a viewer, which is why there is no prediction to roll
+       back and no second copy of the rules to keep in step. Nothing in the
+       game calls this. */
+    adopt: function (next) { if (next) S = next; },
+    reset: reset, begin: begin, act: act, ready: ready,
     charAt: charAt, isWall: isWall, doorAt: doorAt, moduleAt: moduleAt, roomAt: roomAt,
     coordOf: coordOf,
     coffreUndo: coffreUndo,

@@ -135,6 +135,8 @@
     <!-- ================= P1 ================= -->
     <section class="phone phone--p1" id="p1" aria-label="Player 1 phone, Assane">
       <div class="phone__label"><b>P1</b> ASSANE — THE HANDS</div>
+      <!-- only the guest sees this: whether the van is still on the line -->
+      <p class="guestnote" id="guest-note">CONNECTED</p>
       <div class="phone__body">
         <div class="phone__notch"></div>
         <div class="phone__screen" id="p1-screen"></div>
@@ -176,6 +178,18 @@
         <button type="button" data-live="p2">P2 BENJAMIN</button>
       </span>
       <button class="chip chip--btn" id="btn-both" type="button">BOTH PHONES</button>
+      <!-- only appears when there is a relay behind the page to join through -->
+      <button class="chip chip--btn" id="btn-seat" type="button" hidden>SECOND SEAT</button>
+    </div>
+
+    <!-- THE JOIN CARD. Over the television while the presenter waits for
+         somebody to take Assane, gone the moment they do. -->
+    <div class="seat" id="seat-panel" aria-live="polite">
+      <p class="seat__h">TAKE THE SECOND SEAT</p>
+      <img class="seat__qr" id="seat-qr" alt="" aria-hidden="true">
+      <p class="seat__url" id="seat-url"></p>
+      <p class="seat__note">Scan it, or type it in. You get Assane’s phone and
+        nothing else — the plan stays over here.</p>
     </div>
 
   </div>
@@ -191,5 +205,6 @@
 <script src="js/p1.js"></script>
 <script src="js/p2.js"></script>
 <script src="js/main.js"></script>
+<script src="js/link.js"></script>
 </body>
 </html>
