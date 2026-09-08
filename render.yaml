@@ -1,7 +1,17 @@
 # Deux Complices, hosted — for the demo where the second player is not in the
-# room. Render reads this on "New > Blueprint"; every other host wants the same
-# three facts, so it doubles as the instructions for Fly, a VPS, or anything
-# else that can run a Python process.
+# room.
+#
+# BLUEPRINTS ARE A PAID FEATURE, so this file is documentation first and
+# automation second. Everything in it can be typed into New > Web Service by
+# hand on any plan, free included, and that is the shorter road:
+#
+#   Language        Python 3
+#   Build Command   pip install --disable-pip-version-check cryptography segno && python tools/pack.py
+#   Start Command   python serve.py
+#   Environment     PROTOTYPE_PASSWORD, SEAT_TOKEN, PYTHON_VERSION=3.12
+#
+# Every other host wants the same three facts, so this doubles as the
+# instructions for Fly, a VPS, or anything else that can run a Python process.
 #
 #   build:  seal the prototype with the passphrase, exactly as CI does
 #   run:    serve.py, which serves the SEALED build and relays the second seat
