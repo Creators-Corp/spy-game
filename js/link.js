@@ -219,7 +219,15 @@
 
   function openSeat() {
     link.wanted = !link.wanted;
-    if (link.wanted) checkStatus();
+    if (link.wanted) {
+      checkStatus();
+    } else {
+      /* TAKING THE SEAT BACK HAS TO TAKE THE PHONE BACK. Both pollers stop
+         when the seat is closed, and they are the only things that ever
+         cleared link.guest — so closing it while somebody held Assane left
+         HANDED OVER across a phone nothing would ever un-grey. */
+      link.guest = false;
+    }
     paintHostUI();
     U.emit('render');
   }

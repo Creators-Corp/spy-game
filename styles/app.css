@@ -304,6 +304,11 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 /* the presenter's copy of Assane's phone, once a guest is holding it. Greyed
    rather than hidden: the presenter should still be able to see what the other
    player is being shown, without being able to play it. */
+/* THE PILL NEEDS SOMETHING TO HANG ON. Without this .phone is unpositioned,
+   so the ::after below anchored to .stage instead — and 50%/52% of the stage
+   is the middle of the television, which is where HANDED OVER was appearing,
+   nowhere near the phone it was describing. */
+.phone.is-handed{position:relative;}
 .phone.is-handed .phone__screen{filter:grayscale(1) brightness(.4);pointer-events:none;}
 .phone.is-handed .phone__label{color:var(--gold);}
 .phone.is-handed::after{
