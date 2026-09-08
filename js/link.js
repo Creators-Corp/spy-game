@@ -51,6 +51,11 @@
      URL, so the presenter and the guest both already carry it and neither has
      to type anything. Locally there is no token and this appends nothing. */
   var TOKEN = (/[?&]t=([^&]+)/.exec(window.location.search) || [])[1] || '';
+  try { TOKEN = TOKEN || sessionStorage.getItem('dc-seat-token') || ''; } catch (e) {}
+  function setToken(t) {
+    TOKEN = t || '';
+    try { sessionStorage.setItem('dc-seat-token', TOKEN); } catch (e) {}
+  }
   function wire(path) {
     if (!TOKEN) return path;
     return path + (path.indexOf('?') >= 0 ? '&' : '?') + 't=' + encodeURIComponent(TOKEN);
@@ -77,6 +82,7 @@
     wanted: false,       /* has the presenter asked for a second seat */
     guest: false,        /* is somebody actually holding it */
     join: '',
+    needsToken: false,   /* hosted with a SEAT_TOKEN, and this page has not got it */
     seen: 0
   };
 
@@ -188,27 +194,49 @@
     btn.classList.toggle('is-on', link.wanted);
     btn.textContent = link.guest ? 'SECOND SEAT: TAKEN' : link.wanted ? 'SECOND SEAT: WAITING' : 'SECOND SEAT';
     panel.classList.toggle('is-on', link.wanted && !link.guest);
+    /* hosted behind a token this page has not been given: ask for it once
+       rather than making somebody rebuild the address by hand */
+    panel.classList.toggle('is-locked', link.needsToken);
     var p1 = document.getElementById('p1');
     if (p1) p1.classList.toggle('is-handed', link.guest);
   }
 
-  function openSeat() {
-    link.wanted = !link.wanted;
-    if (link.wanted) {
-      var img = document.getElementById('seat-qr');
-      if (img) img.setAttribute('src', '/qr.svg?cb=' + Date.now());
+  /* re-ask now that a token has been typed; a good one comes back with the
+     join address attached and the panel turns into the QR code */
+  function checkStatus() {
+    return fetch(wire('/link/status')).then(function (r) { return r.json(); }).then(function (r) {
+      link.relay = !!(r && r.relay);
+      link.needsToken = !!(r && r.needsToken);
+      link.join = (r && r.join) || '';
       var url = document.getElementById('seat-url');
       if (url) url.textContent = link.join || '';
-    }
+      var img = document.getElementById('seat-qr');
+      if (img && link.join) img.setAttribute('src', wire('/qr.svg') + '&cb=' + Date.now());
+      paintHostUI();
+      return link.relay && !link.needsToken;
+    });
+  }
+
+  function openSeat() {
+    link.wanted = !link.wanted;
+    if (link.wanted) checkStatus();
     paintHostUI();
     U.emit('render');
   }
 
   /* ----------------------------------------------------------------- the boot */
   function boot() {
-    fetch(wire('/link/status')).then(function (r) { return r.json(); }).then(function (r) {
-      link.relay = !!(r && r.relay);
-      link.join = (r && r.join) || '';
+    var form = document.getElementById('seat-token-form');
+    if (form) form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var box = document.getElementById('seat-token');
+      setToken(box ? box.value.trim() : '');
+      checkStatus().then(function (ok) {
+        if (!ok && box) { box.value = ''; box.placeholder = 'THAT TOKEN WAS REFUSED'; }
+      });
+    });
+
+    checkStatus().then(function () {
       if (!link.relay) return;
       var btn = document.getElementById('btn-seat');
       if (btn) { btn.hidden = false; btn.addEventListener('click', openSeat); }

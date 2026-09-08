@@ -190,6 +190,16 @@
       <p class="seat__url" id="seat-url"></p>
       <p class="seat__note">Scan it, or type it in. You get Assane’s phone and
         nothing else — the plan stays over here.</p>
+      <!-- hosted behind a SEAT_TOKEN this browser has not been given -->
+      <form class="seat__lock" id="seat-token-form">
+        <p class="seat__h">SEAT TOKEN</p>
+        <p class="seat__note" style="margin-bottom:10px">This copy is hosted, and
+          the second seat is held behind a token so a stranger cannot take it.
+          Paste it once; this browser will remember it.</p>
+        <input id="seat-token" type="password" autocomplete="off" spellcheck="false"
+               aria-label="Seat token">
+        <button type="submit">UNLOCK THE SEAT</button>
+      </form>
     </div>
 
   </div>

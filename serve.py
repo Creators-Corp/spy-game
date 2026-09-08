@@ -147,11 +147,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?", 1)[0]
 
+        # ASKING IS FREE, BEING TOLD IS NOT. /link/status has to answer without
+        # a token or the presenter's page decides there is no relay and hides
+        # the button that would have let them supply one. It gives away only
+        # that a relay exists and whether a seat is taken; the join address,
+        # which carries the token, is held back until the token is supplied.
+        if path == "/link/status":
+            ok = self._allowed()
+            out = {"relay": True, "guest": guest_here(), "needsToken": bool(SEAT_TOKEN) and not ok}
+            if ok:
+                out["join"] = JOIN_URL
+            return self._json(out)
+
         if path.startswith("/link/") and not self._allowed():
             return self.send_error(403, "no token")
-
-        if path == "/link/status":
-            return self._json({"relay": True, "guest": guest_here(), "join": JOIN_URL})
 
         if path == "/link/state":
             SEEN["guest"] = time.time()
@@ -171,6 +180,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"intents": out, "guest": guest_here()})
 
         if path == "/qr.svg":
+            if not self._allowed():
+                return self.send_error(403, "no token")
             try:
                 import io as _io
                 import segno

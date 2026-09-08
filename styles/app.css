@@ -335,3 +335,24 @@ body.is-guest .guestnote{
   color:var(--gold);
 }
 body.is-guest .guestnote.is-lost{color:var(--red);}
+
+
+/* the join card has two faces: the QR when this browser may see the address,
+   and a single field when it may not */
+.seat__lock{display:none;}
+.seat.is-locked .seat__qr,
+.seat.is-locked .seat__url,
+.seat.is-locked > .seat__note,
+.seat.is-locked > .seat__h{display:none;}
+.seat.is-locked .seat__lock{display:block;}
+.seat__lock input{
+  display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 12px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--stone);color:var(--ink);font-family:var(--mono);font-size:13px;
+}
+.seat__lock button{
+  display:block;width:100%;padding:11px;
+  border:var(--stroke) solid var(--ink);border-radius:var(--r);
+  background:var(--gold);color:var(--on-gold);
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;
+}
