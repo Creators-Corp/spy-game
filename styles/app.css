@@ -381,9 +381,14 @@ body.is-guest .guestnote.is-lost{color:var(--red);}
    This is layout only. The guest page already does exactly this — it has
    always been one phone and nothing else — which is why the second seat has
    never had this problem, and why the rules below are shaped like its rules. */
+/* HIDDEN IS THE DEFAULT AND IT HAS TO BE SAID HERE. The element also carries
+   the hidden attribute, but [hidden] is a UA rule and any class rule outranks
+   it — so writing display:flex here put the bar across the bottom of a 2000px
+   presenter screen, underneath all three screens, which is not a layout that
+   exists. body.is-solo turns it on, and nothing else does. */
 .solobar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
-  display:flex;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  display:none;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
   background:rgba(10,13,17,.94);
   border-top:var(--stroke) solid var(--zinc);
 }

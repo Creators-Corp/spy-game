@@ -161,7 +161,7 @@
        laptop is legible either way, and the second seat is precisely the seat
        most likely to be a phone: it is what the QR code is for. */
     window.dispatchEvent(new Event('resize'));
-    var v = 0, started = false, drawn = '';
+    var v = 0, started = false, drawn = '', job = -1, seed = -1;
 
     Object.keys(ALLOWED).forEach(function (name) {
       var real = E[name];
@@ -180,10 +180,24 @@
         if (!r || r.payload === undefined || r.payload === null) return;
         v = r.v;
         var p = r.payload;
-        if (!started) {
+        /* THE BUILDING CAN CHANGE UNDER A GUEST, AND IT HAS TO BE REBUILT
+           WHEN IT DOES. This used to load the job once, on the first payload,
+           and never again — so a presenter who moved on to the second
+           contract, or restarted on a new roster, left the guest adopting the
+           NEW state on top of the OLD map. Assane stood where contract two
+           said, while isWall() still answered from contract one, so the pad
+           refused directions that were plainly open on the television. It
+           looked like a desync because it was one. The seed matters just as
+           much: it is what rolls the codes, the roster and the safe, so a
+           stale one has the two of them reading different answers. */
+        if (!started || p.job !== job || p.seed !== seed) {
           started = true;
-          C.loadJob(p.job);
-          E.reset(p.seed);            /* deterministic: same codes, same roster */
+          job = p.job; seed = p.seed;
+          U.silence();                /* the old job's cues do not play over the new one */
+          C.loadJob(job);
+          E.reset(seed);              /* deterministic: same codes, same roster */
+          L.p1.resetTyped();          /* half-typed answers belong to the old building */
+          drawn = '';                 /* force the redraw; this is a different place */
         }
         E.adopt(p.S);
         /* ONLY REDRAW WHEN SOMETHING ACTUALLY CHANGED.
