@@ -14,8 +14,38 @@
      no longer existed. Layout lives in one place now. */
   function fit() {
     var st = document.getElementById('stage');
-    var s = Math.min(window.innerWidth / st.offsetWidth, window.innerHeight / st.offsetHeight);
+    /* MEASURE THE BOX IT ACTUALLY SITS IN, not the window. They are the same
+       thing until something else claims part of the screen — on a phone the
+       solo bar takes the bottom 64px — and measuring the window then scales
+       the stage to a height it has not got and posts the last inch of it
+       underneath the bar. */
+    var box = st.parentNode;
+    var w = box.clientWidth || window.innerWidth;
+    var h = box.clientHeight || window.innerHeight;
+    var s = Math.min(w / st.offsetWidth, h / st.offsetHeight);
     st.style.transform = 'scale(' + s + ')';
+  }
+
+  /* ---- one screen at a time, when there is only room for one ----
+     See the note in app.css. Below this width the three-screens-at-once stage
+     shrinks past reading, so the stage shows a single screen and this picks
+     which. The threshold is the stage's own narrowest sensible whole: a
+     television plus a phone. */
+  var soloQuery = window.matchMedia('(max-width: 900px)');
+  var soloView = 'p1';           /* the one with the controls on it */
+  function setSolo(view) {
+    soloView = view;
+    var on = soloQuery.matches && !(L.link && L.link.role === 'guest');
+    document.body.classList.toggle('is-solo', on);
+    ['tv', 'p1', 'p2'].forEach(function (v) {
+      document.body.classList.toggle('solo-' + v, on && v === view);
+    });
+    U.$$('#solo-bar button').forEach(function (b) {
+      b.classList.toggle('is-on', b.getAttribute('data-solo') === view);
+    });
+    var bar = U.$('#solo-bar');
+    if (bar) bar.hidden = !on;
+    fit();
   }
 
   /* ---- render: scroll position is preserved so Benjamin does not lose his
@@ -192,8 +222,16 @@
       this.textContent = 'SLOTS: ' + (document.body.classList.contains('hide-slots') ? 'OFF' : 'ON');
     });
 
+    U.$$('#solo-bar button').forEach(function (b) {
+      b.addEventListener('click', function () { setSolo(b.getAttribute('data-solo')); });
+    });
+    /* rotating the phone can cross the threshold in either direction */
+    if (soloQuery.addEventListener) soloQuery.addEventListener('change', function () { setSolo(soloView); });
+    else if (soloQuery.addListener) soloQuery.addListener(function () { setSolo(soloView); });
+    setSolo(soloView);
+
     fit();
-    window.addEventListener('resize', fit);
+    window.addEventListener('resize', function () { setSolo(soloView); });
     /* the wall sheet arrives over the wire, and ready() fires straight away if
        it is already in. Painting the room first shows the floor drawn from the
        bare rules and then visibly correcting itself. */

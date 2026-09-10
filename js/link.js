@@ -139,6 +139,16 @@
      does not know: the intents it calls are swapped underneath it. */
   function runGuest() {
     document.body.classList.add('is-guest');
+    /* THE STAGE JUST CHANGED SIZE, SO IT HAS TO BE MEASURED AGAIN.
+       main.js fits the stage once, on DOMContentLoaded, and at that moment
+       this page still looked like a presenter's: a 1680px row of television
+       and two phones, which on a handset fits at about 0.22. The class above
+       throws away everything but Assane's phone, so the stage becomes 360px
+       wide — but the scale stayed where it was, and the guest got a phone
+       drawn at a fifth of its size. It went unnoticed because a guest on a
+       laptop is legible either way, and the second seat is precisely the seat
+       most likely to be a phone: it is what the QR code is for. */
+    window.dispatchEvent(new Event('resize'));
     var v = 0, started = false;
 
     Object.keys(ALLOWED).forEach(function (name) {
@@ -211,7 +221,11 @@
       var url = document.getElementById('seat-url');
       if (url) url.textContent = link.join || '';
       var img = document.getElementById('seat-qr');
-      if (img && link.join) img.setAttribute('src', wire('/qr.svg') + '&cb=' + Date.now());
+      /* cache-buster FIRST, so it is the one that brings the "?" along. Built
+         the other way round this reads /qr.svg&cb=... on any copy without a
+         token — no question mark anywhere, a 404, and no QR on screen. Which
+         is every demo run from a laptop in a room. */
+      if (img && link.join) img.setAttribute('src', wire('/qr.svg?cb=' + Date.now()));
       paintHostUI();
       return link.relay && !link.needsToken;
     });

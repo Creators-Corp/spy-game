@@ -75,7 +75,26 @@
 }
 .phead__who{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);}
 .phead__now{font-size:15px;letter-spacing:.12em;text-transform:uppercase;margin-left:auto;}
-.pbody{flex:1;min-height:0;overflow:auto;padding:14px;}
+/* THE DOSSIER IS THE ONE THING PEOPLE READ WITH A FINGER.
+   Two of these declarations are only about touch, and both come from the same
+   report: on a phone the dossier "would not scroll down, it snapped back up".
+
+   touch-action:pan-y tells the browser, before the finger has moved far enough
+   for it to guess, that a vertical drag starting in here is a scroll. Without
+   it the gesture is ambiguous — this is a scroller inside a transformed,
+   position:fixed stage — and the browser can decide mid-drag that it was
+   panning the page all along, which reads exactly like the content springing
+   back.
+
+   overscroll-behavior:contain stops the scroll CHAINING when the manual hits
+   its end. The next link in that chain is a body with overflow:hidden, which
+   cannot scroll and so bounces, dragging the apparent position back up. */
+.pbody{
+  flex:1;min-height:0;overflow:auto;padding:14px;
+  touch-action:pan-y;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
 .pbody::-webkit-scrollbar{width:6px;}
 .pbody::-webkit-scrollbar-thumb{background:var(--stone-dk);border-radius:99px;}
 .pfoot{flex:none;padding:12px 14px 18px;border-top:var(--stroke) solid var(--ink);}

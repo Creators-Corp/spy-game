@@ -205,6 +205,17 @@
   </div>
 </div>
 
+<!-- ONE SCREEN AT A TIME, ON A DISPLAY THAT ONLY FITS ONE.
+     Deliberately a sibling of .stage-fit rather than a child of .stage: the
+     stage is transform:scale()d to fit the room, and everything inside it is
+     scaled with it. On a phone that scale is about 0.22, which would render
+     this bar four pixels tall. Out here it is always the size it claims. -->
+<div class="solobar" id="solo-bar" hidden>
+  <button type="button" data-solo="p1">ASSANE</button>
+  <button type="button" data-solo="tv">TV</button>
+  <button type="button" data-solo="p2">BENJAMIN</button>
+</div>
+
 <script src="js/util.js"></script>
 <script src="js/glyphs.js"></script>
 <script src="js/figures.js"></script>

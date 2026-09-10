@@ -25,6 +25,11 @@ Fill these in before you hand this page on.
 You should be looking at three screens side by side: a television in the middle,
 Assane's phone on the left, Benjamin's on the right.
 
+**On a phone, or a narrow window,** there is no room for three, so you get one
+at a time and a row of buttons along the bottom — **ASSANE · TV · BENJAMIN** —
+to choose which. Nothing else changes. A laptop or a television shows all three
+at once and needs no switching.
+
 ---
 
 ## The shortest version of what it is

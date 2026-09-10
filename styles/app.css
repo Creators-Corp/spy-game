@@ -361,3 +361,60 @@ body.is-guest .guestnote.is-lost{color:var(--red);}
   background:var(--gold);color:var(--on-gold);
   font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;
 }
+
+
+/* ============ ONE SCREEN AT A TIME ============
+   The stage is a fixed 1680x840 canvas holding a television and two phones
+   side by side, scaled down until it fits the room. That is right for a
+   laptop and wrong for a phone: at 375px wide the scale works out at 0.22,
+   the whole game becomes a 375x187 strip, and Benjamin's dossier lands on
+   screen at 75x135 physical pixels. It is not that the dossier scrolled
+   badly at that size — it is that nobody can read a 75px-wide manual, so the
+   only way to use it was to pinch-zoom, and a pinch-zoomed drag over a
+   scroller inside a transformed, position:fixed stage is the gesture the
+   browser is worst at resolving. Hence "it snaps back up".
+
+   So on a narrow display the stage stops being three screens and becomes
+   one, at its natural size, chosen from a bar that is not part of the stage.
+   Nothing about the game changes; the scale goes from 0.22 to about 1.
+
+   This is layout only. The guest page already does exactly this — it has
+   always been one phone and nothing else — which is why the second seat has
+   never had this problem, and why the rules below are shaped like its rules. */
+.solobar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(10,13,17,.94);
+  border-top:var(--stroke) solid var(--zinc);
+}
+.solobar button{
+  flex:1;padding:12px 4px;
+  border:var(--stroke) solid var(--zinc);border-radius:999px;
+  background:transparent;color:var(--zinc-lt);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+}
+.solobar button.is-on{background:var(--gold);color:var(--on-gold);border-color:var(--gold);}
+
+body.is-solo .solobar{display:flex;}
+/* the desktop chrome lives INSIDE the stage, so at solo scale it would sit on
+   top of the phone it is meant to be controlling. The bar replaces it. */
+body.is-solo .stage__chrome{display:none;}
+/* room for the bar, so the bottom of a phone is not underneath it */
+body.is-solo .stage-fit{bottom:64px;}
+body.is-solo .stage{
+  width:auto;height:auto;padding:0;
+  justify-content:center;
+}
+/* whichever one is not the chosen screen simply is not laid out */
+body.is-solo .tv,
+body.is-solo .phone--p1,
+body.is-solo .phone--p2{display:none;}
+body.is-solo.solo-tv .tv{display:block;margin-top:0;}
+body.is-solo.solo-p1 .phone--p1{display:block;}
+body.is-solo.solo-p2 .phone--p2{display:block;}
+/* BOTH PHONES is a one-screen convenience and there is only one screen here;
+   blurring the phone you deliberately switched to would be nonsense. */
+body.is-solo .phone.is-blocked .phone__block{display:none;}
+body.is-solo .phone.is-blocked .phone__screen{filter:none;pointer-events:auto;}
+/* a guest is already exactly one phone; it must not also get the switcher */
+body.is-guest .solobar{display:none;}
