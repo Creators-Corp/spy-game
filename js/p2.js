@@ -1020,7 +1020,10 @@
     host.appendChild(view);
   }
 
-  L.p2 = { render: render, reset: function () {
+  /* wrapped for the same reason as P1's: the dossier is the longest thing
+     anybody reads here, so losing its place is the most expensive. */
+  L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
+           reset: function () {
     tab = 'plan'; openSerial = -1; openBadge = null; pickedFace = null;
     tapped = []; queryResult = null; layer = 'patrols';
   } };

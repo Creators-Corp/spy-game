@@ -406,8 +406,29 @@ window.DC = window.DC || {};
     names.forEach(function (n) { var i = new Image(); i.src = assetURL('art/' + n + '.png'); });
   }
 
+  /* KEEP THE READER'S PLACE ACROSS A REDRAW.
+     Both phones redraw by throwing the whole screen away and building a new
+     one — a new .pbody, with a new scroll position of zero. Whoever was
+     halfway down the manual gets returned to the top.
+
+     main.js used to do this around its own render pass, and that was the bug:
+     it only ever covered ITS pass. The guest polls the van four times a second
+     and calls p1.render() directly, so a guest reading anything taller than
+     the screen was thrown back to the top every time the presenter's
+     heartbeat landed — about once a second, no matter what they did. Owning
+     it here means a new caller cannot forget it. */
+  function keepScroll(sel, draw) {
+    var before = $(sel + ' .pbody');
+    var at = before ? before.scrollTop : 0;
+    draw();
+    if (!at) return;
+    var after = $(sel + ' .pbody');
+    if (after) after.scrollTop = at;
+  }
+
   L.util = {
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
+    keepScroll: keepScroll,
     polishScreen: polishScreen, phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,

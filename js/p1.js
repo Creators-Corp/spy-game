@@ -951,7 +951,11 @@
     paintStill();
   }
 
-  L.p1 = { render: render, pressure: pressure, resetTyped: function () {
+  /* WRAPPED, NOT EXPORTED BARE. This is called both from main.js's render
+     pass and straight from the guest's poll loop, and the reader's place has
+     to survive either. See U.keepScroll. */
+  L.p1 = { render: function () { U.keepScroll('#p1-screen', render); },
+           pressure: pressure, resetTyped: function () {
     typed = ''; outfit = { head: null, torso: null, legs: null };
   } };
 })(window.DC);

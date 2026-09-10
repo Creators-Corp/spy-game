@@ -134,6 +134,18 @@
     setInterval(pushState, 1000);     /* a heartbeat, so a late guest catches up */
   }
 
+  /* WHAT COUNTS AS NEWS, FROM ASSANE'S PHONE'S POINT OF VIEW.
+     Everything but the clock. S.elapsed climbs once a second for the whole
+     job, and it is drawn on the television, which a guest does not have — so
+     comparing raw state would report a change every single second and rebuild
+     the phone every single second, which is the whole bug. Anything that IS
+     on this phone, suspicion included, still comes through. */
+  function snapshot(S) {
+    var copy = {}, k;
+    for (k in S) if (k !== 'elapsed') copy[k] = S[k];
+    return JSON.stringify(copy);
+  }
+
   /* ---------------------------------------------------------------- the guest */
   /* Adopts the presenter's state and sends taps back. p1.js is not modified and
      does not know: the intents it calls are swapped underneath it. */
@@ -149,7 +161,7 @@
        laptop is legible either way, and the second seat is precisely the seat
        most likely to be a phone: it is what the QR code is for. */
     window.dispatchEvent(new Event('resize'));
-    var v = 0, started = false;
+    var v = 0, started = false, drawn = '';
 
     Object.keys(ALLOWED).forEach(function (name) {
       var real = E[name];
@@ -174,7 +186,31 @@
           E.reset(p.seed);            /* deterministic: same codes, same roster */
         }
         E.adopt(p.S);
-        L.p1.render();
+        /* ONLY REDRAW WHEN SOMETHING ACTUALLY CHANGED.
+           The presenter pushes a heartbeat every second so a late guest
+           catches up, and the version number moves whether or not the heist
+           did. Taken at face value that rebuilt Assane's whole phone once a
+           second for the entire game. Scroll position survives that now, but
+           a rebuild under a moving finger still stops the fling dead, which
+           on a touchscreen is indistinguishable from the screen refusing to
+           scroll. An unchanged state is not news and is not drawn. */
+        var shot = snapshot(p.S);
+        if (shot !== drawn) {
+          drawn = shot;
+          L.p1.render();
+        }
+        /* THE ONE THING THAT MOVES BETWEEN REDRAWS.
+           The idle nag is painted straight into the existing strip, exactly
+           as main.js does for the presenter — no rebuild, so it can tighten
+           under a finger without stopping a scroll. Computed here rather than
+           through E.tick() because tick() CHARGES suspicion, and the
+           presenter's copy is already charging it; running it here too would
+           bill Assane twice for standing still. */
+        var P = C.PRESSURE, St = E.S;
+        L.p1.pressure(St.running && St.phase === 'play' && P
+          ? { idle: (Date.now() - St.lastActionAt) / 1000, grace: P.grace,
+              ticking: (Date.now() - St.lastActionAt) / 1000 >= P.grace }
+          : null);
         paintGuestBar();
       }).catch(function () { paintGuestBar(true); });
     }
