@@ -124,6 +124,21 @@ class RelayTests(unittest.TestCase):
         self.assertEqual(serve.STATE["payload"]["S"]["turn"], 5)
         self.assertEqual(serve.STATE["v"], 1)
 
+    def test_state_publication_renews_host_without_another_claim(self):
+        serve.HOST['seen'] -= 31
+        self.assertEqual(self.state()[0], 200)
+        other = dict(self.host, client='other-presenter-123456', secret='other-secret-123456')
+        self.assertEqual(self.request('/link/host', other, lease=False)[0], 409)
+
+    def test_door_clear_is_ordered_between_digits_and_retries_are_deduplicated(self):
+        self.state()
+        for ident, call in [('digit-1', 'porteTap'), ('clear', 'porteClear'), ('digit-2', 'porteTap')]:
+            self.assertEqual(self.tap(ident=ident, call=call)[0], 200)
+        self.tap(ident='clear', call='porteClear')
+        pending = self.request('/link/intent')[1]['intents']
+        self.assertEqual([m['id'] for m in pending], ['digit-1', 'clear', 'digit-2'])
+        self.assertEqual(self.tap(ident='wrong-role', call='porteClear', role='p2', client='second-phone')[0], 403)
+
     def test_expired_movements_are_not_replayed(self):
         self.state()
         self.tap()

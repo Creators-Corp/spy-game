@@ -147,18 +147,18 @@
     function key(n) {
       var worn = K.worn.indexOf(n) >= 0;
       return el('button', { class: worn ? 'is-worn' : '', text: n, onclick: function () {
-        if (S.clavierEntry.length < 4) { S.clavierEntry += n; U.sfx.tap(); U.emit('render'); }
+        E.clavierTap(n); U.emit('render');
       } });
     }
     ['1','2','3','4','5','6','7','8','9'].forEach(function (n) { pad.appendChild(key(n)); });
     pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () {
-      S.clavierEntry = ''; U.emit('render');
+      E.clavierClear(); U.emit('render');
     } }));
     pad.appendChild(key('0'));
     pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
       if (S.clavierEntry.length !== 4) return;
       var ok = E.clavierSubmit(S.clavierEntry);
-      if (!ok) { readout.classList.add('is-bad'); S.clavierEntry = ''; setTimeout(function () { U.emit('render'); }, 500); }
+      if (!ok) { readout.classList.add('is-bad'); setTimeout(function () { U.emit('render'); }, 500); }
       else U.emit('render');
     } }));
 
@@ -274,7 +274,7 @@
     }
     ['1','2','3','4','5','6','7','8','9'].forEach(function (n) { pad.appendChild(key(n)); });
     pad.appendChild(el('button', { class: 'k-clear', text: 'CLR',
-      onclick: function () { S.porteEntry = ''; U.emit('render'); } }));
+      onclick: function () { E.porteClear(); U.emit('render'); } }));
     pad.appendChild(key('0'));
     pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
       if (S.porteEntry.length < K.code.length) return;

@@ -57,8 +57,8 @@ def record_event(kind):
         DIAG["events"].append({"at": time.time(), "event": kind})
 
 
-P1_CALLS = {"ready", "restart", "act", "declineModule", "takePrize", "porteTap", "porteUndo",
-            "porteSubmit", "coffreTap", "coffreUndo", "bureauSubmit", "bureauDoor", "clavierSubmit",
+P1_CALLS = {"ready", "restart", "act", "declineModule", "takePrize", "porteTap", "porteUndo", "porteClear",
+            "porteSubmit", "coffreTap", "coffreUndo", "bureauSubmit", "bureauDoor", "clavierTap", "clavierClear", "clavierSubmit",
             "grilleTry", "deguisementSubmit", "ecouteCut", "fauxChoose", "tchatchePick"}
 P2_CALLS = {"ready", "restart", "selectJob", "pullLever"}
 
@@ -173,7 +173,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Discovery is public; only the active host receives the invitation.
         if path == "/link/status":
             with LOCK:
-                out = {"relay": True, "protocol": 5, "joinRequired": not self._allowed(), **presence(),
+                out = {"relay": True, "protocol": 6, "joinRequired": not self._allowed(), **presence(),
                        "hostReady": bool(STATE["updated"] and time.monotonic() - STATE["updated"] < 5)}
                 if self._host():
                     out["join"] = phone_join_url()
@@ -215,7 +215,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with LOCK:
                 if not self._host():
                     return self._json({"error": "host required"}, 403)
-                out = {"protocol": 5, "queuedInputs": len(INTENTS),
+                out = {"protocol": 6, "queuedInputs": len(INTENTS),
                        "hostAge": time.monotonic() - HOST["seen"], "seats": presence()["seats"]}
             with DIAG_LOCK:
                 out.update(requests=dict(DIAG["requests"]), errors=dict(DIAG["errors"]), events=list(DIAG["events"]))
@@ -334,6 +334,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with LOCK:
                 if not self._host() or payload["host"] != HOST["client"]:
                     return self._json({"error": "host required"}, 403)
+                HOST["seen"] = time.monotonic()
                 # Timed-out requests may still reach the server. An older state
                 # from the same presenter must never replace a newer one.
                 if payload["host"] != STATE["host"] or payload["seq"] > STATE["seq"]:

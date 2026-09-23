@@ -88,9 +88,10 @@ function peer(role, remember = true, storage = new Map()) {
     return nodes.get(id);
   }
   const E = { S: { seed: 1, phase: 'plan', ready: { p1: false, p2: false }, turn: 0 },
+    porteTap() {}, porteUndo() {}, porteClear() {}, porteSubmit() {}, coffreTap() {}, coffreUndo() {}, clavierTap() {}, clavierClear() {}, clavierSubmit() {},
     pullLever(...args) { calls.push(['lever', ...args]); }, ready(who) { calls.push(['ready', who]); }, act(...args) { calls.push(['act', ...args]); },
     reset(seed) { calls.push(['reset', seed]); E.S = { seed }; }, adopt(s) { E.S = s; } };
-  const L = { engine: E, content: { jobIndex: 0, JOBS: [{}, {}], loadJob(i) { calls.push(['job', i]); } },
+  const L = { engine: E, content: { jobIndex: 0, PORTE: { code: '1234' }, JOBS: [{}, {}], loadJob(i) { calls.push(['job', i]); } },
     recovery: { identity: { client: 'presenter', secret: 'secret' }, id: () => 'page',
       pending: false, blocked: false, storageOK: true, meta: { session: 'run-a', seq: 0, applied: [] },
       sync() { return this.meta; }, save() {}, block(message) { this.blocked = !!message; } },
@@ -113,7 +114,7 @@ function peer(role, remember = true, storage = new Map()) {
 test('refresh carries the departing host lease once and clears it after claiming', async () => {
   const storage = new Map();
   async function claim(p, expected, lease) {
-    p.L.net.request = async () => ({ relay: true, protocol: 5 });
+    p.L.net.request = async () => ({ relay: true, protocol: 6 });
     await p.loops[0].work();
     p.L.net.request = async (url, body) => {
       if (url.startsWith('/link/host')) {
@@ -139,6 +140,125 @@ test('refresh carries the departing host lease once and clears it after claiming
 });
 const state = (session = 'run-a', epoch = 'server-a', turn = 0) => ({ epoch, v: 1, hostAge: 0,
   payload: { session, job: 0, seed: 1, S: { seed: 1, turn, phase: 'plan' } } });
+
+test('keypad taps and clear stay immediate through delayed and partially acknowledged snapshots', async () => {
+  const p = peer('guest'), sent = [];
+  async function update(entry, applied = []) {
+    const r = state();
+    Object.assign(r.payload.S, { phase: 'module', moduleId: 'porte', porteEntry: entry });
+    r.payload.applied = applied;
+    p.L.net.request = async () => r;
+    await p.loops[1].work();
+  }
+  async function send() {
+    p.L.net.request = async (url, item) => { sent.push(item); return {}; };
+    await p.loops[0].work();
+  }
+  await update('');
+  p.E.porteTap('1'); assert.equal(p.E.S.porteEntry, '1');
+  await send(); // Received by relay, but host has not applied it yet.
+  await update(''); assert.equal(p.E.S.porteEntry, '1');
+  p.E.porteClear(); assert.equal(p.E.S.porteEntry, '');
+  p.E.porteTap('2'); assert.equal(p.E.S.porteEntry, '2');
+  await send(); await send();
+  assert.deepEqual(sent.map(m => m.call), ['porteTap', 'porteClear', 'porteTap']);
+  await update('1', [sent[0].id]); assert.equal(p.E.S.porteEntry, '2');
+  await update('', sent.slice(0, 2).map(m => m.id)); assert.equal(p.E.S.porteEntry, '2');
+  await update('2', sent.map(m => m.id)); assert.equal(p.E.S.porteEntry, '2');
+  await update('2', sent.map(m => m.id)); assert.equal(p.E.S.porteEntry, '2');
+  p.E.porteTap('3'); p.E.porteTap('4'); p.E.porteTap('5'); p.E.porteSubmit();
+  assert.equal(p.E.S.porteEntry, '2345');
+  for (let i = 0; i < 4; i++) await send();
+  assert.deepEqual(sent.slice(-4).map(m => m.call), ['porteTap', 'porteTap', 'porteTap', 'porteSubmit']);
+});
+
+test('lost keypad response retries once without duplicating its local preview', async () => {
+  const p = peer('guest'), r = state();
+  Object.assign(r.payload.S, { phase: 'module', moduleId: 'porte', porteEntry: '' });
+  p.L.net.request = async () => r; await p.loops[1].work();
+  p.E.porteTap('7');
+  let id;
+  p.L.net.request = async (url, item) => { id = item.id; throw new Error('response lost'); };
+  await assert.rejects(p.loops[0].work());
+  assert.equal(p.E.S.porteEntry, '7');
+  p.L.net.request = async (url, item) => { assert.equal(item.id, id); return {}; };
+  await p.loops[0].work();
+  r.payload.S.porteEntry = '7'; r.payload.applied = [id];
+  p.L.net.request = async () => r; await p.loops[1].work();
+  assert.equal(p.E.S.porteEntry, '7');
+});
+
+test('pending keypad preview is discarded on expiry, puzzle exit, and a new run', async () => {
+  const p = peer('guest');
+  async function update(session = 'run-a', phase = 'module') {
+    const r = state(session);
+    Object.assign(r.payload.S, { phase, moduleId: phase === 'module' ? 'porte' : null, porteEntry: '' });
+    p.L.net.request = async () => r; await p.loops[1].work();
+  }
+  await update(); p.E.porteTap('1');
+  p.setTime(109000); await p.loops[0].work();
+  assert.equal(p.E.S.porteEntry, '');
+  p.E.porteTap('2'); await update('run-a', 'play');
+  assert.equal(p.E.S.porteEntry, '');
+  await update(); assert.equal(p.E.S.porteEntry, '');
+  p.E.porteTap('3'); await update('run-b');
+  assert.equal(p.E.S.porteEntry, '');
+});
+
+test('safe previews glyphs and undo without predicting a puzzle result', async () => {
+  const p = peer('guest'), r = state();
+  Object.assign(r.payload.S, { phase: 'module', moduleId: 'coffre', coffreEntry: [], coffreFails: 0, hasManuscript: false });
+  p.L.net.request = async () => r; await p.loops[1].work();
+  p.E.coffreTap('sun'); p.E.coffreUndo(); p.E.coffreTap('moon');
+  assert.equal(JSON.stringify(p.E.S.coffreEntry), '["moon"]');
+  p.E.coffreTap('key'); p.E.coffreTap('eye'); p.E.coffreTap('star');
+  assert.equal(p.E.S.coffreEntry.length, 4);
+  assert.equal(p.E.S.coffreFails, 0); assert.equal(p.E.S.hasManuscript, false);
+  assert.equal(r.payload.S.coffreEntry.length, 0);
+});
+
+test('exit keypad retains its draft through snapshots and clears in order', async () => {
+  const p = peer('guest'), r = state(), sent = [];
+  Object.assign(r.payload.S, { phase: 'module', moduleId: 'clavier', clavierEntry: '' });
+  p.L.net.request = async () => r; await p.loops[1].work();
+  p.E.clavierTap('1'); p.E.clavierClear(); p.E.clavierTap('2');
+  assert.equal(p.E.S.clavierEntry, '2');
+  p.L.net.request = async (url, item) => { sent.push(item); return {}; };
+  for (let i = 0; i < 3; i++) await p.loops[0].work();
+  r.payload.S.clavierEntry = '1'; r.payload.applied = [sent[0].id];
+  p.L.net.request = async () => r; await p.loops[1].work();
+  assert.equal(p.E.S.clavierEntry, '2');
+  r.payload.S.clavierEntry = '2'; r.payload.applied = sent.map(m => m.id);
+  await p.loops[1].work(); assert.equal(p.E.S.clavierEntry, '2');
+});
+
+test('host publishes confirmed inputs without another ownership round trip', async () => {
+  const p = peer('host');
+  p.L.net.request = async () => ({ relay: true, protocol: 6 }); await p.loops[0].work();
+  let claims = 0, publishes = 0;
+  p.L.net.request = async (url, body) => {
+    if (url.startsWith('/link/host')) { claims++; return { lease: 'lease' }; }
+    if (url.startsWith('/link/state')) { publishes++; assert.deepEqual([...body.applied], ['confirmed']); }
+    return {};
+  };
+  p.L.recovery.meta.applied = ['confirmed'];
+  await p.loops[1].work(); await p.loops[1].work();
+  assert.equal(claims, 1); assert.equal(publishes, 2);
+});
+
+test('other controls show pending feedback until the host confirms the action', async () => {
+  const p = peer('guest'), r = state();
+  p.L.net.request = async () => r; await p.loops[1].work();
+  p.E.act(1, 0);
+  assert.equal(p.nodes.get('guest-note').textContent, 'SENDING…');
+  let id;
+  p.L.net.request = async (url, item) => { id = item.id; return {}; };
+  await p.loops[0].work();
+  assert.equal(p.nodes.get('guest-note').textContent, 'SENDING…');
+  r.payload.applied = [id];
+  p.L.net.request = async () => r; await p.loops[1].work();
+  assert.equal(p.nodes.get('guest-note').textContent, 'CONNECTED');
+});
 
 test('guest retries a lost tap response with the same ID and decoded token', async () => {
   const p = peer('guest'), sent = [];
@@ -185,7 +305,7 @@ test('guest drops unsent old movement after a long interruption or new run', asy
 
 test('host applies a tap once when acknowledgements are lost, and republishes unchanged state', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 5 });
+  p.L.net.request = async () => ({ relay: true, protocol: 6 });
   await p.loops[0].work();
   p.L.link.wanted = true;
   let publishes = 0, loseAck = true;
@@ -223,7 +343,7 @@ test('P2 phone renders the dossier, forwards support controls and blocks movemen
 test('join picker disables taken role and claims the other role', async () => {
   const p = peer('guest', false);
   p.L.net.request = async (url, body) => {
-    if (url.startsWith('/link/status')) return { protocol: 5, hostReady: true,
+    if (url.startsWith('/link/status')) return { protocol: 6, hostReady: true,
       seats: { p1: { taken: true, age: 0 }, p2: { taken: false, age: null } } };
     assert.equal(body.role, 'p2');
     return { role: 'p2', ticket: 'second-ticket', epoch: 'server-a' };
@@ -246,7 +366,7 @@ test('relay restart reclaims the same role but manual reclaim returns to picker'
   assert.equal(p.L.link.player, null);
   p.L.net.request = async url => {
     assert.ok(url.startsWith('/link/status'), 'a released phone must not automatically reclaim the role');
-    return { protocol: 5, hostReady: true, seats: { p1: { taken: false }, p2: { taken: false } } };
+    return { protocol: 6, hostReady: true, seats: { p1: { taken: false }, p2: { taken: false } } };
   };
   await p.loops[2].work();
   assert.equal(p.L.link.player, null);
@@ -254,7 +374,7 @@ test('relay restart reclaims the same role but manual reclaim returns to picker'
 
 test('competing host never publishes state or reads inputs while ownership is rejected', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 5 });
+  p.L.net.request = async () => ({ relay: true, protocol: 6 });
   await p.loops[0].work();
   const paths = [];
   p.L.net.request = async url => { paths.push(url.split('?')[0]); const e = new Error('occupied'); e.status = 409; throw e; };
@@ -266,7 +386,7 @@ test('competing host never publishes state or reads inputs while ownership is re
 
 test('host receives a QR automatically even when public discovery requires a phone invitation', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 5, joinRequired: true });
+  p.L.net.request = async () => ({ relay: true, protocol: 6, joinRequired: true });
   await p.loops[0].work();
   p.L.net.request = async (url, body) => url.startsWith('/link/host')
     ? { lease: 'lease', join: 'https://game.example/?join=1&t=phone-invitation' } : {};
@@ -279,7 +399,7 @@ test('host receives a QR automatically even when public discovery requires a pho
 
 test('pending recovery renews ownership without publishing the blank initial game', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 5 });
+  p.L.net.request = async () => ({ relay: true, protocol: 6 });
   await p.loops[0].work();
   p.L.recovery.pending = true;
   const paths = [];
@@ -290,7 +410,7 @@ test('pending recovery renews ownership without publishing the blank initial gam
 
 test('restored applied input IDs prevent replay after refresh with a lost acknowledgment', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 5 }); await p.loops[0].work();
+  p.L.net.request = async () => ({ relay: true, protocol: 6 }); await p.loops[0].work();
   p.L.recovery.meta.applied = ['already-applied'];
   let ack;
   p.L.net.request = async (url, body, headers) => {
@@ -324,7 +444,7 @@ function recoveredGame(storage = new Map()) {
   const time = clock(), handlers = {}, nodes = new Map();
   const node = id => { if (!nodes.has(id)) nodes.set(id, { hidden: false, addEventListener(e, fn) { handlers[id + ':' + e] = fn; } }); return nodes.get(id); };
   const listeners = {};
-  const L = { util: { silence() {}, sfx: new Proxy({}, { get: () => () => {} }), buzz() {},
+  const L = { util: { silence() {}, sfx: new Proxy({}, { get: () => () => {} }), buzz() {}, clamp: (n, lo, hi) => Math.max(lo, Math.min(hi, n)),
     on(n, fn) { (listeners[n] ||= []).push(fn); }, emit(n) { for (const fn of listeners[n] || []) fn(); } },
     p1: { resetTyped() {} }, p2: { reset() {} }, net: { event() {} }, link: { role: 'host' } };
   const window = { ...events(), DC: L, crypto: require('node:crypto').webcrypto, location: { search: '' } };
@@ -335,6 +455,33 @@ function recoveredGame(storage = new Map()) {
   L.engine.reset(1234); L.recovery.boot();
   return { L, time, storage, handlers, window, nodes };
 }
+
+test('door clear also clears the authoritative engine before the next digit', () => {
+  const p = recoveredGame(), E = p.L.engine;
+  E.S.phase = 'module'; E.S.moduleId = 'porte';
+  E.porteTap('1'); E.porteClear(); E.porteTap('2');
+  assert.equal(E.S.porteEntry, '2');
+});
+
+test('a previous wrong code cannot clear a new door entry later', async () => {
+  const p = recoveredGame(), E = p.L.engine;
+  E.S.phase = 'module'; E.S.moduleId = 'porte';
+  E.S.porteEntry = p.L.content.PORTE.code === '0000' ? '1111' : '0000';
+  E.porteSubmit(); E.porteClear(); E.porteTap('2');
+  await p.time.advance(1000);
+  assert.equal(E.S.porteEntry, '2');
+});
+
+test('exit keypad clears a failed submission on the host', () => {
+  const p = recoveredGame(), E = p.L.engine;
+  p.L.content.loadJob(1); E.reset(1234);
+  E.S.phase = 'module'; E.S.moduleId = 'clavier';
+  E.clavierTap('1'); E.clavierClear(); E.clavierTap('2');
+  assert.equal(E.S.clavierEntry, '2');
+  const wrong = p.L.content.CLAVIER.code === '0000' ? '1111' : '0000';
+  assert.equal(E.clavierSubmit(wrong), false);
+  assert.equal(E.S.clavierEntry, '');
+});
 
 test('refresh resumes the contract, state, session and applied IDs without charging away time', async () => {
   const p = recoveredGame();

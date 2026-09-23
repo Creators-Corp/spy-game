@@ -18,7 +18,7 @@
     var owner = S;
     var timer = setTimeout(function () {
       timers = timers.filter(function (t) { return t !== timer; });
-      if (S !== owner) return;
+      if (S !== owner || S.transitions.indexOf(transition) < 0) return;
       S.transitions = S.transitions.filter(function (t) { return t !== transition; });
       switch (transition.kind) {
         case 'close': closeModule(true); break;
@@ -1029,11 +1029,13 @@
      answer and never a feat of dexterity. It is only live mid-entry, so it can
      never race the resolve timers. */
   function coffreUndo() {
+    if (S.phase !== 'module' || S.moduleId !== 'coffre') return;
     if (!S.coffreEntry.length || S.coffreEntry.length >= 4) return;
     S.coffreEntry.pop();
     U.sfx.tap();
   }
   function coffreTap(glyph) {
+    if (S.phase !== 'module' || S.moduleId !== 'coffre') return;
     if (S.coffreEntry.length >= 4) return;
     S.coffreEntry.push(glyph);
     U.sfx.tap();
@@ -1084,6 +1086,16 @@
     setObjective();
   }
 
+  function clavierTap(d) {
+    if (S.phase !== 'module' || S.moduleId !== 'clavier') return;
+    if (S.clavierEntry.length >= 4) return;
+    S.clavierEntry += d;
+    U.sfx.tap();
+  }
+  function clavierClear() {
+    if (S.phase !== 'module' || S.moduleId !== 'clavier') return;
+    S.clavierEntry = ''; U.sfx.tap();
+  }
   function clavierSubmit(code) {
     if (code === C.CLAVIER.code) {
       U.sfx.unlock();
@@ -1092,6 +1104,7 @@
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
+    S.clavierEntry = '';
     raise(10);
     return false;
   }
@@ -1183,13 +1196,23 @@
     return C.PORTE.code.split('').map(porteSymbolFor);
   }
   function porteTap(d) {
+    if (S.phase !== 'module' || S.moduleId !== 'porte') return;
     if (S.porteEntry.length >= C.PORTE.code.length) return;
     S.porteEntry += d;
     U.sfx.tap();
   }
   function porteUndo() {
+    if (S.phase !== 'module' || S.moduleId !== 'porte') return;
     if (!S.porteEntry.length) return;
     S.porteEntry = S.porteEntry.slice(0, -1);
+    S.transitions = S.transitions.filter(function (t) { return t.kind !== 'door-clear'; });
+    U.sfx.tap();
+  }
+  function porteClear() {
+    if (S.phase !== 'module' || S.moduleId !== 'porte') return;
+    S.porteEntry = '';
+    // Starting a new entry cancels the previous wrong code's delayed clear.
+    S.transitions = S.transitions.filter(function (t) { return t.kind !== 'door-clear'; });
     U.sfx.tap();
   }
   function porteSubmit() {
@@ -1391,7 +1414,8 @@
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
     coffreTap: coffreTap, bureauSubmit: bureauSubmit, bureauDoor: bureauDoor,
-    porteTap: porteTap, porteUndo: porteUndo, porteSubmit: porteSubmit,
+    clavierTap: clavierTap, clavierClear: clavierClear,
+    porteTap: porteTap, porteUndo: porteUndo, porteClear: porteClear, porteSubmit: porteSubmit,
     porteDigitOf: porteDigitOf, porteSymbolFor: porteSymbolFor,
     porteCodeSymbols: porteCodeSymbols, takePrize: takePrize,
     tchatchePick: tchatchePick, rank: rank, setObjective: setObjective,

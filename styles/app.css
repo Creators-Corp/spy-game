@@ -325,11 +325,8 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
   font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;
 }
 
-/* THE GUEST PAGE is one phone, and it gets the window.
-   The stage stops being a 1680x840 canvas and shrinks to what is left in it,
-   which is the phone — and then main.js's own fit() scales that to the window
-   exactly as it always has. Reusing the scaling rather than writing a second
-   one is why this is eight lines instead of a layout. */
+/* A connected phone uses the viewport directly, with scrollable game content.
+   Device bezels and stage scaling belong only to the host presentation. */
 .guestnote{display:none;}
 body.is-guest .stage__chrome,
 body.is-guest .tv,
@@ -337,11 +334,21 @@ body.is-guest.guest-p1 .phone--p2,
 body.is-guest.guest-p2 .phone--p1,
 body.is-guest .seat{display:none !important;}
 body.is-guest .stage{
-  width:auto;height:auto;padding:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;height:100%;padding:0;transform:none;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
 }
+body.is-guest .phone{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;}
+body.is-guest .phone__label,body.is-guest .phone__notch{display:none;}
+body.is-guest .phone__body{
+  width:100%;height:auto;min-height:0;flex:1;padding:0;
+  border-radius:0;box-shadow:none;background:var(--paper);
+}
+body.is-guest .phone__screen{border-radius:0;}
+body.is-guest .phone__vig{inset:0;border-radius:0;}
+body.is-guest .phead{padding-top:12px;}
+body.is-guest button{touch-action:manipulation;}
 body.is-guest .guestnote{
-  display:block;margin:8px 0 0;text-align:center;
+  display:block;flex:none;margin:0;padding:6px 8px;text-align:center;
   font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--gold);
 }
@@ -435,9 +442,13 @@ body.is-guest.is-picking .join-picker{display:block;max-width:440px;margin:0 aut
 .join-picker button{display:flex;flex-direction:column;gap:5px;width:100%;padding:22px;margin:16px 0;text-align:left;background:var(--paper);color:var(--ink);border:2px solid var(--gold);border-radius:12px;cursor:pointer;}
 .join-picker button span{font:11px var(--mono);letter-spacing:.12em;}.join-picker button b{font:700 28px var(--font);}.join-picker button small{font:15px var(--font);}
 .join-picker button:disabled{opacity:.4;cursor:default;}.join-picker__hint{font-size:14px;line-height:1.5;opacity:.7;}
-body.is-guest:not(.is-picking) .guest-tools{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:center;height:44px;background:var(--night);}
+body.is-guest:not(.is-picking) .guest-tools{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:center;height:calc(44px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--night);}
 .guest-tools button{min-height:44px;padding:8px 24px;background:transparent;border:0;color:var(--ink);font:12px var(--mono);cursor:pointer;}
-body.is-guest:not(.is-picking) .stage-fit{bottom:44px;height:calc(100% - 44px);}
+body.is-guest:not(.is-picking) .stage-fit{
+  bottom:calc(44px + env(safe-area-inset-bottom));
+  height:calc(100dvh - 44px - env(safe-area-inset-bottom));
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
 
 body.is-guest.link-waiting .guestnote{color:var(--ink-soft);}
 .recovery{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;background:rgba(10,13,17,.94);padding:24px;}

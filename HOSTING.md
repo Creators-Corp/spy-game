@@ -110,7 +110,18 @@ P2 may choose a contract before readying and operate the support levers. Both
 phones may request a restart from the result screen. Local dossier browsing
 stays on P2’s phone.
 
-Deploy protocol version 5 to client and server together and reload all devices.
+Connected phones fill the browser viewport; device frames remain on the host.
+Door/exit-keypad digits, CLR, and safe glyphs/undo preview immediately on the phone. Snapshots
+include recently applied input IDs, so a delayed snapshot cannot overwrite newer
+entry edits or replay edits already confirmed by the host. Puzzle results still
+come from the host. Pending previews expire on interruption and reset on a new run
+or puzzle exit. CLR travels through the same ordered, deduplicated input queue.
+Active state/input polls run every 100 ms after completion. State publication
+renews the host lease directly, avoiding an extra ownership request per update.
+All queued phone actions show SENDING until the host confirms them. Only entry
+text is predicted; movement, lever effects and puzzle outcomes remain authoritative.
+
+Deploy protocol version 6 to client and server together and reload all devices.
 
 ## Main-screen ownership and refresh recovery
 

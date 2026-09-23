@@ -14,6 +14,7 @@
      no longer existed. Layout lives in one place now. */
   function fit() {
     var st = document.getElementById('stage');
+    if (L.link && L.link.role === 'guest') { st.style.transform = 'none'; return; }
     /* MEASURE THE BOX IT ACTUALLY SITS IN, not the window. They are the same
        thing until something else claims part of the screen — on a phone the
        solo bar takes the bottom 64px — and measuring the window then scales
