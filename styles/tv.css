@@ -92,7 +92,7 @@
   font-size:12.5px;line-height:1.55;margin-bottom:9px;color:var(--on-color);opacity:.88;
 }
 .plan__beats li:last-child{margin-bottom:0;}
-.plan__ready{display:flex;gap:8px;flex-wrap:wrap;}
+.plan__ready{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
 .readylamp{
   display:flex;align-items:center;gap:7px;
   font-size:9px;letter-spacing:.2em;
@@ -100,6 +100,8 @@
   background:transparent;color:var(--zinc-lt);
 }
 .readylamp i{width:8px;height:8px;border-radius:999px;background:transparent;border:var(--stroke) solid var(--zinc);}
+.readylamp.is-connected{background:#122237;border-color:#2B5586;color:#E6DABC;}
+.readylamp.is-connected i{background:#2B5586;border-color:#2B5586;}
 .readylamp.is-ready{background:#FD6A1A;border-color:#FD6A1A;color:var(--on-gold);}
 .readylamp.is-ready i{background:var(--on-gold);border-color:var(--on-gold);}
 

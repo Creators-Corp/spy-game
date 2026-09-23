@@ -301,7 +301,7 @@
      one of them is something Benjamin reads out; none is a search. */
   function answer(id) {
     var S = E.S;
-    if (id === 'porte') { C.PORTE.code.split('').forEach(function (d) { E.porteTap(d); }); E.porteSubmit(); }
+    if (id === 'porte') { C.PORTE.code.split('').forEach(function (d) { E.porteTap(d); }); }
     else if (id === 'bureau') { E.bureauSubmit(C.BUREAU.answer); E.bureauDoor(C.BUREAU.doorMark); }
     else if (id === 'coffre') { C.COFFRE.code.forEach(function (g) { E.coffreTap(g); }); }
     else if (id === 'clavier') { E.clavierSubmit(C.CLAVIER.code); }
@@ -325,6 +325,7 @@
       }
       else if (id === 'clavier' && S.solved.clavier) { S.moduleId = null; S.phase = 'rank'; S.running = false; }
       else { S.solved[id] = true; S.moduleId = null; S.phase = 'play'; }
+      S.codeFeedback = null;
       E.setObjective();
     }
   }

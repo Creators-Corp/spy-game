@@ -20,6 +20,7 @@
       timers = timers.filter(function (t) { return t !== timer; });
       if (S !== owner || S.transitions.indexOf(transition) < 0) return;
       S.transitions = S.transitions.filter(function (t) { return t !== transition; });
+      S.codeFeedback = null;
       switch (transition.kind) {
         case 'close': closeModule(true); break;
         case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
@@ -28,6 +29,9 @@
         case 'finish': S.moduleId = null; finish(); break;
         case 'door-caught': getSpotted('g1'); break;
         case 'door-clear': S.porteEntry = ''; break;
+        case 'clavier-clear': S.clavierEntry = ''; break;
+        case 'bureau-open': S.bureauStep = 1; S.bureauEntry = ''; break;
+        case 'bureau-clear': S.bureauEntry = ''; break;
       }
       U.emit('render');
     }, Math.max(0, transition.at - Date.now()));
@@ -37,6 +41,10 @@
     var transition = { kind: kind, at: Date.now() + delay };
     S.transitions.push(transition);
     schedule(transition);
+  }
+  function codeFeedback(ok) {
+    S.codeFeedback = { id: (S.codeFeedbackSerial || 0) + 1, ok: ok };
+    S.codeFeedbackSerial = S.codeFeedback.id;
   }
   function restore(next, savedAt) {
     timers.forEach(clearTimeout); timers = [];
@@ -217,6 +225,7 @@
       noise: null,             /* where the last run was heard */
       clavierEntry: '',
       bureauStep: 0,           /* 0 = keypad, 1 = door release */
+      bureauEntry: '', codeFeedback: null, codeFeedbackSerial: 0,
       coffreEntry: [],
       coffreFails: 0,
       tchatche: null,
@@ -1041,6 +1050,7 @@
     U.sfx.tap();
     if (S.coffreEntry.length < 4) return;
     var ok = S.coffreEntry.every(function (g, i) { return g === C.COFFRE.code[i]; });
+    codeFeedback(ok);
     if (ok) {
       U.sfx.unlock();
       S.hasManuscript = true;
@@ -1087,16 +1097,21 @@
   }
 
   function clavierTap(d) {
+    if (S.codeFeedback) return;
     if (S.phase !== 'module' || S.moduleId !== 'clavier') return;
     if (S.clavierEntry.length >= 4) return;
     S.clavierEntry += d;
     U.sfx.tap();
+    if (S.clavierEntry.length === 4) clavierSubmit(S.clavierEntry);
   }
   function clavierClear() {
+    if (S.codeFeedback) return;
     if (S.phase !== 'module' || S.moduleId !== 'clavier') return;
     S.clavierEntry = ''; U.sfx.tap();
   }
   function clavierSubmit(code) {
+    if (S.codeFeedback || S.phase !== 'module' || S.moduleId !== 'clavier' || code.length !== 4) return false;
+    codeFeedback(code === C.CLAVIER.code);
     if (code === C.CLAVIER.code) {
       U.sfx.unlock();
       S.solved.clavier = true;
@@ -1104,7 +1119,7 @@
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
-    S.clavierEntry = '';
+    defer('clavier-clear', 900);
     raise(10);
     return false;
   }
@@ -1196,12 +1211,15 @@
     return C.PORTE.code.split('').map(porteSymbolFor);
   }
   function porteTap(d) {
+    if (S.codeFeedback) return;
     if (S.phase !== 'module' || S.moduleId !== 'porte') return;
     if (S.porteEntry.length >= C.PORTE.code.length) return;
     S.porteEntry += d;
     U.sfx.tap();
+    if (S.porteEntry.length === C.PORTE.code.length) porteSubmit();
   }
   function porteUndo() {
+    if (S.codeFeedback) return;
     if (S.phase !== 'module' || S.moduleId !== 'porte') return;
     if (!S.porteEntry.length) return;
     S.porteEntry = S.porteEntry.slice(0, -1);
@@ -1209,6 +1227,7 @@
     U.sfx.tap();
   }
   function porteClear() {
+    if (S.codeFeedback) return;
     if (S.phase !== 'module' || S.moduleId !== 'porte') return;
     S.porteEntry = '';
     // Starting a new entry cancels the previous wrong code's delayed clear.
@@ -1216,7 +1235,9 @@
     U.sfx.tap();
   }
   function porteSubmit() {
+    if (S.codeFeedback || S.phase !== 'module' || S.moduleId !== 'porte') return false;
     if (S.porteEntry.length < C.PORTE.code.length) return false;
+    codeFeedback(S.porteEntry === C.PORTE.code);
     if (S.porteEntry === C.PORTE.code) {
       U.sfx.unlock();
       unlockDoorAt(C.PORTE.door);
@@ -1253,10 +1274,24 @@
     defer('close', 800);
   }
 
+  function bureauTap(d) {
+    if (S.phase !== 'module' || S.moduleId !== 'bureau' || S.bureauStep !== 0 || S.codeFeedback) return;
+    S.bureauEntry = S.bureauEntry || '';
+    if (S.bureauEntry.length >= 4) return;
+    S.bureauEntry += d; U.sfx.tap();
+    if (S.bureauEntry.length === 4) bureauSubmit(S.bureauEntry);
+  }
+  function bureauClear() {
+    if (S.phase !== 'module' || S.moduleId !== 'bureau' || S.codeFeedback) return;
+    S.bureauEntry = ''; U.sfx.tap();
+  }
   function bureauSubmit(code) {
-    if (code === C.BUREAU.answer) { U.sfx.unlock(); S.bureauStep = 1; return true; }
+    if (S.codeFeedback || S.phase !== 'module' || S.moduleId !== 'bureau' || S.bureauStep !== 0 || code.length !== 4) return false;
+    codeFeedback(code === C.BUREAU.answer);
+    if (code === C.BUREAU.answer) { U.sfx.unlock(); defer('bureau-open', 900); return true; }
     U.sfx.bad(); U.buzz('p1');
     raise(10);
+    defer('bureau-clear', 900);
     return false;
   }
   function bureauDoor(mark) {
@@ -1413,7 +1448,7 @@
     startBlackout: startBlackout, darken: darken, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
-    coffreTap: coffreTap, bureauSubmit: bureauSubmit, bureauDoor: bureauDoor,
+    coffreTap: coffreTap, bureauTap: bureauTap, bureauClear: bureauClear, bureauSubmit: bureauSubmit, bureauDoor: bureauDoor,
     clavierTap: clavierTap, clavierClear: clavierClear,
     porteTap: porteTap, porteUndo: porteUndo, porteClear: porteClear, porteSubmit: porteSubmit,
     porteDigitOf: porteDigitOf, porteSymbolFor: porteSymbolFor,

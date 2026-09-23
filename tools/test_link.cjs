@@ -481,7 +481,7 @@ function recoveredGame(storage = new Map()) {
   const time = clock(), handlers = {}, nodes = new Map();
   const node = id => { if (!nodes.has(id)) nodes.set(id, { hidden: false, addEventListener(e, fn) { handlers[id + ':' + e] = fn; } }); return nodes.get(id); };
   const listeners = {};
-  const L = { util: { silence() {}, sfx: new Proxy({}, { get: () => () => {} }), buzz() {}, clamp: (n, lo, hi) => Math.max(lo, Math.min(hi, n)),
+  const L = { util: { silence() {}, sfx: new Proxy({}, { get: () => () => {} }), buzz() {}, shuffle: a => a.slice(), clamp: (n, lo, hi) => Math.max(lo, Math.min(hi, n)),
     on(n, fn) { (listeners[n] ||= []).push(fn); }, emit(n) { for (const fn of listeners[n] || []) fn(); } },
     p1: { resetTyped() {} }, p2: { reset() {} }, net: { event() {} }, link: { role: 'host' } };
   const window = { ...events(), DC: L, crypto: require('node:crypto').webcrypto, location: { search: '', reload() { this.reloaded = true; } } };
@@ -515,16 +515,20 @@ test('a copied host tab can start separately without modifying the original tab 
   assert.equal(fresh.L.recovery.pending, false);
 });
 
-test('a previous wrong code cannot clear a new door entry later', async () => {
+test('door failure holds its entry for feedback, then accepts a fresh entry', async () => {
   const p = recoveredGame(), E = p.L.engine;
   E.S.phase = 'module'; E.S.moduleId = 'porte';
   E.S.porteEntry = p.L.content.PORTE.code === '0000' ? '1111' : '0000';
   E.porteSubmit(); E.porteClear(); E.porteTap('2');
+  assert.equal(E.S.codeFeedback.ok, false);
+  assert.equal(E.S.porteEntry.length, 4);
+  await p.time.advance(1000);
+  E.porteTap('2');
   await p.time.advance(1000);
   assert.equal(E.S.porteEntry, '2');
 });
 
-test('exit keypad clears a failed submission on the host', () => {
+test('exit keypad clears a failed submission after feedback on the host', async () => {
   const p = recoveredGame(), E = p.L.engine;
   p.L.content.loadJob(1); E.reset(1234);
   E.S.phase = 'module'; E.S.moduleId = 'clavier';
@@ -532,7 +536,59 @@ test('exit keypad clears a failed submission on the host', () => {
   assert.equal(E.S.clavierEntry, '2');
   const wrong = p.L.content.CLAVIER.code === '0000' ? '1111' : '0000';
   assert.equal(E.clavierSubmit(wrong), false);
+  assert.equal(E.S.codeFeedback.ok, false);
+  await p.time.advance(900);
   assert.equal(E.S.clavierEntry, '');
+});
+
+for (const module of ['porte', 'bureau', 'clavier', 'coffre']) {
+  for (const correct of [true, false]) {
+    test(`${module} auto-checks the final input and holds ${correct ? 'success' : 'failure'} feedback before continuing`, async () => {
+      const p = recoveredGame(), E = p.L.engine, C = p.L.content;
+      if (module !== 'porte') { C.loadJob(1); E.reset(1234); }
+      E.ready('p1'); E.ready('p2'); E.openModule(module);
+      const answer = module === 'porte' ? C.PORTE.code : module === 'bureau' ? C.BUREAU.answer : module === 'clavier' ? C.CLAVIER.code : C.COFFRE.code;
+      const values = Array.from(answer);
+      if (!correct) values[0] = module === 'coffre' ? 'wrong-symbol' : values[0] === '0' ? '1' : '0';
+      const tap = E[module + 'Tap'];
+      values.slice(0, -1).forEach(tap);
+      assert.equal(E.S.codeFeedback, null);
+      tap(values.at(-1));
+      assert.equal(E.S.codeFeedback.ok, correct);
+      assert.equal(E.S.phase, 'module');
+      assert.equal(E.S.transitions.length, 1);
+      const suspicion = E.S.suspicion;
+      tap(values.at(-1));
+      assert.equal(E.S.transitions.length, 1);
+      assert.equal(E.S.suspicion, suspicion);
+      await p.time.advance(650);
+      assert.equal(E.S.phase, 'module');
+      assert.ok(E.S.codeFeedback);
+      await p.time.advance(250);
+      assert.equal(E.S.codeFeedback, null);
+      if (!correct) assert.equal(E.S[module + 'Entry'].length, 0);
+      else if (module === 'bureau') assert.equal(E.S.bureauStep, 1);
+      else assert.equal(E.S.phase, module === 'clavier' ? 'rank' : 'play');
+    });
+  }
+}
+
+test('repeated wrong door and safe codes finish feedback before starting the guard conversation', async () => {
+  for (const module of ['porte', 'coffre']) {
+    const p = recoveredGame(), E = p.L.engine, C = p.L.content;
+    if (module === 'coffre') { C.loadJob(1); E.reset(1234); }
+    E.ready('p1'); E.ready('p2'); E.openModule(module);
+    const tries = module === 'porte' ? C.PORTE.fails || 3 : 2;
+    for (let i = 0; i < tries; i++) {
+      const wrong = module === 'porte' ? (C.PORTE.code === '0000' ? '1111' : '0000').split('') : Array(4).fill('wrong');
+      wrong.forEach(E[module + 'Tap']);
+      await p.time.advance(650);
+      assert.equal(E.S.phase, 'module');
+      await p.time.advance(250);
+    }
+    assert.equal(E.S.phase, 'tchatche');
+    assert.equal(E.S.codeFeedback, null);
+  }
 });
 
 test('refresh resumes the contract, state, session and applied IDs without charging away time', async () => {
@@ -553,6 +609,21 @@ test('refresh resumes the contract, state, session and applied IDs without charg
   assert.equal(q.L.recovery.meta.seq, 31);
   assert.equal(q.L.recovery.meta.applied[0], 'applied-tap');
   assert.equal(q.nodes.get('stage').inert, false);
+});
+
+test('refresh during automatic desk feedback resumes the pending release screen once', async () => {
+  const p = recoveredGame(), E = p.L.engine;
+  p.L.content.loadJob(1); E.reset(42);
+  E.ready('p1'); E.ready('p2'); E.openModule('bureau');
+  p.L.content.BUREAU.answer.split('').forEach(E.bureauTap);
+  await p.time.advance(300); p.L.recovery.save();
+  const q = recoveredGame(p.storage);
+  await q.time.advance(60000); q.handlers['resume-game:click']();
+  assert.equal(q.L.engine.S.codeFeedback.ok, true);
+  await q.time.advance(599); assert.equal(q.L.engine.S.bureauStep, 0);
+  await q.time.advance(1); assert.equal(q.L.engine.S.bureauStep, 1);
+  assert.equal(q.L.engine.S.codeFeedback, null);
+  assert.equal(q.L.engine.S.transitions.length, 0);
 });
 
 test('refresh during a puzzle transition resumes its remaining animation and completes once', async () => {

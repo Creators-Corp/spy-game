@@ -87,6 +87,17 @@
   --mono:"IBM Plex Mono","Consolas","SF Mono",ui-monospace,monospace;
 }
 
+/* A result cue shared by the TV and Assane's phone. */
+.code-feedback{
+  position:absolute;inset:0;z-index:20;pointer-events:none;border-radius:inherit;
+  --result-color:193,55,46;
+  background:radial-gradient(ellipse at center,rgba(var(--result-color),0) 35%,rgba(var(--result-color),.9) 100%);
+  opacity:0;animation:code-result 650ms ease-in-out both;
+}
+.code-feedback.is-success{--result-color:45,180,100;}
+.is-code-feedback .pscreen{pointer-events:none;}
+@keyframes code-result{0%,100%{opacity:0;}30%,50%{opacity:1;}}
+
 *,*::before,*::after{box-sizing:border-box;}
 html,body{height:100%;}
 body{

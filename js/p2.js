@@ -504,12 +504,12 @@
     ]);
     var rows = el('div', { class: 'keyboard__rows' });
     C.GRILLE.board.forEach(function (b) {
-      /* symbol on the left, the key it opens on the right, both drawn. The
+      /* Symbol on the left, the matching key artwork on the right. The
          row used to end in the words KEY 2, which Benjamin could read out
          without ever looking at the thing — and then Assane pressed the
          button marked 2 without looking either. */
       var ic = G.icon(b.sym); ic.style.color = 'var(--ink)';
-      var kc = G.icon(b.shape || 'key'); kc.style.color = 'var(--ink)';
+      var kc = el('img', { src: U.assetURL('art/ui/key' + b.key + '.png'), alt: 'Key', draggable: 'false' });
       rows.appendChild(el('div', { class: 'keyrow' }, [
         el('i', {}, [ic]),
         el('span', { class: 'keyrow__arrow', text: '→' }),

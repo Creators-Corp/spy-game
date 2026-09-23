@@ -44,7 +44,7 @@ HOST_GRACE = 30.0
 HOST_REFRESH_DELAY = 4.0
 
 P1_CALLS = {"ready", "restart", "act", "declineModule", "takePrize", "porteTap", "porteUndo", "porteClear",
-            "porteSubmit", "coffreTap", "coffreUndo", "bureauSubmit", "bureauDoor", "clavierTap", "clavierClear", "clavierSubmit",
+            "porteSubmit", "coffreTap", "coffreUndo", "bureauTap", "bureauClear", "bureauSubmit", "bureauDoor", "clavierTap", "clavierClear", "clavierSubmit",
             "grilleTry", "deguisementSubmit", "ecouteCut", "fauxChoose", "tchatchePick"}
 P2_CALLS = {"ready", "restart", "selectJob", "pullLever"}
 

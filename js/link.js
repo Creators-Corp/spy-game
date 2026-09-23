@@ -19,7 +19,7 @@
   function post(path, body) { return N.request(wire(path), body, headers()); }
   var P1 = { ready: 1, restart: 1, act: 1, declineModule: 1, takePrize: 1,
     porteTap: 1, porteUndo: 1, porteClear: 1, porteSubmit: 1, coffreTap: 1, coffreUndo: 1,
-    bureauSubmit: 1, bureauDoor: 1, clavierTap: 1, clavierClear: 1, clavierSubmit: 1, grilleTry: 1,
+    bureauTap: 1, bureauClear: 1, bureauSubmit: 1, bureauDoor: 1, clavierTap: 1, clavierClear: 1, clavierSubmit: 1, grilleTry: 1,
     deguisementSubmit: 1, ecouteCut: 1, fauxChoose: 1, tchatchePick: 1 };
   var P2 = { ready: 1, restart: 1, selectJob: 1, pullLever: 1 };
   var seats = { p1: { taken: false, age: null }, p2: { taken: false, age: null } };
@@ -37,9 +37,13 @@
   };
   link.renderGuest = function () { if (link.player) L[link.player].render(); };
   function observe(r) {
+    var seatsChanged = r.seats && ['p1', 'p2'].some(function (role) {
+      return seats[role].taken !== r.seats[role].taken;
+    });
     if (r.seats) seats = r.seats;
     link.seen = Date.now(); link.relay = true;
     paintHostUI();
+    if (seatsChanged && E.S.phase === 'plan') U.emit('render');
   }
 
   function runHost() {
@@ -158,11 +162,16 @@
     var ticket = remembered.ticket || '', epoch = remembered.epoch || '', v = -1;
     var session = null, drawn = '', queue = [], serial = 0, connected = false, claiming = false;
     var base = null, pendingInputs = [];
-    var editable = { porteTap: 1, porteUndo: 1, porteClear: 1, coffreTap: 1, coffreUndo: 1, clavierTap: 1, clavierClear: 1 };
+    var editable = { porteTap: 1, porteUndo: 1, porteClear: 1, coffreTap: 1, coffreUndo: 1, clavierTap: 1, clavierClear: 1, bureauTap: 1, bureauClear: 1 };
     function project(S, item) {
       // Predict only entry text. Unlocks, failures and puzzle timers remain
       // authoritative on the host, including the safe's fourth glyph.
-      if (S.phase !== 'module') return;
+      if (S.phase !== 'module' || S.codeFeedback) return;
+      if (S.moduleId === 'bureau' && S.bureauStep === 0) {
+        S.bureauEntry = S.bureauEntry || '';
+        if (item.call === 'bureauTap' && S.bureauEntry.length < 4) S.bureauEntry += item.args[0];
+        if (item.call === 'bureauClear') S.bureauEntry = '';
+      }
       if (S.moduleId === 'porte') {
         if (item.call === 'porteTap' && S.porteEntry.length < C.PORTE.code.length) S.porteEntry += item.args[0];
         if (item.call === 'porteUndo') S.porteEntry = S.porteEntry.slice(0, -1);
@@ -235,7 +244,7 @@
         var preview = Object.assign({}, E.S);
         if (preview.coffreEntry) preview.coffreEntry = preview.coffreEntry.slice();
         project(preview, item);
-        if (preview.porteEntry === E.S.porteEntry && preview.clavierEntry === E.S.clavierEntry &&
+        if (preview.porteEntry === E.S.porteEntry && preview.clavierEntry === E.S.clavierEntry && preview.bureauEntry === E.S.bureauEntry &&
             JSON.stringify(preview.coffreEntry) === JSON.stringify(E.S.coffreEntry)) return false;
       }
       queue.push(item);

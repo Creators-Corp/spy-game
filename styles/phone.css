@@ -719,16 +719,16 @@
   border:var(--stroke) solid var(--ink);border-left-width:4px;border-radius:var(--r);
   background:var(--stone);padding:11px 12px 6px;margin-bottom:12px;
 }
-.keyrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--stone-dk);}
-.keyrow:first-child{border-top:0;}
-.keyrow__key{flex:1 1 auto !important;width:auto !important;}
-.keyrow__key svg{width:70px;height:36px;}
+.keyrow{display:flex;align-items:center;justify-content:center;gap:14px;height:98px;padding:12px 0;border-top:1px solid var(--stone-dk);}
+.keyrow:first-child{height:96px;border-top:0;}
+.keyrow .keyrow__key{flex:0 1 calc(75% - 78px);width:auto;min-width:0;height:48px;display:flex;align-items:center;justify-content:center;}
+.keyrow__key img{display:block;width:auto;height:80%;max-width:100%;object-fit:contain;}
 .keyrow i{
-  width:36px;height:36px;flex:none;display:grid;place-items:center;
+  width:48px;height:48px;flex:none;display:grid;place-items:center;
   border:var(--stroke) solid var(--ink);border-radius:var(--r);background:var(--paper);
 }
-.keyrow i svg{width:26px;height:26px;}
-.keyrow__arrow{color:var(--ink-soft);}
+.keyrow i svg{width:36px;height:36px;}
+.keyrow__arrow{flex:none;width:28px;text-align:center;color:var(--ink);font-size:28px;line-height:1;}
 .keyrow b{font-family:var(--mono);font-size:15px;letter-spacing:.1em;font-weight:500;}
 
 /* ============ LES LEVIERS ============ */

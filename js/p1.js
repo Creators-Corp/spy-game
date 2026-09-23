@@ -155,12 +155,6 @@
       E.clavierClear(); U.emit('render');
     } }));
     pad.appendChild(key('0'));
-    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
-      if (S.clavierEntry.length !== 4) return;
-      var ok = E.clavierSubmit(S.clavierEntry);
-      if (!ok) { readout.classList.add('is-bad'); setTimeout(function () { U.emit('render'); }, 500); }
-      else U.emit('render');
-    } }));
 
     var door = el('div', { class: 'desk desk--night' }, [
       U.artSlot('blackout-door'),
@@ -276,10 +270,6 @@
     pad.appendChild(el('button', { class: 'k-clear', text: 'CLR',
       onclick: function () { E.porteClear(); U.emit('render'); } }));
     pad.appendChild(key('0'));
-    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
-      if (S.porteEntry.length < K.code.length) return;
-      E.porteSubmit(); U.emit('render');
-    } }));
 
     /* The plate. The zero carries a mark under it, drawn at the size a real
        engraver would have put it: small enough to ignore, big enough to
@@ -757,7 +747,6 @@
   }
 
   /* ---------------------------------------------------------- LE BUREAU */
-  var typed = '';
   function viewBureau() {
     var S = E.S;
 
@@ -785,22 +774,15 @@
       ]);
     }
 
-    var readout = el('div', { class: 'readout', text: typed || '· · · ·' });
+    var readout = el('div', { class: 'readout', text: S.bureauEntry || '· · · ·' });
     var pad = el('div', { class: 'keypad' });
     ['1','2','3','4','5','6','7','8','9'].forEach(function (n) {
       pad.appendChild(el('button', { text: n, onclick: function () {
-        if (typed.length < 4) { typed += n; U.sfx.tap(); U.emit('render'); }
+        E.bureauTap(n); U.emit('render');
       } }));
     });
-    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () { typed = ''; U.emit('render'); } }));
-    pad.appendChild(el('button', { text: '0', onclick: function () { if (typed.length < 4) { typed += '0'; U.sfx.tap(); U.emit('render'); } } }));
-    pad.appendChild(el('button', { class: 'k-ok', text: 'OK', onclick: function () {
-      if (typed.length !== 4) return;
-      var ok = E.bureauSubmit(typed);
-      if (!ok) { readout.classList.add('is-bad'); }
-      typed = '';
-      setTimeout(function () { U.emit('render'); }, ok ? 200 : 500);
-    } }));
+    pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () { E.bureauClear(); U.emit('render'); } }));
+    pad.appendChild(el('button', { text: '0', onclick: function () { E.bureauTap('0'); U.emit('render'); } }));
 
     /* The desk. The photo, the note and the badge are set live over the art —
        never generated inside it. No generated text, ever. */
@@ -944,6 +926,7 @@
     else v = viewEnd();
     if ((S.phase === 'module' && S.moduleId !== 'deguisement') || S.phase === 'rank' || S.phase === 'jail') U.polishScreen(v);
     host.appendChild(v);
+    U.codeFeedback(host, S);
     if (S.phase === 'play' && S.running) {
       var idle = Math.max(0, (Date.now() - S.lastActionAt) / 1000);
       pressure({ idle: idle, grace: C.PRESSURE.grace, ticking: idle >= C.PRESSURE.grace });
@@ -956,6 +939,6 @@
      to survive either. See U.keepScroll. */
   L.p1 = { render: function () { U.keepScroll('#p1-screen', render); },
            pressure: pressure, resetTyped: function () {
-    typed = ''; outfit = { head: null, torso: null, legs: null };
+    outfit = { head: null, torso: null, legs: null };
   } };
 })(window.DC);

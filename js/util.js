@@ -422,9 +422,34 @@ window.DC = window.DC || {};
     if (after) after.scrollTop = at;
   }
 
+  // Each display starts its cue when it receives the authoritative result.
+  // Retain that start across redraws so polling cannot restart the animation.
+  var codeCues = new WeakMap();
+  function codeFeedback(host, state) {
+    var result = state.codeFeedback, cue = codeCues.get(host);
+    var overlay = host.querySelector('.code-feedback');
+    if (!result) {
+      if (overlay) overlay.remove();
+      codeCues.delete(host);
+      host.classList.remove('is-code-feedback');
+      return;
+    }
+    if (!cue || cue.id !== result.id || cue.seed !== state.seed) {
+      cue = { id: result.id, seed: state.seed, at: Date.now() };
+      codeCues.set(host, cue);
+      if (overlay) { overlay.remove(); overlay = null; }
+    }
+    host.classList.add('is-code-feedback');
+    if (!overlay) {
+      overlay = el('div', { class: 'code-feedback' + (result.ok ? ' is-success' : ' is-error'), 'aria-hidden': 'true' });
+      overlay.style.animationDelay = '-' + Math.min(650, Date.now() - cue.at) + 'ms';
+      host.appendChild(overlay);
+    }
+  }
+
   L.util = {
     el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
-    keepScroll: keepScroll,
+    keepScroll: keepScroll, codeFeedback: codeFeedback,
     polishScreen: polishScreen, phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,
     sfx: sfx, setMuted: setMuted, isMuted: isMuted, buzz: buzz, heartbeat: heartbeat, score: score,

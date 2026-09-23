@@ -221,8 +221,15 @@
        in the top bar and the target sits under the title, so all this line has
        to carry is which contract and which shift. */
     $('#plan-job').textContent = C.contract.split(' — ')[0] + '  ·  ROSTER ' + S.seed;
-    $('#lamp-p1').classList.toggle('is-ready', S.ready.p1);
-    $('#lamp-p2').classList.toggle('is-ready', S.ready.p2);
+    ['p1', 'p2'].forEach(function (role) {
+      var lamp = $('#lamp-' + role);
+      var ready = !!S.ready[role];
+      var connected = !!(L.link && L.link.taken(role));
+      lamp.classList.toggle('is-ready', ready);
+      lamp.classList.toggle('is-connected', connected && !ready);
+      lamp.querySelector('span').textContent = (role === 'p1' ? 'P1 ASSANE' : 'P2 BENJAMIN') +
+        ' – ' + (ready ? 'READY' : connected ? 'CONNECTED' : 'IDLE');
+    });
   }
 
   var CLAVIER_TILE = { id: 'clavier', name: 'LE CLAVIER', icon: 'lock' };
@@ -394,6 +401,7 @@
     else if (S.phase === 'tchatche') { show('tchatche'); renderTchatche(); }
     else if (S.phase === 'rank') { show('rank'); renderRank(); }
     else if (S.phase === 'jail') { show('jail'); }
+    U.codeFeedback(scr, S);
   }
 
   L.tv = { render: render };
