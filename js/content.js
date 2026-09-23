@@ -250,6 +250,11 @@
        tile; contract four's is a plain window on a plain wall. */
     HATCH: 'niche',
     PRIZE: { dark: true, name: 'DOSSIER' },
+    MAP_OBJECTIVES: [
+      { until: 'porte', targets: ['deguisement', 'porte'] },
+      { until: 'prize', targets: ['prize'] },
+      { targets: ['exit'] }
+    ],
     DOORS: [
       /* the service gate at the foot of the stairs. Its mark is a plain lock on
          Benjamin's plan — what is stamped on the padlock is Assane's to see */
@@ -514,6 +519,12 @@
        time. This contract is the one that earns it: the safe is three rooms
        and two floors from the only way out. */
     PRIZE: { name: 'MANUSCRIPT', hatchHidden: true },
+    MAP_OBJECTIVES: [
+      { until: 'porte', targets: ['deguisement', 'porte'] },
+      { until: 'bureau', targets: ['bureau'], unlockTargets: ['bureau-door'] },
+      { until: 'coffre', targets: ['coffre'] },
+      { targets: ['exit'] }
+    ],
     OBJ: {
       door:  'A locked door at the back of the kitchens. P1 has the keypad; P2 has the code.',
       after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
@@ -703,7 +714,7 @@
   var JOB_FIELDS = ['id', 'HATCH', 'venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'LINK', 'CLAVIER', 'PORTE',
-    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ'];
+    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ', 'MAP_OBJECTIVES'];
 
   function loadJob(i) {
     var job = JOBS[i] || JOBS[0];
