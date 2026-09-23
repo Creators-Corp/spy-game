@@ -161,12 +161,18 @@
     try { remembered = JSON.parse(saved(seatKey) || '{}'); } catch (e) {}
     var ticket = remembered.ticket || '', epoch = remembered.epoch || '', v = -1;
     var session = null, drawn = '', queue = [], serial = 0, connected = false, claiming = false;
+    var syncing = false, syncVersion = 0;
     var base = null, pendingInputs = [];
     var editable = { porteTap: 1, porteUndo: 1, porteClear: 1, coffreTap: 1, coffreUndo: 1, clavierTap: 1, clavierClear: 1, bureauTap: 1, bureauClear: 1 };
     function project(S, item) {
       // Predict only entry text. Unlocks, failures and puzzle timers remain
       // authoritative on the host, including the safe's fourth glyph.
       if (S.phase !== 'module' || S.codeFeedback) return;
+      // The final digit now submits automatically. Until its host result
+      // arrives, clearing it locally would show an edit the host cannot accept.
+      var entry = S.moduleId === 'porte' ? S.porteEntry : S.moduleId === 'bureau' ? S.bureauEntry :
+        S.moduleId === 'clavier' ? S.clavierEntry : null;
+      if (entry && entry.length >= (S.moduleId === 'porte' ? C.PORTE.code.length : 4)) return;
       if (S.moduleId === 'bureau' && S.bureauStep === 0) {
         S.bureauEntry = S.bureauEntry || '';
         if (item.call === 'bureauTap' && S.bureauEntry.length < 4) S.bureauEntry += item.args[0];
@@ -197,7 +203,7 @@
       pendingInputs.forEach(function (m) { project(next, m); });
       E.adopt(next);
       var shot = snapshot(next);
-      if (shot !== drawn) { drawn = shot; link.renderGuest(); }
+      if (shot !== drawn) { link.renderGuest(); drawn = shot; }
       paintConnection();
     }
     var suggested = remembered.ticket ? null : query.get('role');
@@ -216,6 +222,10 @@
       connected = message === 'CONNECTED'; paintConnection();
     }
     function remember() { save(seatKey, JSON.stringify({ role: link.player, ticket: ticket, epoch: epoch })); }
+    link.serverReport = function () {
+      if (!link.player || !ticket) return Promise.resolve(null);
+      return get('/link/diagnostics?role=' + link.player + '&client=' + encodeURIComponent(client) + '&ticket=' + encodeURIComponent(ticket));
+    };
     function loseSeat(message) {
       suggested = null;
       queue = []; pendingInputs = []; base = null; ticket = ''; session = null; drawn = ''; v = -1;
@@ -269,16 +279,27 @@
         if (queue.length) send.kick();
         poller.kick();
       }).catch(function (error) {
+        // A reply for the previous contract must not clear newer inputs or
+        // turn an already recovered phone back into a reconnecting screen.
+        if (item.session !== session) { poller.kick(); return; }
+        if (error.status === 409) {
+          queue = []; pendingInputs = []; v = -1; syncing = true; syncVersion++;
+          connection('SYNCING GAME…'); mirror(); poller.kick();
+          N.event('game_resync', { contract: C.jobIndex + 1, phase: E.S.phase });
+          return; // A session change needs a fresh snapshot, not retry backoff.
+        }
         connection('RECONNECTING…');
-        if (error.status === 409 || error.status === 410) { queue = []; pendingInputs = []; mirror(); v = -1; }
+        if (error.status === 410) { queue = []; pendingInputs = []; mirror(); v = -1; }
         poller.kick(); throw error;
       });
     }, POLL);
     var poller = N.loop(function () {
       if (!link.player || !ticket) return;
+      var requestedSync = syncVersion;
       var path = '/link/state?since=' + v + '&epoch=' + encodeURIComponent(epoch) +
         '&role=' + link.player + '&client=' + encodeURIComponent(client) + '&ticket=' + encodeURIComponent(ticket);
       return get(path).then(function (r) {
+        if (requestedSync !== syncVersion) { poller.kick(); return; }
         if (r.roomMissing) { v = -1; connection('WAITING FOR THE MAIN SCREEN…'); return; }
         if (r.seatLost) {
           if (r.epoch !== epoch) return claim(link.player); // new relay, same open game
@@ -286,25 +307,35 @@
           return;
         }
         epoch = r.epoch; v = r.v; remember();
-        connection(r.hostAge === null || r.hostAge > 5 ? 'WAITING FOR THE MAIN SCREEN…' : 'CONNECTED');
+        connection(r.hostAge === null || r.hostAge > 5 ? 'WAITING FOR THE MAIN SCREEN…' : syncing ? 'SYNCING GAME…' : 'CONNECTED');
         if (!r.payload) { mirror(); return; }
         var p = r.payload;
-        if (p.session !== session) {
-          session = p.session; queue = []; pendingInputs = []; drawn = '';
-          U.silence(); C.loadJob(p.job); E.reset(p.seed);
-          L.p1.resetTyped(); L.p2.reset();
+        try {
+          if (p.session !== session) {
+            queue = []; pendingInputs = []; drawn = '';
+            U.silence(); C.loadJob(p.job); E.reset(p.seed);
+            L.p1.resetTyped(); L.p2.reset();
+            session = p.session;
+          }
+          pendingInputs = pendingInputs.filter(function (m) {
+            return (p.applied || []).indexOf(m.id) < 0 && base &&
+              base.phase === p.S.phase && base.moduleId === p.S.moduleId;
+          });
+          base = p.S;
+          mirror();
+          syncing = false;
+          connection(r.hostAge === null || r.hostAge > 5 ? 'WAITING FOR THE MAIN SCREEN…' : 'CONNECTED');
+          var P = C.PRESSURE, S = E.S;
+          if (link.player === 'p1') L.p1.pressure(S.running && S.phase === 'play' && P
+            ? { idle: Math.max(0, (Date.now() - S.lastActionAt) / 1000), grace: P.grace,
+                ticking: (Date.now() - S.lastActionAt) / 1000 >= P.grace } : null);
+        } catch (error) {
+          v = -1; drawn = ''; error.view = true;
+          N.event('view_failed', { contract: p.job + 1, phase: p.S.phase, error: error.name || 'Error' });
+          throw error;
         }
-        pendingInputs = pendingInputs.filter(function (m) {
-          return (p.applied || []).indexOf(m.id) < 0 && base &&
-            base.phase === p.S.phase && base.moduleId === p.S.moduleId;
-        });
-        base = p.S; mirror();
-        var P = C.PRESSURE, S = E.S;
-        if (link.player === 'p1') L.p1.pressure(S.running && S.phase === 'play' && P
-          ? { idle: Math.max(0, (Date.now() - S.lastActionAt) / 1000), grace: P.grace,
-              ticking: (Date.now() - S.lastActionAt) / 1000 >= P.grace } : null);
       });
-    }, POLL, function () { connection('RECONNECTING…'); });
+    }, POLL, function (error) { connection(error.view ? 'SCREEN ERROR — RELOAD THIS PHONE' : 'RECONNECTING…'); });
     ['p1', 'p2'].forEach(function (role) {
       document.getElementById('join-' + role).addEventListener('click', function () { claim(role).catch(function () {}); });
     });
@@ -384,8 +415,10 @@
         var download = document.getElementById('report-download');
         panel.hidden = false; output.value = 'Preparing connection report…'; download.hidden = true;
         var report = { protocol: 7, generatedAt: new Date().toISOString(), role: ROLE,
-          player: link.player, recoveryAvailable: R.storageOK, client: N.diagnostics() };
-        var server = owner ? get('/link/diagnostics').catch(function () { return { unavailable: true }; }) : Promise.resolve(null);
+          player: link.player, contract: C.jobIndex + 1, phase: E.S.phase,
+          recoveryAvailable: R.storageOK, client: N.diagnostics() };
+        var server = (owner ? get('/link/diagnostics') : link.serverReport ? link.serverReport() : Promise.resolve(null))
+          .catch(function () { return { unavailable: true }; });
         server.then(function (data) {
           report.server = data;
           output.value = JSON.stringify(report, null, 2);

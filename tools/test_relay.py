@@ -1,4 +1,5 @@
 """Relay regressions. Run: python -m unittest discover -s tools -p test_relay.py"""
+import gzip
 import http.client
 import json
 from pathlib import Path
@@ -78,6 +79,71 @@ class RelayTests(unittest.TestCase):
         self.assertTrue(self.room.seat_taken("p1"))
         self.room.seats["p1"]["seen"] -= 20
         self.assertFalse(self.room.seat_taken("p1"))
+
+    def test_slow_response_write_does_not_block_other_players_in_the_room(self):
+        entered, release = threading.Event(), threading.Event()
+        original = serve.Handler._send_json
+        results = []
+
+        def slow_write(handler, obj, code):
+            if handler.path.startswith('/link/host?'):
+                entered.set()
+                release.wait(2)
+            return original(handler, obj, code)
+
+        with patch.object(serve.Handler, '_send_json', slow_write):
+            worker = threading.Thread(target=lambda: results.append(self.request('/link/host', self.host)))
+            worker.start()
+            try:
+                self.assertTrue(entered.wait(1))
+                self.assertTrue(self.room.lock.acquire(timeout=0.2), 'socket write holds the game lock')
+                self.room.lock.release()
+                self.assertEqual(self.state()[0], 200)
+                self.assertEqual(self.claim()[0], 200)
+                self.assertEqual(self.tap()[0], 200)
+            finally:
+                release.set()
+                worker.join(3)
+        self.assertEqual(results[0][0], 200)
+
+    def test_state_snapshots_support_gzip_and_uncompressed_clients(self):
+        payload = {'host': self.host['client'], 'seq': 1, 'session': 'run-a', 'job': 1,
+                   'seed': 1234, 'S': {'phase': 'tchatche', 'padding': 'game-state-' * 400}}
+        self.assertEqual(self.request('/link/state', payload)[0], 200)
+        self.claim()
+        query = urlencode({'room': self.room_id, 't': self.room.host['join'], 'role': 'p1',
+                           'client': 'phone', 'ticket': self.tickets[('p1', 'phone')], 'since': -1})
+        for encoding in ['gzip, deflate, br', 'identity', 'gzip;q=0']:
+            conn = http.client.HTTPConnection('127.0.0.1', self.server.server_port, timeout=2)
+            try:
+                conn.request('GET', '/link/state?' + query, headers={'Accept-Encoding': encoding})
+                response = conn.getresponse()
+                body = response.read()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(int(response.getheader('Content-Length')), len(body))
+                if encoding.startswith('gzip,'):
+                    self.assertEqual(response.getheader('Content-Encoding'), 'gzip')
+                    self.assertLess(len(body), 1024)
+                    body = gzip.decompress(body)
+                else:
+                    self.assertIsNone(response.getheader('Content-Encoding'))
+                self.assertEqual(json.loads(body)['payload']['S'], payload['S'])
+            finally:
+                conn.close()
+
+    def test_phone_can_read_sanitized_diagnostics_only_with_its_own_seat(self):
+        self.state()
+        self.claim()
+        auth = urlencode({'role': 'p1', 'client': 'phone', 'ticket': self.tickets[('p1', 'phone')]})
+        status, report = self.request('/link/diagnostics?' + auth, lease=False)
+        self.assertEqual(status, 200)
+        encoded = json.dumps(report)
+        for secret in [self.room.host['join'], self.lease, self.tickets[('p1', 'phone')], 'run-a']:
+            self.assertNotIn(secret, encoded)
+        self.assertEqual(self.request('/link/diagnostics?' + auth.replace('role=p1', 'role=p2'), lease=False)[0], 403)
+        self.assertEqual(self.request('/link/diagnostics?' + auth.replace('ticket=', 'wrong='), lease=False)[0], 403)
+        _, other_request, _ = self.other_room()
+        self.assertEqual(other_request('/link/diagnostics?' + auth, lease=False)[0], 403)
 
     def test_lost_post_response_can_retry_without_duplicate_tap(self):
         self.state()

@@ -67,6 +67,28 @@ test('request deadline aborts a hung fetch; non-2xx responses reject', async () 
   await assert.rejects(other.net.request('/busy'), e => e.status === 503);
 });
 
+test('stalled state reads abort after three seconds and report their stage without credentials', async () => {
+  for (const stage of ['waiting_for_headers', 'reading_body']) {
+    const p = transport((url, options) => {
+      const hung = new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('aborted'))));
+      return stage === 'reading_body' ? Promise.resolve({ ok: true, json: () => hung }) : hung;
+    });
+    const result = p.net.request('/link/state?ticket=PRIVATE&t=SECRET').catch(e => e);
+    await p.time.advance(2999);
+    const active = p.net.diagnostics();
+    assert.equal(active.inFlight[0].stage, stage);
+    assert.equal(active.inFlight[0].ageMs, 2999);
+    assert.equal(JSON.stringify(active).includes('PRIVATE'), false);
+    await p.time.advance(1);
+    assert.equal((await result).transport, true);
+    const report = p.net.diagnostics();
+    assert.equal(report.timeouts, 1);
+    assert.equal(report.inFlight.length, 0);
+    assert.equal(report.events[0].durationMs, 3000);
+    assert.equal(report.events[0].stage, stage);
+  }
+});
+
 test('failed polls back off and foregrounding retries immediately', async () => {
   const { net, time, document } = transport();
   let calls = 0;
@@ -88,7 +110,7 @@ function peer(role, remember = true, storage = new Map(), room = 'test-room-1234
     return nodes.get(id);
   }
   const E = { S: { seed: 1, phase: 'plan', ready: { p1: false, p2: false }, turn: 0 },
-    porteTap() {}, porteUndo() {}, porteClear() {}, porteSubmit() {}, coffreTap() {}, coffreUndo() {}, clavierTap() {}, clavierClear() {}, clavierSubmit() {},
+    porteTap() {}, porteUndo() {}, porteClear() {}, porteSubmit() {}, coffreTap() {}, coffreUndo() {}, clavierTap() {}, clavierClear() {}, clavierSubmit() {}, bureauTap() {}, bureauClear() {},
     pullLever(...args) { calls.push(['lever', ...args]); }, ready(who) { calls.push(['ready', who]); }, act(...args) { calls.push(['act', ...args]); },
     reset(seed) { calls.push(['reset', seed]); E.S = { seed }; }, adopt(s) { E.S = s; } };
   const L = { engine: E, content: { jobIndex: 0, PORTE: { code: '1234' }, JOBS: [{}, {}], loadJob(i) { calls.push(['job', i]); } },
@@ -141,6 +163,76 @@ test('refresh carries the departing host lease once and clears it after claiming
 const state = (session = 'run-a', epoch = 'server-a', turn = 0) => ({ epoch, v: 1, hostAge: 0,
   payload: { session, job: 0, seed: 1, S: { seed: 1, turn, phase: 'plan' } } });
 
+test('session rejection resyncs immediately and ignores an older in-flight poll', async () => {
+  const p = peer('guest');
+  p.L.net.request = async () => state(); await p.loops[1].work();
+  p.E.ready('p1');
+  let release;
+  p.L.net.request = () => new Promise(resolve => { release = resolve; });
+  const oldPoll = p.loops[1].work();
+  p.L.net.request = async () => { throw Object.assign(new Error('new game'), { status: 409 }); };
+  await p.loops[0].work();
+  assert.equal(p.nodes.get('guest-note').textContent, 'SYNCING GAME…');
+  release(state()); await oldPoll;
+  assert.equal(p.nodes.get('guest-note').textContent, 'SYNCING GAME…');
+  p.L.net.request = async url => {
+    assert.equal(new URL(url, 'https://test').searchParams.get('since'), '-1');
+    return state('run-b');
+  };
+  await p.loops[1].work();
+  assert.equal(p.nodes.get('guest-note').textContent, 'CONNECTED');
+});
+
+test('late rejection from an old run cannot discard new-run input', async () => {
+  const p = peer('guest');
+  p.L.net.request = async () => state(); await p.loops[1].work();
+  p.E.ready('p1');
+  let reject;
+  p.L.net.request = () => new Promise((resolve, fail) => { reject = fail; });
+  const oldSend = p.loops[0].work();
+  p.L.net.request = async () => state('run-b'); await p.loops[1].work();
+  p.E.ready('p1');
+  reject(Object.assign(new Error('old run'), { status: 409 })); await oldSend;
+  p.L.net.request = async (url, input) => { assert.equal(input.session, 'run-b'); return {}; };
+  await p.loops[0].work();
+  assert.equal(p.nodes.get('guest-note').textContent, 'SENDING…');
+});
+
+test('phone retries a failed guard or door render instead of calling it a network disconnection', async () => {
+  for (const phase of ['tchatche', 'module']) {
+    const p = peer('guest'), r = state();
+    r.payload.job = 1; r.payload.S.phase = phase; r.payload.S.moduleId = 'bureau';
+    const logged = [];
+    p.L.net.event = (kind, details) => logged.push({ kind, ...details });
+    p.L.net.request = async () => r;
+    p.L.p1.render = () => { throw new TypeError('private content'); };
+    await assert.rejects(p.loops[1].work(), error => {
+      p.loops[1].onError(error); return error.view;
+    });
+    assert.equal(p.nodes.get('guest-note').textContent, 'SCREEN ERROR — RELOAD THIS PHONE');
+    assert.equal(logged.find(e => e.kind === 'view_failed').contract, 2);
+    assert.equal(JSON.stringify(logged).includes('private content'), false);
+    let rendered = false;
+    p.L.p1.render = () => { rendered = true; };
+    await p.loops[1].work();
+    assert.equal(rendered, true);
+    assert.equal(p.nodes.get('guest-note').textContent, 'CONNECTED');
+  }
+});
+
+test('phone connection reports request room diagnostics with its own seat credentials', async () => {
+  const p = peer('guest');
+  p.L.net.request = async url => {
+    const parsed = new URL(url, 'https://test');
+    assert.equal(parsed.pathname, '/link/diagnostics');
+    assert.equal(parsed.searchParams.get('role'), 'p1');
+    assert.equal(parsed.searchParams.get('ticket'), 'ticket');
+    assert.equal(parsed.searchParams.get('room'), 'test-room-123456789');
+    return { queuedInputs: 0 };
+  };
+  assert.equal((await p.L.link.serverReport()).queuedInputs, 0);
+});
+
 test('keypad taps and clear stay immediate through delayed and partially acknowledged snapshots', async () => {
   const p = peer('guest'), sent = [];
   async function update(entry, applied = []) {
@@ -170,6 +262,30 @@ test('keypad taps and clear stay immediate through delayed and partially acknowl
   assert.equal(p.E.S.porteEntry, '2345');
   for (let i = 0; i < 4; i++) await send();
   assert.deepEqual(sent.slice(-4).map(m => m.call), ['porteTap', 'porteTap', 'porteTap', 'porteSubmit']);
+});
+
+test('automatic phone submissions cannot be cleared or edited while their result is in flight', async () => {
+  for (const module of ['porte', 'bureau', 'clavier']) {
+    const p = peer('guest'), r = state(), sent = [];
+    Object.assign(r.payload.S, { phase: 'module', moduleId: module, bureauStep: 0, [module + 'Entry']: '' });
+    p.L.net.request = async () => r; await p.loops[1].work();
+    for (const digit of '1234') p.E[module + 'Tap'](digit);
+    p.E[module + 'Clear'](); p.E[module + 'Tap']('9');
+    if (module === 'porte') p.E.porteUndo();
+    assert.equal(p.E.S[module + 'Entry'], '1234');
+    p.L.net.request = async (url, input) => { sent.push(input); return {}; };
+    for (let i = 0; i < 6; i++) await p.loops[0].work();
+    assert.equal(sent.length, 4);
+    // A partial host acknowledgement must still show the complete submission.
+    r.payload.S[module + 'Entry'] = '12'; r.payload.applied = sent.slice(0, 2).map(m => m.id);
+    p.L.net.request = async () => r; await p.loops[1].work();
+    assert.equal(p.E.S[module + 'Entry'], '1234');
+    // After failed-code feedback finishes, a new attempt works normally.
+    r.payload.S[module + 'Entry'] = ''; r.payload.applied = sent.map(m => m.id);
+    await p.loops[1].work();
+    p.E[module + 'Tap']('9'); p.E[module + 'Clear'](); p.E[module + 'Tap']('2');
+    assert.equal(p.E.S[module + 'Entry'], '2');
+  }
 });
 
 test('lost keypad response retries once without duplicating its local preview', async () => {

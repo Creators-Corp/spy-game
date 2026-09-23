@@ -4,6 +4,7 @@
   'use strict';
   var stats = { requests: 0, failures: 0, timeouts: 0, lastLatencyMs: null, maxLatencyMs: 0, events: [] };
   var outages = {};
+  var inFlight = {}, requestSerial = 0;
   function event(kind, details) {
     stats.events.push(Object.assign({ at: Date.now(), event: kind }, details || {}));
     if (stats.events.length > 100) stats.events.shift();
@@ -15,16 +16,22 @@
   } catch (e) {}
   function request(url, body, headers) {
     var start = Date.now(), route = url.split('?')[0];
+    var ident = ++requestSerial, stage = 'waiting_for_headers';
+    // A stale read is safe to replace; give input submissions their full
+    // deadline so a slow response does not needlessly resend the same tap.
+    var deadline = body === undefined && route === '/link/state' ? 3000 : 8000;
+    inFlight[ident] = { route: route, started: start, stage: stage };
     stats.requests++;
     var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, 8000);
-    var options = { signal: controller.signal, cache: 'no-store', credentials: 'same-origin', headers: Object.assign({}, headers) };
+    var timer = setTimeout(function () { controller.abort(); }, deadline);
+    var options = { signal: controller.signal, cache: 'no-store', priority: 'high', credentials: 'same-origin', headers: Object.assign({}, headers) };
     if (body !== undefined) {
       options.method = 'POST';
       options.headers['Content-Type'] = 'application/json';
       options.body = JSON.stringify(body);
     }
     return fetch(url, options).then(function (response) {
+      stage = 'reading_body'; inFlight[ident].stage = stage;
       if (!response.ok) {
         var error = new Error('HTTP ' + response.status);
         error.status = response.status;
@@ -38,13 +45,16 @@
       }
       return result;
     }).catch(function (error) {
+      error.transport = true;
       stats.failures++;
       if (controller.signal.aborted) stats.timeouts++;
       if (outages[route] === undefined) outages[route] = start;
-      event('request_failed', { route: route, status: error.status || 0, timeout: controller.signal.aborted });
+      event('request_failed', { route: route, status: error.status || 0, timeout: controller.signal.aborted,
+        stage: stage, durationMs: Date.now() - start });
       throw error;
     }).finally(function () {
       clearTimeout(timer);
+      delete inFlight[ident];
       stats.lastLatencyMs = Date.now() - start;
       stats.maxLatencyMs = Math.max(stats.maxLatencyMs, stats.lastLatencyMs);
     });
@@ -94,5 +104,11 @@
   document.addEventListener('visibilitychange', function () { event(document.hidden ? 'background' : 'foreground'); });
   window.addEventListener('pagehide', function () { event('page_left'); });
   L.net = { request: request, loop: loop, event: event,
-    diagnostics: function () { return JSON.parse(JSON.stringify(stats)); } };
+    diagnostics: function () {
+      return Object.assign(JSON.parse(JSON.stringify(stats)), {
+        inFlight: Object.keys(inFlight).map(function (key) {
+          var r = inFlight[key]; return { route: r.route, stage: r.stage, ageMs: Date.now() - r.started };
+        }), visibility: document.hidden ? 'hidden' : 'visible'
+      });
+    } };
 })(window.DC);
