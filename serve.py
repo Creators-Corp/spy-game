@@ -18,6 +18,7 @@ import http.server
 import socketserver
 import json
 import hashlib
+import gzip
 import re
 import socket
 import sys
@@ -162,9 +163,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------------ send
     def _json(self, obj, code=200):
-        body = json.dumps(obj).encode("utf-8")
+        # Build the response while locked, but write it only after the handler
+        # releases its room lock. A slow socket must not stall the other players.
+        return obj, code
+
+    def _send_json(self, obj, code):
+        body = json.dumps(obj, separators=(',', ':')).encode("utf-8")
+        compress = len(body) >= 1024 and any(
+            part.strip() == 'gzip' for part in self.headers.get('Accept-Encoding', '').split(','))
+        if compress:
+            body = gzip.compress(body, compresslevel=1)
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Vary", "Accept-Encoding")
+        if compress:
+            self.send_header("Content-Encoding", "gzip")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -201,6 +214,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------------- GET
     def do_GET(self):
+        result = self._get()
+        if isinstance(result, tuple):
+            self._send_json(*result)
+
+    def _get(self):
         path = self.path.split("?", 1)[0]
         self.room = None  # A keep-alive connection may switch rooms or serve assets.
         if path.startswith('/link/') or path == '/qr.svg':
@@ -257,8 +275,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if path == "/link/diagnostics":
             with self.room.lock:
-                if not self._host():
-                    return self._json({"error": "host required"}, 403)
+                if not self._host() and not self.room.owns_seat(self._query('role'), self._query('client'), self._query('ticket')):
+                    return self._json({"error": "active player required"}, 403)
                 out = {"protocol": 7, "queuedInputs": len(self.room.intents),
                        "hostAge": time.monotonic() - self.room.host["seen"], "seats": self.room.presence()["seats"]}
             with self.room.diag_lock:
@@ -292,6 +310,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------------ POST
     def do_POST(self):
+        result = self._post()
+        if isinstance(result, tuple):
+            self._send_json(*result)
+
+    def _post(self):
         path = self.path.split("?", 1)[0]
         self.room = None
         if not path.startswith('/link/'):
