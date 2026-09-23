@@ -18,6 +18,7 @@ import http.server
 import socketserver
 import json
 import hashlib
+import re
 import socket
 import sys
 import threading
@@ -32,30 +33,15 @@ HOSTED = bool(os.environ.get("RENDER") or os.environ.get("PUBLIC_URL"))
 PUBLIC_URL = (os.environ.get("PUBLIC_URL")
               or os.environ.get("RENDER_EXTERNAL_URL") or "").rstrip("/")
 
-# ------------------------------------------------------------------ le relais
-# Two role-owned phones, one presenter, everything in memory, nothing on disk. A version
-# number on the state so a guest that has seen the latest gets told "nothing
-# new" instead of the whole screen again.
-LOCK = threading.Lock()
-EPOCH = uuid.uuid4().hex              # a new relay process starts a new version history
-STATE = {"v": 0, "payload": None, "host": None, "seq": -1, "updated": 0.0}
-INTENTS = []
-RECEIVED = OrderedDict()             # deduplicate a phone retry after a lost response
-SEATS = {role: {"client": None, "ticket": None, "seen": 0.0} for role in ("p1", "p2")}
-GUEST_GRACE = 30.0                   # tolerate a short mobile network interruption
-INTENT_TTL = 10.0                    # never replay old movement after a long outage
-HOST = {"client": None, "secret": None, "page": None, "lease": None, "join": None, "seen": 0.0}
+# Each room owns its relay state. Only the registry lock is shared across rooms.
+ROOMS = {}
+ROOMS_LOCK = threading.Lock()
+ROOM_IDLE_TTL = 30 * 60
+MAX_ROOMS = 100
+GUEST_GRACE = 30.0
+INTENT_TTL = 10.0
 HOST_GRACE = 30.0
 HOST_REFRESH_DELAY = 4.0
-DIAG_LOCK = threading.Lock()
-DIAG = {"requests": {}, "errors": {}, "events": deque(maxlen=100)}
-
-
-def record_event(kind):
-    # Deliberately omit URLs, credentials, client IDs and game contents.
-    with DIAG_LOCK:
-        DIAG["events"].append({"at": time.time(), "event": kind})
-
 
 P1_CALLS = {"ready", "restart", "act", "declineModule", "takePrize", "porteTap", "porteUndo", "porteClear",
             "porteSubmit", "coffreTap", "coffreUndo", "bureauSubmit", "bureauDoor", "clavierTap", "clavierClear", "clavierSubmit",
@@ -63,25 +49,60 @@ P1_CALLS = {"ready", "restart", "act", "declineModule", "takePrize", "porteTap",
 P2_CALLS = {"ready", "restart", "selectJob", "pullLever"}
 
 
-def seat_age(role):
-    seen = SEATS[role]["seen"]
-    return time.monotonic() - seen if seen else None
+class Room:
+    def __init__(self, room_id):
+        self.id = room_id
+        self.lock = threading.RLock()
+        self.epoch = uuid.uuid4().hex
+        self.state = {"v": 0, "payload": None, "host": None, "seq": -1, "updated": 0.0}
+        self.intents = []
+        self.received = OrderedDict()
+        self.seats = {role: {"client": None, "ticket": None, "seen": 0.0} for role in ("p1", "p2")}
+        self.host = {"client": None, "secret": None, "page": None, "lease": None, "join": None, "seen": 0.0}
+        self.diag_lock = threading.Lock()
+        self.diag = {"requests": {}, "errors": {}, "events": deque(maxlen=100)}
+        self.touched = time.monotonic()
+
+    def record_event(self, kind):
+        with self.diag_lock:
+            self.diag["events"].append({"at": time.time(), "event": kind})
+
+    def seat_age(self, role):
+        seen = self.seats[role]["seen"]
+        return time.monotonic() - seen if seen else None
+
+    def seat_taken(self, role):
+        age = self.seat_age(role)
+        return self.seats[role]["client"] is not None and age is not None and age < GUEST_GRACE
+
+    def presence(self):
+        return {"seats": {role: {"taken": self.seat_taken(role), "age": self.seat_age(role)}
+                          for role in self.seats}, "epoch": self.epoch}
+
+    def owns_seat(self, role, client, ticket):
+        seat = self.seats.get(role)
+        return bool(seat and client and ticket and seat["client"] == client and seat["ticket"] == ticket)
+
+    def phone_join_url(self):
+        return JOIN_URL + "&" + urlencode({"room": self.id, "t": self.host["join"]}) if JOIN_URL and self.host["join"] else None
 
 
-def seat_taken(role):
-    age = seat_age(role)
-    return SEATS[role]["client"] is not None and age is not None and age < GUEST_GRACE
-
-
-def presence():
-    return {"seats": {role: {"taken": seat_taken(role), "age": seat_age(role)}
-                      for role in SEATS}, "epoch": EPOCH}
-
-
-def owns_seat(role, client, ticket):
-    seat = SEATS.get(role)
-    return bool(seat and client and ticket and seat["client"] == client and seat["ticket"] == ticket)
-
+def find_room(room_id, create=False):
+    with ROOMS_LOCK:
+        now = time.monotonic()
+        for key, room in list(ROOMS.items()):
+            if now - room.touched > ROOM_IDLE_TTL and room.lock.acquire(blocking=False):
+                try:
+                    if now - room.touched > ROOM_IDLE_TTL:
+                        del ROOMS[key]
+                finally:
+                    room.lock.release()
+        if room_id not in ROOMS and create and len(ROOMS) < MAX_ROOMS:
+            ROOMS[room_id] = Room(room_id)
+        room = ROOMS.get(room_id)
+        if room:
+            room.touched = now
+        return room
 
 
 def lan_ip():
@@ -99,10 +120,6 @@ def lan_ip():
 
 
 JOIN_URL = None          # filled in by main(), so the QR and the page agree
-
-
-def phone_join_url():
-    return JOIN_URL + "&" + urlencode({"t": HOST["join"]}) if JOIN_URL and HOST["join"] else None
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -131,15 +148,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         route = urlsplit(self.path).path
         route = route if route in ("/link/host", "/link/status", "/link/state", "/link/claim",
                                   "/link/release", "/link/intent", "/link/ack", "/link/diagnostics") else "assets"
-        with DIAG_LOCK:
-            DIAG["requests"][route] = DIAG["requests"].get(route, 0) + 1
-            if code >= 400:
-                key = route + ":" + str(code)
-                DIAG["errors"][key] = DIAG["errors"].get(key, 0) + 1
+        room = getattr(self, 'room', None)
+        if room:
+            with room.diag_lock:
+                room.diag["requests"][route] = room.diag["requests"].get(route, 0) + 1
+                if code >= 400:
+                    key = route + ":" + str(code)
+                    room.diag["errors"][key] = room.diag["errors"].get(key, 0) + 1
         super().send_response(code, message)
 
     def _host(self):
-        return bool(HOST["lease"] and self.headers.get("X-Host-Lease") == HOST["lease"])
+        return bool(self.room.host["lease"] and self.headers.get("X-Host-Lease") == self.room.host["lease"])
 
     # ------------------------------------------------------------------ send
     def _json(self, obj, code=200):
@@ -164,19 +183,44 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _allowed(self):
         """A host lease or the automatically generated phone invitation."""
-        return self._host() or bool(HOST["join"] and self._query("t") == HOST["join"])
+        allowed = self._host() or bool(self.room.host["join"] and self._query("t") == self.room.host["join"])
+        if allowed:
+            self.room.touched = time.monotonic()
+        return allowed
+
+    def _select_room(self, create=False):
+        room_id = self._query('room')
+        if not re.fullmatch(r'[A-Za-z0-9_-]{16,80}', room_id):
+            self.send_error(400, 'missing or invalid room; scan a new QR code')
+            return False
+        self.room = find_room(room_id, create)
+        if create and not self.room:
+            self.send_error(503, 'all rooms are in use; try again later')
+            return False
+        return True
 
     # ------------------------------------------------------------------- GET
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        self.room = None  # A keep-alive connection may switch rooms or serve assets.
+        if path.startswith('/link/') or path == '/qr.svg':
+            if not self._select_room():
+                return
+            if not self.room:
+                if path == '/link/status':
+                    return self._json({"relay": True, "protocol": 7, "joinRequired": True, "hostReady": False,
+                                       "seats": {role: {"taken": False, "age": None} for role in ('p1', 'p2')}})
+                if path == '/link/state':
+                    return self._json({"roomMissing": True})
+                return self.send_error(404, 'room not active; keep the main screen open')
 
         # Discovery is public; only the active host receives the invitation.
         if path == "/link/status":
-            with LOCK:
-                out = {"relay": True, "protocol": 6, "joinRequired": not self._allowed(), **presence(),
-                       "hostReady": bool(STATE["updated"] and time.monotonic() - STATE["updated"] < 5)}
+            with self.room.lock:
+                out = {"relay": True, "protocol": 7, "joinRequired": not self._allowed(), **self.room.presence(),
+                       "hostReady": bool(self.room.state["updated"] and time.monotonic() - self.room.state["updated"] < 5)}
                 if self._host():
-                    out["join"] = phone_join_url()
+                    out["join"] = self.room.phone_join_url()
             return self._json(out)
 
         if path.startswith("/link/") and not self._allowed():
@@ -187,45 +231,45 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 since = int(self._query("since") or 0)
             except ValueError:
                 since = 0
-            with LOCK:
+            with self.room.lock:
                 role = self._query("role")
-                if not owns_seat(role, self._query("client"), self._query("ticket")):
-                    return self._json({"seatLost": True, "epoch": EPOCH})
-                SEATS[role]["seen"] = time.monotonic()
-                out = {"v": STATE["v"], "epoch": EPOCH,
-                       "hostAge": time.monotonic() - STATE["updated"] if STATE["updated"] else None}
+                if not self.room.owns_seat(role, self._query("client"), self._query("ticket")):
+                    return self._json({"seatLost": True, "epoch": self.room.epoch})
+                self.room.seats[role]["seen"] = time.monotonic()
+                out = {"v": self.room.state["v"], "epoch": self.room.epoch,
+                       "hostAge": time.monotonic() - self.room.state["updated"] if self.room.state["updated"] else None}
                 # An epoch change recovers immediately even if since is higher
                 # than this process's version counter.
-                if STATE["payload"] is not None and (STATE["v"] != since or self._query("epoch") != EPOCH):
-                    out["payload"] = STATE["payload"]
+                if self.room.state["payload"] is not None and (self.room.state["v"] != since or self._query("epoch") != self.room.epoch):
+                    out["payload"] = self.room.state["payload"]
             return self._json(out)
 
         if path == "/link/intent":
-            with LOCK:
+            with self.room.lock:
                 if not self._host():
                     return self._json({"error": "host required"}, 403)
                 now = time.monotonic()
-                INTENTS[:] = [m for m in INTENTS if now - m["received"] < INTENT_TTL]
+                self.room.intents[:] = [m for m in self.room.intents if now - m["received"] < INTENT_TTL]
                 # Reading is not acknowledging: a lost HTTP response must not
                 # delete a tap before the presenter has applied it.
-                out = {"intents": list(INTENTS), **presence()}
+                out = {"intents": list(self.room.intents), **self.room.presence()}
             return self._json(out)
 
         if path == "/link/diagnostics":
-            with LOCK:
+            with self.room.lock:
                 if not self._host():
                     return self._json({"error": "host required"}, 403)
-                out = {"protocol": 6, "queuedInputs": len(INTENTS),
-                       "hostAge": time.monotonic() - HOST["seen"], "seats": presence()["seats"]}
-            with DIAG_LOCK:
-                out.update(requests=dict(DIAG["requests"]), errors=dict(DIAG["errors"]), events=list(DIAG["events"]))
+                out = {"protocol": 7, "queuedInputs": len(self.room.intents),
+                       "hostAge": time.monotonic() - self.room.host["seen"], "seats": self.room.presence()["seats"]}
+            with self.room.diag_lock:
+                out.update(requests=dict(self.room.diag["requests"]), errors=dict(self.room.diag["errors"]), events=list(self.room.diag["events"]))
             return self._json(out)
 
         if path == "/qr.svg":
-            with LOCK:
+            with self.room.lock:
                 if not self._allowed():
                     return self.send_error(403, "invitation required")
-                invitation_url = phone_join_url()
+                invitation_url = self.room.phone_join_url()
             try:
                 import io as _io
                 import segno
@@ -249,80 +293,90 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     # ------------------------------------------------------------------ POST
     def do_POST(self):
         path = self.path.split("?", 1)[0]
+        self.room = None
+        if not path.startswith('/link/'):
+            return self.send_error(404, 'no such endpoint')
+        msg = None
+        if path == '/link/host':
+            msg = self._read()
+            if not isinstance(msg, dict) or any(not isinstance(msg.get(k), str) or not 16 <= len(msg[k]) <= 120
+                                                for k in ('client', 'secret', 'page')):
+                return self._json({"error": "invalid host"}, 400)
+        if not self._select_room(create=path == '/link/host'):
+            return
+        if not self.room:
+            return self.send_error(404, 'room not active; keep the main screen open')
 
         if path.startswith("/link/") and path != "/link/host" and not self._allowed():
             return self.send_error(403, "no token")
 
         if path == "/link/host":
-            msg = self._read()
-            if not isinstance(msg, dict) or any(not isinstance(msg.get(k), str) or not 16 <= len(msg[k]) <= 120
-                                                for k in ("client", "secret", "page")):
-                return self._json({"error": "invalid host"}, 400)
-            with LOCK:
+            with self.room.lock:
                 now = time.monotonic()
-                same = HOST["client"] == msg["client"] and HOST["secret"] == msg["secret"]
+                same = self.room.host["client"] == msg["client"] and self.room.host["secret"] == msg["secret"]
                 resume = msg.get("resume")
                 # The leaving page writes this proof to its own sessionStorage
                 # on pagehide. Ordinary duplicate tabs do not inherit it.
-                handoff = (same and isinstance(resume, dict) and HOST["lease"]
-                           and resume.get("lease") == HOST["lease"]
-                           and resume.get("page") == HOST["page"])
-                if HOST["client"] and not same and now - HOST["seen"] < HOST_GRACE:
+                handoff = (same and isinstance(resume, dict) and self.room.host["lease"]
+                           and resume.get("lease") == self.room.host["lease"]
+                           and resume.get("page") == self.room.host["page"])
+                if self.room.host["client"] and not same and now - self.room.host["seen"] < HOST_GRACE:
                     return self._json({"error": "another screen is hosting"}, 409)
-                if same and HOST["page"] != msg["page"] and not handoff and now - HOST["seen"] < HOST_REFRESH_DELAY:
+                if same and self.room.host["page"] != msg["page"] and not handoff and now - self.room.host["seen"] < HOST_REFRESH_DELAY:
                     return self._json({"error": "waiting for previous page"}, 409)
                 if not same:
-                    STATE.update(v=0, payload=None, host=None, seq=-1, updated=0)
-                    INTENTS.clear()
-                    RECEIVED.clear()
-                    for seat in SEATS.values():
+                    self.room.state.update(v=0, payload=None, host=None, seq=-1, updated=0)
+                    self.room.intents.clear()
+                    self.room.received.clear()
+                    for seat in self.room.seats.values():
                         seat.update(client=None, ticket=None, seen=0.0)
-                if not same or HOST["page"] != msg["page"]:
-                    HOST["lease"] = uuid.uuid4().hex
-                    record_event("host_resumed" if same else "host_claimed")
+                if not same or self.room.host["page"] != msg["page"]:
+                    self.room.host["lease"] = uuid.uuid4().hex
+                    self.room.record_event("host_resumed" if same else "host_claimed")
                 # Stable for this host across refreshes and relay restarts, but
                 # grants no presenter privileges and changes with a new host.
-                invitation = hashlib.sha256(("phone-join:" + msg["secret"]).encode()).hexdigest()
-                HOST.update(client=msg["client"], secret=msg["secret"], page=msg["page"], seen=now, join=invitation)
+                invitation = hashlib.sha256(("phone-join:" + self.room.id + ":" + msg["secret"]).encode()).hexdigest()
+                self.room.host.update(client=msg["client"], secret=msg["secret"], page=msg["page"], seen=now, join=invitation)
+                self.room.touched = now
                 # Ownership secret never travels in the public game snapshot.
-                return self._json({"lease": HOST["lease"], "epoch": EPOCH, "join": phone_join_url()})
+                return self._json({"lease": self.room.host["lease"], "epoch": self.room.epoch, "join": self.room.phone_join_url()})
 
         if path == "/link/claim":
             msg = self._read()
             if not isinstance(msg, dict):
                 return self._json({"error": "invalid claim"}, 400)
             role, client = msg.get("role"), msg.get("client")
-            if role not in SEATS or not isinstance(client, str) or not 1 <= len(client) <= 120:
+            if role not in self.room.seats or not isinstance(client, str) or not 1 <= len(client) <= 120:
                 return self._json({"error": "invalid role"}, 400)
-            with LOCK:
-                if not STATE["updated"] or time.monotonic() - STATE["updated"] > 5:
+            with self.room.lock:
+                if not self.room.state["updated"] or time.monotonic() - self.room.state["updated"] > 5:
                     return self._json({"error": "waiting for presenter"}, 425)
-                if seat_taken(role) and SEATS[role]["client"] != client:
+                if self.room.seat_taken(role) and self.room.seats[role]["client"] != client:
                     return self._json({"error": "role taken"}, 409)
-                if any(seat_taken(other) and SEATS[other]["client"] == client
-                       for other in SEATS if other != role):
+                if any(self.room.seat_taken(other) and self.room.seats[other]["client"] == client
+                       for other in self.room.seats if other != role):
                     return self._json({"error": "already joined"}, 409)
-                seat = SEATS[role]
+                seat = self.room.seats[role]
                 if seat["client"] != client or not seat["ticket"]:
                     seat.update(client=client, ticket=uuid.uuid4().hex)
-                    record_event("seat_claimed_" + role)
+                    self.room.record_event("seat_claimed_" + role)
                 seat["seen"] = time.monotonic()
-                return self._json({"role": role, "ticket": seat["ticket"], "epoch": EPOCH})
+                return self._json({"role": role, "ticket": seat["ticket"], "epoch": self.room.epoch})
 
         if path == "/link/release":
             msg = self._read()
             if not isinstance(msg, dict):
                 return self._json({"error": "invalid release"}, 400)
             role = msg.get("role")
-            if role not in SEATS:
+            if role not in self.room.seats:
                 return self._json({"error": "invalid role"}, 400)
-            with LOCK:
-                if not self._host() and not owns_seat(role, msg.get("client"), msg.get("ticket")):
+            with self.room.lock:
+                if not self._host() and not self.room.owns_seat(role, msg.get("client"), msg.get("ticket")):
                     return self._json({"error": "role owner required"}, 403)
-                SEATS[role].update(client=None, ticket=None, seen=0.0)
-                record_event("seat_released_" + role)
-                INTENTS[:] = [m for m in INTENTS if m["role"] != role]
-            return self._json({"ok": True, **presence()})
+                self.room.seats[role].update(client=None, ticket=None, seen=0.0)
+                self.room.record_event("seat_released_" + role)
+                self.room.intents[:] = [m for m in self.room.intents if m["role"] != role]
+            return self._json({"ok": True, **self.room.presence()})
 
         if path == "/link/state":
             payload = self._read()
@@ -331,20 +385,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     or not isinstance(payload.get("host"), str)
                     or not isinstance(payload.get("seq"), int)):
                 return self._json({"error": "invalid state"}, 400)
-            with LOCK:
-                if not self._host() or payload["host"] != HOST["client"]:
+            with self.room.lock:
+                if not self._host() or payload["host"] != self.room.host["client"]:
                     return self._json({"error": "host required"}, 403)
-                HOST["seen"] = time.monotonic()
+                self.room.host["seen"] = time.monotonic()
                 # Timed-out requests may still reach the server. An older state
                 # from the same presenter must never replace a newer one.
-                if payload["host"] != STATE["host"] or payload["seq"] > STATE["seq"]:
-                    old_session = (STATE["payload"] or {}).get("session")
+                if payload["host"] != self.room.state["host"] or payload["seq"] > self.room.state["seq"]:
+                    old_session = (self.room.state["payload"] or {}).get("session")
                     if old_session != payload["session"]:
-                        INTENTS.clear()
-                        RECEIVED.clear()
-                    STATE.update(v=STATE["v"] + 1, payload=payload,
+                        self.room.intents.clear()
+                        self.room.received.clear()
+                    self.room.state.update(v=self.room.state["v"] + 1, payload=payload,
                                  host=payload["host"], seq=payload["seq"], updated=time.monotonic())
-                out = {"ok": True, "v": STATE["v"], **presence()}
+                out = {"ok": True, "v": self.room.state["v"], **self.room.presence()}
             return self._json(out)
 
         if path == "/link/ack":
@@ -352,11 +406,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not isinstance(msg, dict) or not isinstance(msg.get("ids"), list):
                 return self._json({"error": "invalid acknowledgement"}, 400)
             ids = {item for item in msg["ids"] if isinstance(item, str)}
-            with LOCK:
+            with self.room.lock:
                 if not self._host():
                     return self._json({"error": "host required"}, 403)
-                if msg.get("session") == (STATE["payload"] or {}).get("session"):
-                    INTENTS[:] = [m for m in INTENTS if m["id"] not in ids]
+                if msg.get("session") == (self.room.state["payload"] or {}).get("session"):
+                    self.room.intents[:] = [m for m in self.room.intents if m["id"] not in ids]
             return self._json({"ok": True})
 
         if path == "/link/intent":
@@ -365,28 +419,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     or not 1 <= len(msg["id"]) <= 120 or not isinstance(msg.get("call"), str)
                     or not isinstance(msg.get("args"), list)):
                 return self._json({"error": "invalid intent"}, 400)
-            with LOCK:
+            with self.room.lock:
                 role = msg.get("role")
-                if not owns_seat(role, msg.get("client"), msg.get("ticket")):
+                if not self.room.owns_seat(role, msg.get("client"), msg.get("ticket")):
                     return self._json({"error": "seat lost"}, 410)
                 allowed = P1_CALLS if role == "p1" else P2_CALLS
                 if msg["call"] not in allowed:
                     return self._json({"error": "wrong role"}, 403)
-                SEATS[role]["seen"] = time.monotonic()
-                if not STATE["payload"] or msg.get("session") != STATE["payload"].get("session"):
-                    return self._json({"error": "resync", "epoch": EPOCH}, 409)
-                if msg["id"] in RECEIVED:
+                self.room.seats[role]["seen"] = time.monotonic()
+                if not self.room.state["payload"] or msg.get("session") != self.room.state["payload"].get("session"):
+                    return self._json({"error": "resync", "epoch": self.room.epoch}, 409)
+                if msg["id"] in self.room.received:
                     return self._json({"ok": True, "duplicate": True})
                 now = time.monotonic()
-                INTENTS[:] = [m for m in INTENTS if now - m["received"] < INTENT_TTL]
-                if len(INTENTS) >= 64:
+                self.room.intents[:] = [m for m in self.room.intents if now - m["received"] < INTENT_TTL]
+                if len(self.room.intents) >= 64:
                     return self._json({"error": "busy"}, 503)
-                INTENTS.append({"id": msg["id"], "session": msg["session"],
+                self.room.intents.append({"id": msg["id"], "session": msg["session"],
                                 "role": role, "call": msg["call"],
                                 "args": [role] if msg["call"] == "ready" else msg["args"], "received": now})
-                RECEIVED[msg["id"]] = True
-                while len(RECEIVED) > 512:
-                    RECEIVED.popitem(last=False)
+                self.room.received[msg["id"]] = True
+                while len(self.room.received) > 512:
+                    self.room.received.popitem(last=False)
             return self._json({"ok": True})
 
         return self.send_error(404, "no such endpoint")

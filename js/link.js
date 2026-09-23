@@ -5,13 +5,14 @@
   var U = L.util, E = L.engine, C = L.content, N = L.net, R = L.recovery;
   var query = new URLSearchParams(window.location.search);
   var ROLE = query.has('join') || /^(p1|p2)$/.test(query.get('role')) ? 'guest' : 'host';
+  var ROOM = ROLE === 'guest' ? query.get('room') || '' : R.identity.client;
   var POLL = 100, TOKEN = ROLE === 'guest' ? query.get('t') || '' : '';
   function saved(key) { try { return sessionStorage.getItem(key) || ''; } catch (e) { return ''; } }
   function save(key, value) { try { sessionStorage.setItem(key, value); } catch (e) {} }
   function id() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2); }
   var client = saved('dc-phone-client') || id();
   save('dc-phone-client', client);
-  function wire(path) { return path + (path.indexOf('?') >= 0 ? '&' : '?') + 't=' + encodeURIComponent(TOKEN); }
+  function wire(path) { return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'room=' + encodeURIComponent(ROOM) + '&t=' + encodeURIComponent(TOKEN); }
   var lease = '', owner = false;
   function headers() { return lease ? { 'X-Host-Lease': lease } : {}; }
   function get(path) { return N.request(wire(path), undefined, headers()); }
@@ -63,7 +64,7 @@
     function hostError(error) {
       if (error.status === 403 || error.status === 409) {
         owner = false; lease = '';
-        R.block(error.status === 409 ? 'Another page is hosting. If you just refreshed, your game will be available in a few seconds. Otherwise, keep the original main screen open. This page will wait until it closes.' :
+        R.block(error.status === 409 ? 'Another tab is hosting this room. Use that tab to continue this game, or start a separate game here. A refresh will reconnect automatically.' :
           'Reconnecting to the main screen session…');
       }
       paintHostUI();
@@ -146,8 +147,14 @@
 
   function runGuest() {
     document.body.classList.add('is-guest');
+    if (!ROOM) {
+      picker('Scan a new QR code from CONNECT PHONES on the main screen.');
+      ['p1', 'p2'].forEach(function (role) { document.getElementById('join-' + role).disabled = true; });
+      return;
+    }
+    var seatKey = 'dc-phone-seat:' + ROOM;
     var remembered = {};
-    try { remembered = JSON.parse(saved('dc-phone-seat') || '{}'); } catch (e) {}
+    try { remembered = JSON.parse(saved(seatKey) || '{}'); } catch (e) {}
     var ticket = remembered.ticket || '', epoch = remembered.epoch || '', v = -1;
     var session = null, drawn = '', queue = [], serial = 0, connected = false, claiming = false;
     var base = null, pendingInputs = [];
@@ -199,11 +206,11 @@
       }
       connected = message === 'CONNECTED'; paintConnection();
     }
-    function remember() { save('dc-phone-seat', JSON.stringify({ role: link.player, ticket: ticket, epoch: epoch })); }
+    function remember() { save(seatKey, JSON.stringify({ role: link.player, ticket: ticket, epoch: epoch })); }
     function loseSeat(message) {
       suggested = null;
       queue = []; pendingInputs = []; base = null; ticket = ''; session = null; drawn = ''; v = -1;
-      connection('CHOOSE YOUR ROLE'); layout(null); save('dc-phone-seat', ''); picker(message);
+      connection('CHOOSE YOUR ROLE'); layout(null); save(seatKey, ''); picker(message);
     }
     function claim(role) {
       if (claiming) return Promise.resolve();
@@ -263,6 +270,7 @@
       var path = '/link/state?since=' + v + '&epoch=' + encodeURIComponent(epoch) +
         '&role=' + link.player + '&client=' + encodeURIComponent(client) + '&ticket=' + encodeURIComponent(ticket);
       return get(path).then(function (r) {
+        if (r.roomMissing) { v = -1; connection('WAITING FOR THE MAIN SCREEN…'); return; }
         if (r.seatLost) {
           if (r.epoch !== epoch) return claim(link.player); // new relay, same open game
           loseSeat('This role was returned to the main screen. Choose a free role to rejoin.');
@@ -302,7 +310,7 @@
     var lobby = N.loop(function () {
       if (link.player) return;
       return get('/link/status').then(function (r) {
-        if (r.protocol !== 6) { picker('Update the main screen, then reload this page.'); return; }
+        if (r.protocol !== 7) { picker('Update the main screen, then reload this page.'); return; }
         seats = r.seats || seats;
         picker(r.joinRequired ? 'Scan the QR code on the main screen to join.' :
           !r.hostReady ? 'Waiting for the main screen. Keep it open.' :
@@ -342,15 +350,15 @@
     if (!join || join === link.join) return;
     link.join = join;
     document.getElementById('seat-url').value = join;
-    var token = new URLSearchParams(join.split('?')[1]).get('t') || '';
+    var params = new URLSearchParams(join.split('?')[1]), token = params.get('t') || '';
     var qr = document.getElementById('seat-qr');
     qr.hidden = false;
-    qr.src = '/qr.svg?t=' + encodeURIComponent(token);
+    qr.src = '/qr.svg?room=' + encodeURIComponent(params.get('room') || ROOM) + '&t=' + encodeURIComponent(token);
     document.getElementById('seat-join-status').textContent = '';
   }
   function checkStatus() {
     return get('/link/status').then(function (r) {
-      if (!r.relay || r.protocol !== 6) { var error = new Error('Update required'); error.status = 426; throw error; }
+      if (!r.relay || r.protocol !== 7) { var error = new Error('Update required'); error.status = 426; throw error; }
       link.relay = true;
       observe(r);
       setJoin(r.join);
@@ -366,7 +374,7 @@
         var panel = document.getElementById('report-panel'), output = document.getElementById('report-text');
         var download = document.getElementById('report-download');
         panel.hidden = false; output.value = 'Preparing connection report…'; download.hidden = true;
-        var report = { protocol: 6, generatedAt: new Date().toISOString(), role: ROLE,
+        var report = { protocol: 7, generatedAt: new Date().toISOString(), role: ROLE,
           player: link.player, recoveryAvailable: R.storageOK, client: N.diagnostics() };
         var server = owner ? get('/link/diagnostics').catch(function () { return { unavailable: true }; }) : Promise.resolve(null);
         server.then(function (data) {

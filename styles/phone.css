@@ -867,6 +867,34 @@
   transform:scale(calc(336 / 430));transform-origin:top left;
   background:#161B22;
 }
+/* Real phones have a variable viewport, not the host's 336px device screen.
+   Remove the inner artwork transform as well as the outer device frame. */
+body.is-guest .pscreen--infiltration,
+body.is-guest .pscreen--dossier{
+  position:relative;top:auto;left:auto;width:100%;height:100%;min-width:0;
+  transform:none;
+}
+body.is-guest .pscreen--infiltration .dpad{
+  grid-template-columns:repeat(3,minmax(0,120px));grid-template-rows:repeat(3,auto);
+  gap:clamp(6px,2vw,10px);
+}
+body.is-guest .pscreen--infiltration .dpad button{
+  width:100%;height:auto;aspect-ratio:6/5;min-width:0;
+}
+body.is-guest .pscreen--infiltration .dpad .dpad__art{width:100%;height:100%;}
+body.is-guest .pscreen--infiltration .dpad .dpad__wait{
+  padding:0 8px;font-size:clamp(14px,4.5vw,22px);
+}
+body.is-guest .pscreen--infiltration .nav__sense .h img{
+  width:clamp(36px,15vw,98px);max-width:24%;flex-shrink:1;
+}
+body.is-guest .pscreen{--heading-unit:clamp(.7px,calc(100vw / 430),1px);}
+body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
+@media (max-height:500px){
+  body.is-guest .phone__screen{overflow:auto;overscroll-behavior:contain;touch-action:pan-y;}
+  body.is-guest .pscreen{height:auto;min-height:100%;flex:none;}
+  body.is-guest .pbody{flex:none;overflow:visible;}
+}
 .pscreen--dossier .pbody{padding:0 12px 18px;}
 .pscreen--dossier .dossier__plan{display:flex;flex-direction:column;gap:18px;}
 .pscreen--dossier .layers,

@@ -412,9 +412,11 @@ window.DC = window.DC || {};
      heartbeat landed — about once a second, no matter what they did. Owning
      it here means a new caller cannot forget it. */
   function keepScroll(sel, draw) {
+    var screen = $(sel), screenAt = screen ? screen.scrollTop : 0;
     var before = $(sel + ' .pbody');
     var at = before ? before.scrollTop : 0;
     draw();
+    if (screen && screenAt) screen.scrollTop = screenAt;
     if (!at) return;
     var after = $(sel + ' .pbody');
     if (after) after.scrollTop = at;

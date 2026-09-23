@@ -79,7 +79,7 @@ test('failed polls back off and foregrounding retries immediately', async () => 
   loop.stop();
 });
 
-function peer(role, remember = true, storage = new Map()) {
+function peer(role, remember = true, storage = new Map(), room = 'test-room-123456789') {
   const loops = [], handlers = {}, nodes = new Map(), calls = [];
   const classList = () => ({ add() {}, toggle() {} });
   function node(id) {
@@ -103,10 +103,10 @@ function peer(role, remember = true, storage = new Map()) {
         const control = { work, onError, kicks: 0, kick() { this.kicks++; }, stop() {} };
         loops.push(control); return control;
       } } };
-  const window = { ...events(), DC: L, location: { search: role !== 'host' ? '?join=1&t=a%2Bb' : '', protocol: 'https:' } };
+  const window = { ...events(), DC: L, location: { search: role !== 'host' ? '?join=1&room=' + room + '&t=a%2Bb' : '', protocol: 'https:' } };
   const document = { ...events(), readyState: 'complete', body: { classList: classList() }, getElementById: node, querySelectorAll() { return []; } };
   let now = 100000;
-  vm.runInNewContext(source('link.js'), { window, document, sessionStorage: { getItem(key) { return storage.has(key) ? storage.get(key) : key === 'dc-phone-seat' && role !== 'host' && remember ? JSON.stringify({ role: role === 'p2' ? 'p2' : 'p1', ticket: 'ticket', epoch: 'server-a' }) : ''; }, setItem(key, value) { storage.set(key, value); } },
+  vm.runInNewContext(source('link.js'), { window, document, sessionStorage: { getItem(key) { return storage.has(key) ? storage.get(key) : key === 'dc-phone-seat:test-room-123456789' && role !== 'host' && remember ? JSON.stringify({ role: role === 'p2' ? 'p2' : 'p1', ticket: 'ticket', epoch: 'server-a' }) : ''; }, setItem(key, value) { storage.set(key, value); } },
     URLSearchParams, Set, Event, Math, setTimeout, navigator: {}, Date: class extends Date { static now() { return now; } } });
   return { L, E, loops, handlers, nodes, calls, window, storage, setTime(t) { now = t; } };
 }
@@ -114,7 +114,7 @@ function peer(role, remember = true, storage = new Map()) {
 test('refresh carries the departing host lease once and clears it after claiming', async () => {
   const storage = new Map();
   async function claim(p, expected, lease) {
-    p.L.net.request = async () => ({ relay: true, protocol: 6 });
+    p.L.net.request = async () => ({ relay: true, protocol: 7 });
     await p.loops[0].work();
     p.L.net.request = async (url, body) => {
       if (url.startsWith('/link/host')) {
@@ -234,7 +234,7 @@ test('exit keypad retains its draft through snapshots and clears in order', asyn
 
 test('host publishes confirmed inputs without another ownership round trip', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6 }); await p.loops[0].work();
+  p.L.net.request = async () => ({ relay: true, protocol: 7 }); await p.loops[0].work();
   let claims = 0, publishes = 0;
   p.L.net.request = async (url, body) => {
     if (url.startsWith('/link/host')) { claims++; return { lease: 'lease' }; }
@@ -244,6 +244,43 @@ test('host publishes confirmed inputs without another ownership round trip', asy
   p.L.recovery.meta.applied = ['confirmed'];
   await p.loops[1].work(); await p.loops[1].work();
   assert.equal(claims, 1); assert.equal(publishes, 2);
+});
+
+test('phone requests and remembered seats are scoped to the invited room', async () => {
+  const storage = new Map();
+  const first = peer('guest', true, storage);
+  first.L.net.request = async url => {
+    assert.equal(new URLSearchParams(url.split('?')[1]).get('room'), 'test-room-123456789');
+    return state();
+  };
+  await first.loops[1].work();
+  assert.ok(storage.has('dc-phone-seat:test-room-123456789'));
+  const second = peer('guest', false, storage, 'second-room-123456789');
+  assert.equal(second.L.link.player, null);
+  const original = peer('guest', false, storage);
+  assert.equal(original.L.link.player, 'p1');
+});
+
+test('missing room waits for its host and a new epoch reclaims the phone role', async () => {
+  const p = peer('guest');
+  p.L.net.request = async () => state(); await p.loops[1].work();
+  p.L.net.request = async () => ({ roomMissing: true }); await p.loops[1].work();
+  assert.equal(p.L.link.player, 'p1');
+  assert.equal(p.nodes.get('guest-note').textContent, 'WAITING FOR THE MAIN SCREEN…');
+  let claimed = false;
+  p.L.net.request = async (url, body) => {
+    if (url.startsWith('/link/claim')) { claimed = true; assert.equal(body.role, 'p1'); return { ticket: 'new', epoch: 'new-epoch' }; }
+    return { seatLost: true, epoch: 'new-epoch' };
+  };
+  await p.loops[1].work(); assert.equal(claimed, true);
+});
+
+test('old invitations without a room explain that a new QR is needed', () => {
+  const p = peer('guest', false, new Map(), '');
+  assert.equal(p.L.link.player, null);
+  assert.match(p.nodes.get('join-message').textContent, /Scan a new QR/);
+  assert.equal(p.nodes.get('join-p1').disabled, true);
+  assert.equal(p.loops.length, 0);
 });
 
 test('other controls show pending feedback until the host confirms the action', async () => {
@@ -305,7 +342,7 @@ test('guest drops unsent old movement after a long interruption or new run', asy
 
 test('host applies a tap once when acknowledgements are lost, and republishes unchanged state', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6 });
+  p.L.net.request = async () => ({ relay: true, protocol: 7 });
   await p.loops[0].work();
   p.L.link.wanted = true;
   let publishes = 0, loseAck = true;
@@ -343,7 +380,7 @@ test('P2 phone renders the dossier, forwards support controls and blocks movemen
 test('join picker disables taken role and claims the other role', async () => {
   const p = peer('guest', false);
   p.L.net.request = async (url, body) => {
-    if (url.startsWith('/link/status')) return { protocol: 6, hostReady: true,
+    if (url.startsWith('/link/status')) return { protocol: 7, hostReady: true,
       seats: { p1: { taken: true, age: 0 }, p2: { taken: false, age: null } } };
     assert.equal(body.role, 'p2');
     return { role: 'p2', ticket: 'second-ticket', epoch: 'server-a' };
@@ -366,7 +403,7 @@ test('relay restart reclaims the same role but manual reclaim returns to picker'
   assert.equal(p.L.link.player, null);
   p.L.net.request = async url => {
     assert.ok(url.startsWith('/link/status'), 'a released phone must not automatically reclaim the role');
-    return { protocol: 6, hostReady: true, seats: { p1: { taken: false }, p2: { taken: false } } };
+    return { protocol: 7, hostReady: true, seats: { p1: { taken: false }, p2: { taken: false } } };
   };
   await p.loops[2].work();
   assert.equal(p.L.link.player, null);
@@ -374,7 +411,7 @@ test('relay restart reclaims the same role but manual reclaim returns to picker'
 
 test('competing host never publishes state or reads inputs while ownership is rejected', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6 });
+  p.L.net.request = async () => ({ relay: true, protocol: 7 });
   await p.loops[0].work();
   const paths = [];
   p.L.net.request = async url => { paths.push(url.split('?')[0]); const e = new Error('occupied'); e.status = 409; throw e; };
@@ -386,20 +423,20 @@ test('competing host never publishes state or reads inputs while ownership is re
 
 test('host receives a QR automatically even when public discovery requires a phone invitation', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6, joinRequired: true });
+  p.L.net.request = async () => ({ relay: true, protocol: 7, joinRequired: true });
   await p.loops[0].work();
   p.L.net.request = async (url, body) => url.startsWith('/link/host')
-    ? { lease: 'lease', join: 'https://game.example/?join=1&t=phone-invitation' } : {};
+    ? { lease: 'lease', join: 'https://game.example/?join=1&room=presenter&t=phone-invitation' } : {};
   await p.loops[1].work();
-  assert.equal(p.nodes.get('seat-qr').src, '/qr.svg?t=phone-invitation');
-  assert.equal(p.nodes.get('seat-url').value, 'https://game.example/?join=1&t=phone-invitation');
+  assert.equal(p.nodes.get('seat-qr').src, '/qr.svg?room=presenter&t=phone-invitation');
+  assert.equal(p.nodes.get('seat-url').value, 'https://game.example/?join=1&room=presenter&t=phone-invitation');
   assert.equal(p.L.recovery.blocked, false);
   assert.equal(p.handlers['seat-token-form:submit'], undefined);
 });
 
 test('pending recovery renews ownership without publishing the blank initial game', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6 });
+  p.L.net.request = async () => ({ relay: true, protocol: 7 });
   await p.loops[0].work();
   p.L.recovery.pending = true;
   const paths = [];
@@ -410,7 +447,7 @@ test('pending recovery renews ownership without publishing the blank initial gam
 
 test('restored applied input IDs prevent replay after refresh with a lost acknowledgment', async () => {
   const p = peer('host');
-  p.L.net.request = async () => ({ relay: true, protocol: 6 }); await p.loops[0].work();
+  p.L.net.request = async () => ({ relay: true, protocol: 7 }); await p.loops[0].work();
   p.L.recovery.meta.applied = ['already-applied'];
   let ack;
   p.L.net.request = async (url, body, headers) => {
@@ -447,9 +484,9 @@ function recoveredGame(storage = new Map()) {
   const L = { util: { silence() {}, sfx: new Proxy({}, { get: () => () => {} }), buzz() {}, clamp: (n, lo, hi) => Math.max(lo, Math.min(hi, n)),
     on(n, fn) { (listeners[n] ||= []).push(fn); }, emit(n) { for (const fn of listeners[n] || []) fn(); } },
     p1: { resetTyped() {} }, p2: { reset() {} }, net: { event() {} }, link: { role: 'host' } };
-  const window = { ...events(), DC: L, crypto: require('node:crypto').webcrypto, location: { search: '' } };
+  const window = { ...events(), DC: L, crypto: require('node:crypto').webcrypto, location: { search: '', reload() { this.reloaded = true; } } };
   const document = { ...events(), getElementById: node, querySelector: () => node('stage') };
-  const ctx = vm.createContext({ window, document, Uint8Array, sessionStorage: { getItem: k => storage.get(k), setItem: (k, v) => storage.set(k, v) },
+  const ctx = vm.createContext({ window, document, Uint8Array, sessionStorage: { getItem: k => storage.get(k), setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) },
     ...time, setInterval() {}, Math });
   for (const file of ['content.js', 'engine.js', 'recovery.js']) vm.runInContext(source(file), ctx);
   L.engine.reset(1234); L.recovery.boot();
@@ -461,6 +498,21 @@ test('door clear also clears the authoritative engine before the next digit', ()
   E.S.phase = 'module'; E.S.moduleId = 'porte';
   E.porteTap('1'); E.porteClear(); E.porteTap('2');
   assert.equal(E.S.porteEntry, '2');
+});
+
+test('a copied host tab can start separately without modifying the original tab storage', () => {
+  const original = recoveredGame(); original.L.recovery.save();
+  const copied = recoveredGame(new Map(original.storage));
+  copied.L.recovery.block('Another tab is hosting this room');
+  copied.handlers['new-room:click'](); copied.window.dispatchEvent({ type: 'pagehide' });
+  assert.equal(copied.window.location.reloaded, true);
+  assert.equal(copied.storage.has('dc-host-identity'), false);
+  assert.equal(copied.storage.has('dc-checkpoint-v1'), false);
+  assert.equal(original.storage.has('dc-host-identity'), true);
+  assert.equal(original.storage.has('dc-checkpoint-v1'), true);
+  const fresh = recoveredGame(copied.storage);
+  assert.notEqual(fresh.L.recovery.identity.client, original.L.recovery.identity.client);
+  assert.equal(fresh.L.recovery.pending, false);
 });
 
 test('a previous wrong code cannot clear a new door entry later', async () => {

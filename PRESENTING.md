@@ -26,6 +26,8 @@ addresses refer to the phone itself. Some venue Wi-Fi blocks devices from reachi
 each other; use the hosted Render address or a hotspot in that case.
 
 With the Render address, each phone only needs an internet connection.
+Each new host tab or browser starts its own game room. Scan that host's QR on
+both phones; another group's phones and progress stay separate.
 
 ## If something goes wrong
 
@@ -37,7 +39,7 @@ With the Render address, each phone only needs an internet connection.
 | The phone was deliberately disconnected | Choose a free role again. It will not take its old role back automatically. |
 | No **CONNECT PHONES** button | This copy has no relay. Use the Render version or run `python serve.py`. |
 | The main screen asks for a hosting token | This is an older build. Deploy the updated client and server together, then reload all devices. The current version shows its QR automatically. |
-| **Another page is hosting** | Use the original main screen. After a refresh, wait a few seconds. To move to a different screen, close the old one and wait about 30 seconds. |
+| **Another tab is hosting this room** | Use the original tab to continue that game, or choose **START SEPARATE GAME** to play independently. A normal refresh reconnects automatically. |
 | **Continue your heist?** | Choose **RESUME GAME** to keep progress and the connected phones, or **START NEW GAME** for a fresh run. |
 
 A phone keeps its role when refreshed. Short interruptions preserve the seat for

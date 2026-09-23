@@ -68,6 +68,17 @@
       R.pending = false; candidate = null; current = null;
       R.paint(); U.emit('restart'); R.save();
     });
+    document.getElementById('new-room').addEventListener('click', function () {
+      // Duplicating a tab can copy sessionStorage, including its host identity.
+      // Start independently without changing the original room or its phones.
+      try {
+        sessionStorage.removeItem('dc-host-identity');
+        sessionStorage.removeItem(key);
+        sessionStorage.removeItem('dc-host-handoff');
+        R.block('Starting a separate game…');
+        window.location.reload();
+      } catch (e) { R.block('Open the game in a new browser window to start a separate game.'); }
+    });
     U.on('render', R.save);
     U.on('ready', R.save);
     window.addEventListener('pagehide', R.save);

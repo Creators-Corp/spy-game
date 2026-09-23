@@ -77,9 +77,8 @@ recovery also uses a versioned checkpoint in that tab's session storage (see bel
 For Render, check the actual service settings (the repository cannot verify the
 live dashboard):
 
-- Use **one instance**, with autoscaling disabled. There is one game in memory;
-  multiple instances do not share the relay, and this prototype does not yet
-  support separate rooms for multiple simultaneous games.
+- Use **one instance**, with autoscaling disabled. It supports multiple rooms
+  in memory; separate service instances do not share those rooms.
 - Check the service's **compute plan**, separately from the Pro workspace plan.
   Paid workspace membership alone does not change a Free service's limitations.
 - Keep the presenter tab open and active. Browsers can suspend background pages.
@@ -121,18 +120,28 @@ renews the host lease directly, avoiding an extra ownership request per update.
 All queued phone actions show SENDING until the host confirms them. Only entry
 text is predicted; movement, lever effects and puzzle outcomes remain authoritative.
 
-Deploy protocol version 6 to client and server together and reload all devices.
+Deploy protocol version 7 to client and server together and reload all devices.
 
 ## Main-screen ownership and refresh recovery
 
-The relay grants one main screen an opaque host lease. Publishing state, reading
+The relay grants one main screen per room an opaque host lease. Publishing state, reading
 or acknowledging inputs, disconnecting other players, and reading server
 diagnostics require that lease. Phone tickets can release only their own role.
 Host credentials stay in the main tab's session storage, outside phone snapshots,
 QR codes and diagnostics. A separate invitation derived from the host secret is
 embedded in the phone QR; it grants no host privileges and remains stable when
-the same host reconnects after a relay restart. A second main screen waits instead of overwriting the
-active game. There is still one game per service, not multiple rooms.
+the same host reconnects after a relay restart. Each fresh browser tab gets its
+own room automatically; the room ID travels in every relay request and phone QR.
+State, phone seats, inputs, acknowledgements, leases and diagnostics are isolated
+by room. Opening another browser does not block or replace an existing game.
+A duplicated tab may inherit the original tab's identity; START SEPARATE GAME
+creates a fresh identity and checkpoint without affecting the original room.
+
+Rooms are removed after 30 minutes without requests. The registry is capped at
+100 rooms; this is a memory bound, not a guaranteed concurrent-player capacity.
+An expired or restarted relay can be recreated by its original host with the same
+QR invitation, a new epoch, and the saved checkpoint. Phones wait and rejoin when
+that host returns. A room ID alone never authorizes joining or hosting.
 
 A normal refresh passes a one-use handoff through the tab's session storage and
 receives a new lease immediately, invalidating the old page's requests. If the

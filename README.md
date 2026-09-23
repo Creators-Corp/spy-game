@@ -510,7 +510,7 @@ art/
 
 Worth saying out loud so nobody is surprised in the room:
 
-- **One networked game per service.** One protected main screen, up to two phones; separate rooms are not implemented.
+- **Multiple rooms on one service instance.** Each host tab gets an independent room and QR for up to two phones. Rooms live in memory and expire after 30 minutes without requests; separate service instances do not share rooms.
 - **Refresh recovery in the same tab.** No cross-device cloud saves. Connection reports are available on all screens.
 - **Two jobs, not eight.** The library holds two contracts; the retention story in the deck wants one per episode.
 - **All six modules are built** — Le Coffre, Le Bureau, Le Blackout, Le Déguisement, Le Faux and L'Écoute, plus Le Clavier (the keypad beat inside the blackout). Nothing from the module library is missing.
