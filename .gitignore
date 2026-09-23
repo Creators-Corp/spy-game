@@ -1,5 +1,4 @@
-# The sealed build. Rebuilt by CI on every push; never committed, so a stale
-# copy encrypted with an old passphrase can never be published by accident.
+# The published build. Rebuilt by CI on every push; never committed.
 dist/
 
 __pycache__/

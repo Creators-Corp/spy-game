@@ -1,36 +1,8 @@
-# Deux Complices, hosted — for the demo where the second player is not in the
-# room.
-#
-# BLUEPRINTS ARE A PAID FEATURE, so this file is documentation first and
-# automation second. Everything in it can be typed into New > Web Service by
-# hand on any plan, free included, and that is the shorter road:
-#
-#   Language        Python 3
-#   Build Command   pip install --disable-pip-version-check cryptography segno && python tools/pack.py
-#   Start Command   python serve.py
-#   Environment     PROTOTYPE_PASSWORD, SEAT_TOKEN, PYTHON_VERSION=3.12
-#
-# Every other host wants the same three facts, so this doubles as the
-# instructions for Fly, a VPS, or anything else that can run a Python process.
-#
-#   build:  seal the prototype with the passphrase, exactly as CI does
-#   run:    serve.py, which serves the SEALED build and relays the second seat
-#
-# WHAT MUST BE SET BY HAND, because neither belongs in a repository:
-#
-#   PROTOTYPE_PASSWORD   the passphrase the build is encrypted with, and the
-#                        one anybody opening the site has to type. Same secret
-#                        as the GitHub Actions one.
-#   SEAT_TOKEN           a second, different secret. Without it the relay is
-#                        open to whoever finds the address, and the first
-#                        stranger to poll becomes Assane.
-#
-# THE FREE PLAN WILL EMBARRASS YOU. It sleeps after about fifteen minutes and
-# takes the better part of a minute to wake, which is a long silence with a
-# room watching. Starter stays warm.
-#
-# ONE INSTANCE, DELIBERATELY. The relay holds the seat in memory, so a second
-# instance would be a second game nobody can reach. Do not scale it.
+# Hosted prototype with the optional two-phone relay.
+# Build: pip install --disable-pip-version-check segno && python tools/pack.py && python tools/verify.py
+# Start: python serve.py
+# SEAT_TOKEN protects joining the player roles; the game page opens directly.
+# One instance: the relay stores its state in memory.
 
 services:
   - type: web
@@ -39,12 +11,11 @@ services:
     plan: starter
     numInstances: 1
     buildCommand: |
-      pip install --disable-pip-version-check cryptography segno
+      pip install --disable-pip-version-check segno
       python tools/pack.py
+      python tools/verify.py
     startCommand: python serve.py
     envVars:
-      - key: PROTOTYPE_PASSWORD
-        sync: false          # set it in the dashboard, never here
       - key: SEAT_TOKEN
         sync: false
       - key: PYTHON_VERSION

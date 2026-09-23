@@ -136,7 +136,7 @@
     <section class="phone phone--p1" id="p1" aria-label="Player 1 phone, Assane">
       <div class="phone__label"><b>P1</b> ASSANE — THE HANDS</div>
       <!-- only the guest sees this: whether the van is still on the line -->
-      <p class="guestnote" id="guest-note">CONNECTED</p>
+      <p class="guestnote" id="guest-note" role="status" aria-live="polite">CONNECTING…</p>
       <div class="phone__body">
         <div class="phone__notch"></div>
         <div class="phone__screen" id="p1-screen"></div>
@@ -151,6 +151,7 @@
     <!-- ================= P2 ================= -->
     <section class="phone phone--p2" id="p2" aria-label="Player 2 phone, Benjamin">
       <div class="phone__label"><b>P2</b> BENJAMIN — THE BRAIN</div>
+      <p class="guestnote" id="guest-note-p2" role="status" aria-live="polite">CONNECTING…</p>
       <div class="phone__body">
         <div class="phone__notch"></div>
         <div class="phone__screen" id="p2-screen"></div>
@@ -179,30 +180,54 @@
       </span>
       <button class="chip chip--btn" id="btn-both" type="button">BOTH PHONES</button>
       <!-- only appears when there is a relay behind the page to join through -->
-      <button class="chip chip--btn" id="btn-seat" type="button" hidden>SECOND SEAT</button>
+      <button class="chip chip--btn" id="btn-seat" type="button" hidden>CONNECT PHONES</button>
     </div>
 
-    <!-- THE JOIN CARD. Over the television while the presenter waits for
-         somebody to take Assane, gone the moment they do. -->
-    <div class="seat" id="seat-panel" aria-live="polite">
-      <p class="seat__h">TAKE THE SECOND SEAT</p>
-      <img class="seat__qr" id="seat-qr" alt="" aria-hidden="true">
-      <p class="seat__url" id="seat-url"></p>
-      <p class="seat__note">Scan it, or type it in. You get Assane’s phone and
-        nothing else — the plan stays over here.</p>
-      <!-- hosted behind a SEAT_TOKEN this browser has not been given -->
-      <form class="seat__lock" id="seat-token-form">
-        <p class="seat__h">SEAT TOKEN</p>
-        <p class="seat__note" style="margin-bottom:10px">This copy is hosted, and
-          the second seat is held behind a token so a stranger cannot take it.
-          Paste it once; this browser will remember it.</p>
-        <input id="seat-token" type="password" autocomplete="off" spellcheck="false"
-               aria-label="Seat token">
-        <button type="submit">UNLOCK THE SEAT</button>
-      </form>
-    </div>
 
   </div>
+</div>
+
+<!-- Connection UI lives outside the scaled game canvas so it stays readable. -->
+<div class="seat" id="seat-panel" role="dialog" aria-label="Connect your phones">
+  <button class="seat__close" id="seat-close" type="button" aria-label="Close connection panel">✕</button>
+  <h2 class="seat__h">ONE SCREEN. TWO PHONES.</h2>
+  <p class="seat__note">Scan this code on <b>both phones</b>.<br>Choose Assane on one and Benjamin on the other.</p>
+  <img class="seat__qr" id="seat-qr" alt="Scan on both phones to join">
+  <div class="seat__link"><input id="seat-url" readonly aria-label="Phone join link"><button id="seat-copy" type="button">COPY LINK</button></div>
+  <div class="seat__players">
+    <div><b>P1 · ASSANE</b><span id="seat-status-p1">Waiting for phone</span><button id="reclaim-p1" type="button" disabled>Disconnect P1</button></div>
+    <div><b>P2 · BENJAMIN</b><span id="seat-status-p2">Waiting for phone</span><button id="reclaim-p2" type="button" disabled>Disconnect P2</button></div>
+  </div>
+  <p class="seat__note">Keep this main screen open. Once connected, press READY on each phone.</p>
+  <p class="seat__note" id="save-status"></p>
+  <button class="report-button" type="button" data-diagnostics>CONNECTION REPORT</button>
+  <form class="seat__lock" id="seat-token-form">
+    <p class="seat__h">CONNECT YOUR PHONES</p>
+    <p class="seat__note">Enter the hosting seat token once on this screen. The QR code handles the phones automatically.</p>
+    <input id="seat-token" type="password" autocomplete="off" spellcheck="false" aria-label="Seat token">
+    <button type="submit">SHOW JOIN CODE</button>
+  </form>
+</div>
+<div class="join-picker" id="join-picker">
+  <p class="join-picker__brand">DEUX COMPLICES</p>
+  <h1>Who are you?</h1>
+  <p id="join-message" role="status" aria-live="polite">Connecting to the main screen…</p>
+  <button id="join-p1" type="button" disabled><span>PLAYER 1</span><b>ASSANE</b><small>Move, unlock, escape</small></button>
+  <button id="join-p2" type="button" disabled><span>PLAYER 2</span><b>BENJAMIN</b><small>Read the plans and guide Assane</small></button>
+  <p class="join-picker__hint">Each phone takes a different role.<br>Keep the game open on the main screen.</p>
+  <button type="button" data-diagnostics>CONNECTION REPORT</button>
+</div>
+<div class="guest-tools"><button id="guest-change" type="button">CHANGE PLAYER</button><button type="button" data-diagnostics>CONNECTION REPORT</button></div>
+<div class="recovery" id="recovery-panel" role="dialog" aria-modal="true" aria-labelledby="recovery-title" hidden>
+  <div><h2 id="recovery-title">Continue your heist?</h2><p>Your game was saved. Resume where you left off, with the same connected phones.</p>
+  <button id="resume-game" type="button">RESUME GAME</button><button id="new-game" type="button">START NEW GAME</button></div>
+</div>
+<div class="recovery" id="host-notice" role="status" hidden><div><h2>Main screen connection</h2><p id="host-message"></p><button type="button" data-diagnostics>CONNECTION REPORT</button></div></div>
+<div class="recovery report" id="report-panel" role="dialog" aria-modal="true" aria-labelledby="report-title" hidden>
+  <div><h2 id="report-title">Connection report</h2><p>Save this report when reporting a connection problem. It contains connection timings and errors, without join tokens or game contents.</p>
+  <textarea id="report-text" readonly aria-label="Connection report contents"></textarea>
+  <a class="report-button" id="report-download" download="deux-complices-connection-report.json" hidden>SAVE REPORT</a>
+  <button id="report-close" type="button">CLOSE</button></div>
 </div>
 
 <!-- ONE SCREEN AT A TIME, ON A DISPLAY THAT ONLY FITS ONE.
@@ -225,7 +250,9 @@
 <script src="js/tv.js"></script>
 <script src="js/p1.js"></script>
 <script src="js/p2.js"></script>
+<script src="js/recovery.js"></script>
 <script src="js/main.js"></script>
+<script src="js/net.js"></script>
 <script src="js/link.js"></script>
 </body>
 </html>

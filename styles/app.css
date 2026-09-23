@@ -280,11 +280,8 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 }
 
 
-/* ============ THE SECOND SEAT ============
-   A join card while the presenter waits, a greyed-out phone once somebody has
-   taken Assane, and a guest page that is one phone and nothing else. All of it
-   is dead weight in the sealed build, where there is no relay to join through
-   and the button never appears at all. */
+/* ============ PHONE CONNECTIONS ============
+   Role selection, a shared join code, and one claimed role per phone. */
 .seat{
   display:none;position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
   z-index:60;width:360px;padding:22px 22px 18px;text-align:center;
@@ -328,7 +325,8 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 .guestnote{display:none;}
 body.is-guest .stage__chrome,
 body.is-guest .tv,
-body.is-guest .phone--p2,
+body.is-guest.guest-p1 .phone--p2,
+body.is-guest.guest-p2 .phone--p1,
 body.is-guest .seat{display:none !important;}
 body.is-guest .stage{
   width:auto;height:auto;padding:0;
@@ -340,6 +338,9 @@ body.is-guest .guestnote{
   color:var(--gold);
 }
 body.is-guest .guestnote.is-lost{color:var(--red);}
+/* Keep the current screen visible while reconnecting, but do not collect
+   movement against an out-of-date map. */
+body.is-guest.link-waiting .phone__screen{pointer-events:none;opacity:.65;}
 
 
 /* the join card has two faces: the QR when this browser may see the address,
@@ -423,3 +424,41 @@ body.is-solo .phone.is-blocked .phone__block{display:none;}
 body.is-solo .phone.is-blocked .phone__screen{filter:none;pointer-events:auto;}
 /* a guest is already exactly one phone; it must not also get the switcher */
 body.is-guest .solobar{display:none;}
+
+/* Phone joining and role selection: real viewport sizes, never stage-scaled. */
+.seat{position:fixed;top:50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:24px;box-sizing:border-box;}
+.seat__h{padding:0 18px;line-height:1.5;}
+.seat__note{font-size:14px;line-height:1.5;}
+.seat__qr{width:210px;height:210px;margin:16px auto;}
+.seat__close{position:absolute;right:6px;top:6px;width:44px;height:44px;border:0;background:transparent;color:var(--ink);font-size:20px;cursor:pointer;}
+.seat__link{display:flex;gap:6px;margin:12px 0;}
+.seat__link input{min-width:0;flex:1;font:12px var(--mono);padding:8px;border:1px solid var(--ink);border-radius:4px;}
+.seat__link button,.seat__players button{min-height:44px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:4px;padding:8px;cursor:pointer;}
+.seat__players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+.seat__players>div{display:flex;flex-direction:column;gap:8px;padding:12px 8px;background:var(--stone);border-radius:6px;}
+.seat__players b{font-size:13px;}.seat__players span{font-size:13px;}.seat__players button:disabled{opacity:.4;cursor:default;}
+.seat.is-locked .seat__link,.seat.is-locked .seat__players{display:none;}
+.join-picker,.guest-tools{display:none;}
+body.is-guest.is-picking .stage-fit,body.is-guest.is-picking .guest-tools{display:none;}
+body.is-guest.is-picking{overflow:auto;}
+body.is-guest.is-picking .join-picker{display:block;max-width:440px;margin:0 auto;padding:32px 24px;box-sizing:border-box;color:var(--ink);text-align:center;}
+.join-picker__brand{font:12px var(--mono);letter-spacing:.2em;color:var(--gold);}
+.join-picker h1{font-size:36px;margin:16px 0 8px;}
+#join-message{min-height:48px;font-size:16px;line-height:1.4;}
+.join-picker button{display:flex;flex-direction:column;gap:5px;width:100%;padding:22px;margin:16px 0;text-align:left;background:var(--paper);color:var(--ink);border:2px solid var(--gold);border-radius:12px;cursor:pointer;}
+.join-picker button span{font:11px var(--mono);letter-spacing:.12em;}.join-picker button b{font:700 28px var(--font);}.join-picker button small{font:15px var(--font);}
+.join-picker button:disabled{opacity:.4;cursor:default;}.join-picker__hint{font-size:14px;line-height:1.5;opacity:.7;}
+body.is-guest:not(.is-picking) .guest-tools{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:center;height:44px;background:var(--night);}
+.guest-tools button{min-height:44px;padding:8px 24px;background:transparent;border:0;color:var(--ink);font:12px var(--mono);cursor:pointer;}
+body.is-guest:not(.is-picking) .stage-fit{bottom:44px;height:calc(100% - 44px);}
+
+body.is-guest.link-waiting .guestnote{color:var(--ink-soft);}
+.recovery{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;background:rgba(10,13,17,.94);padding:24px;}
+.recovery[hidden]{display:none;}
+.recovery>div{max-width:440px;background:var(--paper);border:1px solid var(--gold);border-radius:12px;padding:28px;color:var(--ink);}
+.recovery h2{font-size:28px;}.recovery p{font-size:16px;line-height:1.6;}
+.recovery button,.report-button{min-height:44px;padding:12px;margin:8px 6px 0 0;background:var(--paper);color:var(--ink);border:1px solid var(--gold);border-radius:6px;cursor:pointer;}
+#resume-game{background:var(--gold);color:var(--on-gold);}
+.report{z-index:200;}.report>div{max-height:calc(100dvh - 48px);overflow:auto;}
+.report textarea{box-sizing:border-box;width:100%;height:200px;font:11px var(--mono);background:var(--night);color:var(--ink);padding:12px;}
+.report a{display:inline-block;text-decoration:none;box-sizing:border-box;}.report a[hidden]{display:none;}

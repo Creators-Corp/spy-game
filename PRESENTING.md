@@ -1,116 +1,63 @@
 # Deux Complices — running the demo
 
-For whoever is showing this. You need a browser and nothing else: no install,
-no repository, no command line.
+## One main screen and two phones
 
-Fill these in before you hand this page on.
+1. Open the game on the laptop or TV browser. Keep that tab open and active.
+2. Press **CONNECT PHONES**.
+3. If asked, enter the hosting **seat token** once on this screen.
+4. Scan the **same QR code on both phones**, or use **COPY LINK** and open that
+   address on each phone.
+5. One phone chooses **PLAYER 1 · ASSANE**. The other chooses **PLAYER 2 · BENJAMIN**.
+   A role that is already taken is disabled.
+6. Benjamin chooses the contract. Both players press **READY** on their phones.
+7. Close the connection panel on the main screen and play.
 
-| | |
+Assane moves and interacts with puzzles. Benjamin has the map, dossier and support
+controls. They need to describe what they see and talk each other through the job.
+
+The connection button shows how many phones have joined. Open it at any time to
+check both players or disconnect one. Disconnecting one phone does not remove the
+other. **CHANGE PLAYER** on a phone releases its role and returns to role choice.
+
+## Connecting in the room
+
+With `python serve.py`, put both phones on the same network as the laptop and
+use the QR code. Do not type `localhost` or `127.0.0.1` into the phones: those
+addresses refer to the phone itself. Some venue Wi-Fi blocks devices from reaching
+each other; use the hosted Render address or a hotspot in that case.
+
+With the Render address, each phone only needs an internet connection.
+
+## If something goes wrong
+
+| What you see | What to do |
 |---|---|
-| **Address** | `_______________________________________________` |
-| **Passphrase** | `_______________________________________________` |
-| **Seat token** *(only if you want a second player on their own laptop)* | `___________________________` |
+| A role says **Already connected** | Choose the other role. To replace a phone, disconnect its role on the main screen first. |
+| **RECONNECTING…** | Keep the phone page open. It retries automatically; returning to the browser triggers a retry. |
+| **WAITING FOR THE MAIN SCREEN…** | Keep the main game tab open and active, and check its internet connection. |
+| The phone was deliberately disconnected | Choose a free role again. It will not take its old role back automatically. |
+| No **CONNECT PHONES** button | This copy has no relay. Use the Render version or run `python serve.py`. |
+| The main screen asks for a token | Enter the hosting seat token there. Neither phone needs to type it. |
+| **Another page is hosting** | Use the original main screen. After a refresh, wait a few seconds. To move to a different screen, close the old one and wait about 30 seconds. |
+| **Continue your heist?** | Choose **RESUME GAME** to keep progress and the connected phones, or **START NEW GAME** for a fresh run. |
 
----
+A phone keeps its role when refreshed. Short interruptions preserve the seat for
+30 seconds, with the idle-pressure clock paused while the connection is stalled.
+After a deployment, reload the main screen and both phones before starting a demo.
+Refreshing the main screen offers to resume the saved game in that same tab.
+Keep the tab open: this is refresh recovery, not a saved game shared across devices.
 
-## Five minutes before
+If a connection problem happens, open **CONNECTION REPORT** on the affected phone
+and in the main screen's connection panel. Use **SAVE REPORT**, or select and copy
+the report text if the browser cannot download it. Keep both reports to help
+diagnose the problem. Reports include timings and errors, without join tokens or
+game contents.
 
-1. Open the address and type the passphrase. It decrypts in the browser and
-   takes a few seconds.
-2. Leave the tab open. **If it took the better part of a minute to load, that is
-   the host waking up** — it goes to sleep when nobody has used it for a while.
-   Opening it early is the whole reason for doing this five minutes before.
-3. Turn the sound on. There is music, and it changes when the job does.
+## One screen, or one phone
 
-You should be looking at three screens side by side: a television in the middle,
-Assane's phone on the left, Benjamin's on the right.
+The prototype also works with all three panes on one screen. Both players press
+READY there. Or connect just one phone and play the other role on the main screen.
 
-**On a phone, or a narrow window,** there is no room for three, so you get one
-at a time and a row of buttons along the bottom — **ASSANE · TV · BENJAMIN** —
-to choose which. Nothing else changes. A laptop or a television shows all three
-at once and needs no switching.
-
----
-
-## The shortest version of what it is
-
-Two people rob a building. **Neither of them can see what the other sees, and
-that is the entire game.**
-
-- **Assane (P1)** is inside. He moves, he touches things, he talks his way out.
-  He sees three squares in front of him and will not see a guard until it is too
-  late.
-- **Benjamin (P2)** is in the van with the floor plan, the patrol routes, the
-  staff files and the safe manual. He sees everything and can touch nothing.
-
-Every lock in the game is split down the middle. Assane can see the shape of a
-key but not which one; Benjamin knows which one but cannot reach it. The only
-way through any door is the two of them talking.
-
----
-
-## Running it on one screen
-
-This is the normal way and it needs no setup at all.
-
-1. Both players press **READY**.
-2. Assane's player uses the arrow pad. Benjamin's player reads their phone.
-3. **P1 ASSANE / P2 BENJAMIN** in the top bar blurs the other phone, so one
-   person can hold the laptop without reading their partner's half.
-
-That is the whole demo. Everything below is optional.
-
----
-
-## Giving Assane to somebody else
-
-Only if you want the second player on their own laptop or phone — it makes the
-"I cannot see what you see" real rather than a promise.
-
-1. Press **SECOND SEAT** in the top bar.
-2. If it asks for a **seat token**, paste the one from the table above. It asks
-   once and remembers.
-3. A QR code appears. Somebody scans it, or types the address under it.
-4. From that moment they are Assane. Your copy of his phone greys out and says
-   **HANDED OVER** — that is correct, not a fault.
-5. Both press **READY** and play.
-
-They need to be able to reach the address — on the same wifi if you are running
-this from a laptop, or anywhere at all if it is hosted.
-
-**If they close their tab, you get Assane back within about six seconds** and can
-carry on alone. Nothing is lost.
-
----
-
-## When something goes wrong
-
-| what you see | what it is | what to do |
-|---|---|---|
-| Blank page for up to a minute on the first open | The host is asleep and waking | Wait. Open it early next time. |
-| The passphrase is refused | It is case-sensitive and has no recovery | Retype it carefully. If it is genuinely lost, the build has to be made again. |
-| No **SECOND SEAT** button at all | There is no relay behind this copy — a statically published build | Run it on one screen. Everything else works. |
-| The card asks for a token you do not have | Hosted, and the seat is held behind a token | Play on one screen, or get the token. |
-| The guest's screen says **LOST THE VAN** | Their connection dropped | It reconnects itself. If it does not, they reload the same address. |
-| The guest sees a phone that never updates | They opened the plain address, not the QR one | The address must end in `?role=p1`. Re-scan the QR. |
-| Somebody else took the seat | It goes to whoever asks first | Whoever should have it reloads the QR address; the other closes their tab. |
-| Anything else, thirty seconds before you are on | — | Reload the page and run it on one screen. It is designed for that and it is what most people have seen. |
-
----
-
-## Two things worth saying out loud while you play
-
-- **The guards only move when Assane moves.** Nobody is under time pressure.
-  Standing still is a real move and costs nothing but nerve.
-- **Getting caught is not losing.** It starts a conversation: Assane describes
-  the guard's face, Benjamin finds him in the files and reads back one true
-  thing about his life, and Assane talks his way out of it. Three exchanges, two
-  mistakes allowed. It is the best thing in the game — do not avoid it.
-
----
-
-## What not to do
-
-- Do not put the address anywhere public. This is under an NDA; the passphrase
-  is the only thing between the link and the world.
-- Do not open two guest tabs at once. The second one silently takes the seat.
+Guards move when Assane moves; lingering can still raise suspicion. Getting caught
+starts La Tchatche: Assane describes the guard, Benjamin finds the matching face
+and information, and they talk their way out together.

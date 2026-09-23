@@ -1,13 +1,7 @@
-name: Publish sealed preview
+name: Publish playable preview
 
-# The repository holds the prototype in the clear; GitHub Pages never does.
-# Every push rebuilds the site as ciphertext, using a passphrase that lives
-# only in repository secrets and is used to encrypt, never shipped.
-#
-# Set the secret first:
-#   Settings -> Secrets and variables -> Actions -> New repository secret
-#   Name: PROTOTYPE_PASSWORD
-# and turn on Settings -> Pages -> Source: GitHub Actions.
+# Build the game and its assets as a normal static site, opening directly.
+# Settings -> Pages -> Source: GitHub Actions.
 
 on:
   push:
@@ -34,26 +28,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - run: pip install --disable-pip-version-check cryptography
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-      - name: Fail early if the passphrase is not configured
-        env:
-          PROTOTYPE_PASSWORD: ${{ secrets.PROTOTYPE_PASSWORD }}
+      - name: Check relay recovery
         run: |
-          if [ -z "$PROTOTYPE_PASSWORD" ]; then
-            echo "::error::PROTOTYPE_PASSWORD is not set. Add it under Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          echo "passphrase present (${#PROTOTYPE_PASSWORD} characters)"
+          python -m unittest discover -s tools -p test_relay.py
+          node tools/test_link.cjs
 
-      - name: Seal the build
-        env:
-          PROTOTYPE_PASSWORD: ${{ secrets.PROTOTYPE_PASSWORD }}
+      - name: Build the prototype
         run: python tools/pack.py
 
-      # The gate on the whole arrangement. If anything readable has found its
-      # way into dist/, the deploy stops here instead of on the open web.
-      - name: Refuse to publish anything readable
+      - name: Verify the published files
         run: python tools/verify.py
 
       - uses: actions/upload-pages-artifact@v3

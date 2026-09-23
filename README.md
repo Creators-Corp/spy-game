@@ -2,10 +2,8 @@
 
 **One TV. Two phones. One heist.** All three faked on one screen, so a room can watch the whole conversation at once.
 
-> **Confidential.** This build is held under an NDA. The published site serves
-> only ciphertext behind a passphrase — see **[HOSTING.md](HOSTING.md)** before
-> putting it anywhere. This repository was started with no history for the same
-> reason; do not import the earlier one.
+> The published prototype opens directly, without a password or decryption
+> step. See **[HOSTING.md](HOSTING.md)** for building and publishing it.
 
 Open `index.html` in a browser. No build, no install, no server, no network.
 
@@ -77,22 +75,35 @@ Then just let them talk. Nothing on either phone tells a player what the other o
 | `art/sfx-caught.wav` | Artlist Original — Epic Orchestral · *Royal String Logo* |
 | `art/sfx-victory.wav` | Unrealsfx — Candy Game Vol 2 · *Bonus Point Notification* |
 
-The four `.wav` files ship at **48 kHz / 16-bit**, down from the 96 kHz / 24-bit masters — 12.5 MB of audio became 4.2 MB with nothing audible lost, because the whole pack is decrypted client-side before the gate opens and headroom nobody can hear is time the room spends waiting. `tools/downsample.py` does it: 2:1 decimation, which is exact at these rates, with a binomial low-pass first so what lives above 24 kHz does not fold back into the audible band. Drop a fresh master into `art/` and run it again. The masters are in git history.
+The four `.wav` files ship at **48 kHz / 16-bit**, down from the 96 kHz / 24-bit masters — 12.5 MB of audio became 4.2 MB with nothing audible lost, keeping downloads smaller without carrying inaudible headroom. `tools/downsample.py` does it: 2:1 decimation, which is exact at these rates, with a binomial low-pass first so what lives above 24 kHz does not fold back into the audible band. Drop a fresh master into `art/` and run it again. The masters are in git history.
 
 **Four recorded cues, against a synthesised bench.** Every other cue in the game is an oscillator, so it works with an empty art folder and survives a phone speaker. These three are not. Assane's step is a whoosh, played three voices deep and round-robin so a held arrow key overlaps the way footsteps do rather than chopping one sample off at 200ms — and it keeps the old square-wave blip as its fallback, because a step is the one cue that fires often enough for its absence to feel like the game has stopped responding. The other two: *Tech Impact* lands whenever a building system dies — the beams dropped, the lights cut, or the power itself going on contract two — *Royal String Logo* is the building's verdict the moment a hand lands on Assane's shoulder, running under LA TCHATCHE rather than stopping for it; and *Bonus Point Notification* is the only one that gets the room to itself, on the rank card, after the score has already gone quiet. Looping a camera deliberately gets neither: it is the quiet lever, and announcing it would tell the room the one thing nobody in the fiction is supposed to hear.
 
-**A second player can take Assane from another machine.** Run `python serve.py`, press **SECOND SEAT**, and a QR code goes up over the television. Somebody scans it and from that moment Assane is theirs — the presenter keeps the television and Benjamin, and their copy of Assane's phone greys out with HANDED OVER on it. Close the guest tab and it comes back within six seconds. Never press the button and nothing has changed.
+**Both players can use their own phones.** Open the game on the main screen and
+press **CONNECT PHONES**. Scan the same QR code on both phones. One chooses
+**PLAYER 1 · ASSANE**, the other **PLAYER 2 · BENJAMIN**, then both press READY.
+Taken roles are disabled, so two phones cannot accidentally claim the same seat.
+Benjamin chooses the contract, reads the dossier, and operates the support controls
+from his phone. Assane moves and solves the puzzles from his.
 
-Only two things cross the wire, and neither is the game: `{ job, seed, S }` out, `{ call, args }` back. The state is the engine's own 3 KB of JSON; the *seed* is why there is no content payload, since `reset(seed)` is deterministic and the guest rolling the same seed gets the same door code, safe and roster without being sent any of them. The guest runs no rules at all — it adopts what it is handed and every intent is intercepted and posted, so there is no prediction, no rollback and no second copy of the rules. `serve.py` holds no rules either: it is a relay, and the presenter's browser is still the only place the game exists.
+The main screen runs the game and must stay open. Its connection panel shows
+both players and can disconnect either one independently. Phone refreshes keep
+the claimed role; brief interruptions reconnect automatically. A disconnected
+role is held for 30 seconds before becoming available again. Either role can
+also stay on the main screen for a one-phone demo.
+
+The relay carries game snapshots and acknowledged player inputs. It enforces
+role ownership and allowed actions; it does not run the game rules. Keep one
+service instance and one game at a time.
 
 | where | what happens |
 |---|---|
-| **same room** | `python serve.py` binds every interface; the guest opens the printed address. Windows will want an inbound rule for port 8080, and a lot of venue wifi isolates devices from each other — a phone hotspot is the reliable fallback. |
-| **GitHub Pages** | static hosting, so there is no relay and the SECOND SEAT button never appears. The published build is exactly what it was before the feature existed. |
-| **hosted** (`render.yaml`) | the same `serve.py` runs as a web service. Deployed it serves **dist/** and refuses to start without it, so a public address can never be handed the working tree. Set `SEAT_TOKEN` or the first stranger to find the URL is Assane. |
-| **a tunnel** | `cloudflared tunnel --url http://localhost:8080` gives a public address with nothing deployed. Best for a pitch over a call. |
+| **same room** | Run `python serve.py`; phones scan the on-screen QR. They must be on a network that can reach the laptop. |
+| **GitHub Pages** | Static hosting has no relay, so use the three panes on one screen. |
+| **Render** (`render.yaml`) | Both phones can join from anywhere through the hosted relay. If `SEAT_TOKEN` is set, enter it once on the main screen; the QR handles it for both phones. |
 
-Known and deliberate: the guest is served the same javascript as everybody else, so a guest with devtools open can read Benjamin's answers. Closing that means splitting `content.js` by role — the right work if this ever stops being a demo.
+The prototype serves the same code to all devices. Roles keep the normal UI and
+controls separate, but do not hide puzzle answers from someone using devtools.
 
 **If P1 gets spotted, that is not a loss.** It is **La Tchatche**: P1 describes the guard's face, P2 finds him in VISAGES, reads the crack, and tells P1 which of three lines to use. Three exchanges. Two mistakes ends the job — and losing takes five seconds and gets a laugh.
 
@@ -482,6 +493,9 @@ js/
   engine.js         rules. Turn loop, vision cones, spotting, scoring. Touches no DOM.
   tv.js  p1.js  p2.js   the three views
   main.js           boot, scaling, the clock
+  recovery.js       per-tab checkpoints and resume prompt
+  net.js            bounded requests, retries, connection diagnostics
+  link.js           host ownership, role claims, state and input relay
 art/
   ART_PROMPTS.md    the eleven prompts
 ```
@@ -496,8 +510,8 @@ art/
 
 Worth saying out loud so nobody is surprised in the room:
 
-- **No networking.** Three panes on one screen, by design, for this pass.
-- **One authored job.** The modules are data-driven, but only one job is written.
+- **One networked game per service.** One protected main screen, up to two phones; separate rooms are not implemented.
+- **Refresh recovery in the same tab.** No cross-device cloud saves. Connection reports are available on all screens.
 - **Two jobs, not eight.** The library holds two contracts; the retention story in the deck wants one per episode.
 - **All six modules are built** — Le Coffre, Le Bureau, Le Blackout, Le Déguisement, Le Faux and L'Écoute, plus Le Clavier (the keypad beat inside the blackout). Nothing from the module library is missing.
 - **Solo and 3–4 player modes are not built.** Duo only.

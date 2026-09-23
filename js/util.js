@@ -31,15 +31,9 @@ window.DC = window.DC || {};
       return el('li', {}, [el('b', { text: String(i + 1) }), el('em', { text: t })]);
     }));
   }
-  /* EVERY image in the build resolves through here.
-     Running locally, window.__ASSET does not exist and this hands the path
-     straight back, so development is unchanged. In the published build the
-     loader has already decrypted the art into memory and filled __ASSET with
-     blob URLs, so this returns one of those — and nothing the host serves is
-     ever a readable PNG. */
+  /* Assets use the same relative paths locally and in the published build. */
   function assetURL(path) {
-    var m = window.__ASSET;
-    return (m && m[path]) || path;
+    return path;
   }
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }

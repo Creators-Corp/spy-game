@@ -617,8 +617,8 @@
       foot([el('div', { class: 'nav__controls' }, [pad])])
     ]);
     view.classList.add('pscreen--infiltration');
-    // Image sources resolve from the document, including file:// demos and
-    // the encrypted build's asset map, rather than from styles/phone.css.
+    // Image sources resolve from the document in local and published demos,
+    // rather than from styles/phone.css.
     U.$$('button', pad).forEach(function (button) {
       if (button.classList.contains('dpad__wait')) {
         button.textContent = '';

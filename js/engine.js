@@ -11,6 +11,42 @@
   var PERP = { N: { x: 1, y: 0 }, S: { x: 1, y: 0 }, E: { x: 0, y: 1 }, W: { x: 0, y: 1 } };
 
   var S = null;
+  var timers = [];
+  // Persist named transitions, not closures. A refresh in an unlock animation
+  // resumes its remaining delay; an old run's timer cannot mutate a new run.
+  function schedule(transition) {
+    var owner = S;
+    var timer = setTimeout(function () {
+      timers = timers.filter(function (t) { return t !== timer; });
+      if (S !== owner) return;
+      S.transitions = S.transitions.filter(function (t) { return t !== transition; });
+      switch (transition.kind) {
+        case 'close': closeModule(true); break;
+        case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
+        case 'safe-caught': getSpotted('1184'); break;
+        case 'safe-clear': S.coffreEntry = []; break;
+        case 'finish': S.moduleId = null; finish(); break;
+        case 'door-caught': getSpotted('g1'); break;
+        case 'door-clear': S.porteEntry = ''; break;
+      }
+      U.emit('render');
+    }, Math.max(0, transition.at - Date.now()));
+    timers.push(timer);
+  }
+  function defer(kind, delay) {
+    var transition = { kind: kind, at: Date.now() + delay };
+    S.transitions.push(transition);
+    schedule(transition);
+  }
+  function restore(next, savedAt) {
+    timers.forEach(clearTimeout); timers = [];
+    S = next;
+    var delta = Math.max(0, Date.now() - savedAt);
+    ['lastActionAt', 'flash', 'blackoutAt'].forEach(function (key) { if (S[key]) S[key] += delta; });
+    if (S.toast) S.toast.at += delta;
+    if (S.levers.last) S.levers.last.at += delta;
+    (S.transitions || []).forEach(function (t) { t.at += delta; schedule(t); });
+  }
 
   /* ---------------------------------------------------------------- setup */
   function entryTile() {
@@ -89,6 +125,7 @@
   }
 
   function reset(seed) {
+    timers.forEach(clearTimeout); timers = [];
     if (seed === undefined || seed === null) seed = nextSeed();
     /* the roster is who is on tonight, dealt before the state is built so the
        guards below pick up the badges it settled on */
@@ -126,6 +163,7 @@
       turn: 0,
       elapsed: 0,
       running: false,
+      transitions: [],
       suspicion: 0,
       spotted: 0,
       grace: 0,
@@ -1005,15 +1043,15 @@
       U.sfx.unlock();
       S.hasManuscript = true;
       S.loot.manuscrit = true;
-      setTimeout(function () { closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); U.emit('render'); }, 900);
+      defer('safe-open', 900);
     } else {
       U.sfx.bad(); U.buzz('p1');
       S.coffreFails++;
       raise(15);
       if (S.coffreFails >= 2) {
-        setTimeout(function () { getSpotted('1184'); U.emit('render'); }, 700);
+        defer('safe-caught', 700);
       } else {
-        setTimeout(function () { S.coffreEntry = []; U.emit('render'); }, 900);
+        defer('safe-clear', 900);
       }
     }
   }
@@ -1050,7 +1088,7 @@
     if (code === C.CLAVIER.code) {
       U.sfx.unlock();
       S.solved.clavier = true;
-      setTimeout(function () { S.moduleId = null; finish(); U.emit('render'); }, 900);
+      defer('finish', 900);
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
@@ -1065,7 +1103,7 @@
     if (circuit === C.ECOUTE.answer) {
       U.sfx.unlock();
       S.cutCameras[C.ECOUTE.kills] = true;
-      setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
+      defer('close', 900);
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
@@ -1079,7 +1117,7 @@
       U.sfx.unlock();
       S.disguised = true;
       S.outfit = { head: outfit.head, torso: outfit.torso, legs: outfit.legs };
-      setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
+      defer('close', 900);
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
@@ -1097,7 +1135,7 @@
       U.sfx.bad(); U.buzz('p1');
       raise(15);
     }
-    setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
+    defer('close', 900);
     return pickedGenuine;
   }
 
@@ -1110,7 +1148,7 @@
     if (hit.sym === K.lock) {
       U.sfx.unlock();
       unlockDoorAt(K.door);
-      setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
+      defer('close', 800);
       return true;
     }
     U.sfx.block(); U.buzz('p1');
@@ -1159,7 +1197,7 @@
     if (S.porteEntry === C.PORTE.code) {
       U.sfx.unlock();
       unlockDoorAt(C.PORTE.door);
-      setTimeout(function () { closeModule(true); U.emit('render'); }, 900);
+      defer('close', 900);
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
@@ -1167,9 +1205,9 @@
     raise(8);
     /* three wrong codes and somebody comes to see who is standing at the door */
     if (S.porteFails >= (C.PORTE.fails || 3)) {
-      setTimeout(function () { getSpotted('g1'); U.emit('render'); }, 700);
+      defer('door-caught', 700);
     } else {
-      setTimeout(function () { S.porteEntry = ''; U.emit('render'); }, 900);
+      defer('door-clear', 900);
     }
     return false;
   }
@@ -1189,7 +1227,7 @@
     S.hasManuscript = true;
     S.loot.dossier = true;
     if (C.PRIZE && C.PRIZE.dark) darken();
-    setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
+    defer('close', 800);
   }
 
   function bureauSubmit(code) {
@@ -1202,7 +1240,7 @@
     if (mark === C.BUREAU.doorMark) {
       U.sfx.unlock();
       S.doors.forEach(function (d) { if (d.mark === mark) d.locked = false; });
-      setTimeout(function () { closeModule(true); U.emit('render'); }, 800);
+      defer('close', 800);
       return true;
     }
     U.sfx.bad(); U.buzz('p1');
@@ -1340,6 +1378,7 @@
        back and no second copy of the rules to keep in step. Nothing in the
        game calls this. */
     adopt: function (next) { if (next) S = next; },
+    restore: restore,
     reset: reset, begin: begin, act: act, ready: ready,
     charAt: charAt, isWall: isWall, doorAt: doorAt, moduleAt: moduleAt, roomAt: roomAt,
     coordOf: coordOf,

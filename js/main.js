@@ -58,11 +58,9 @@
       if (b) keep[sel] = b.scrollTop;
     });
 
-    /* A GUEST IS ONE PHONE. It has no television and no dossier to draw, and
-       drawing them would be drawing the presenter's half out of a state that
-       arrived over the wire a moment ago. link.js redraws P1 on its own when
-       new state lands. */
-    if (L.link && L.link.role === 'guest') { L.p1.render(); return; }
+    /* A guest draws only its claimed role. Dossier tab changes stay local;
+       game changes arrive through the relay. */
+    if (L.link && L.link.role === 'guest') { L.link.renderGuest(); return; }
 
     L.tv.render();
     L.p1.render();
@@ -113,6 +111,7 @@
   }
 
   function restart() {
+    if (L.link && L.link.role === 'guest') { if (L.link.restart) L.link.restart(); return; }
     /* a new job silences the old one: without this a catch sting or a victory
        cue plays on over the plan screen of the next run */
     U.silence();
@@ -131,12 +130,14 @@
                   'assane-standing', 'guard-standing', 'jail-slam', 'blackout-cut', 'blackout-door']);
     U.hydrateStaticSlots();
     E.reset();
+    L.recovery.boot();
 
     U.on('render', render);
     U.on('restart', restart);
     /* Changing the contract is a full reset — a job is a map, a roster and six
        module payloads, and half of one job mixed into another is nonsense. */
     U.on('job', function (i) {
+      if (L.link && L.link.role === 'guest') { L.link.selectJob(i); return; }
       L.content.loadJob(i);
       restart();
     });
@@ -146,12 +147,22 @@
 
     /* the clock ticks on its own, but only the clock re-draws —
        a full pass every second would fight with what the players are reading */
+    var lastClock = Date.now();
     setInterval(function () {
+      var now = Date.now(), delta = now - lastClock;
+      lastClock = now;
       /* the clock belongs to whoever owns the game. A guest running its own
          would charge Assane suspicion twice — once here and once on the
          presenter's machine, whose answer is the one that counts. */
       if (L.link && L.link.role === 'guest') return;
+      if (L.recovery.pending || L.recovery.blocked) return;
       if (!E.S.running) return;
+      // A network interruption is not a gameplay decision to stand still.
+      if (L.link && L.link.paused()) {
+        E.S.lastActionAt = Math.min(now, E.S.lastActionAt + delta);
+        L.p1.pressure(null);
+        return;
+      }
       E.S.elapsed++;
       var c = U.$('#tv-clock');
       if (c) c.textContent = U.mmss(E.S.elapsed);
@@ -160,7 +171,7 @@
          place rather than re-rendered, because swapping the d-pad out from
          under a finger once a second would eat taps. Player 2 is never
          redrawn by the clock — he is reading. */
-      var p = E.tick(Date.now());
+      var p = E.tick(now);
       if (E.S.phase === 'play') { L.tv.render(); L.p1.pressure(p); }
       if (p && p.ticking) U.buzz('p1');   /* the phone nags while the clock charges */
     }, 1000);
@@ -171,6 +182,8 @@
     window.addEventListener('keydown', function (ev) {
       var k = KEYS[ev.key];
       if (!k || E.S.phase !== 'play') return;
+      if (L.recovery.pending || L.recovery.blocked) return;
+      if (L.link && ((L.link.role === 'guest' && L.link.player !== 'p1') || L.link.taken('p1'))) return;
       if (live === 'p2') return;          /* Assane's phone is blocked; so are his keys */
       ev.preventDefault();
       if (E.isWall(E.S.assane.x + k[0], E.S.assane.y + k[1])) return;

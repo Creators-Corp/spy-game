@@ -57,12 +57,8 @@
       U.emit('render');
     };
     var r = new XMLHttpRequest();
-    /* In the sealed build every asset is served out of the decrypted
-       manifest, so the sheet has to be asked for by the same name the tiles
-       are. The cache-buster is for the dev server only — appended to a real
-       path, it would miss the manifest entirely. */
-    var url = U.assetURL(ART + 'overrides.json'), plain = url === ART + 'overrides.json';
-    r.open('GET', url + (plain ? '?t=' + Date.now() : ''), true);
+    /* Reload the artist's sheet along with the current build. */
+    r.open('GET', U.assetURL(ART + 'overrides.json') + '?t=' + Date.now(), true);
     r.onload = function () {
       if (r.status >= 200 && r.status < 300) {
         try { OVERRIDE = JSON.parse(r.responseText) || {}; } catch (e) { OVERRIDE = {}; }

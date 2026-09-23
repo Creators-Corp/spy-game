@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""96 kHz / 24-bit masters -> 48 kHz / 16-bit, in place, for the sealed build.
+"""96 kHz / 24-bit masters -> 48 kHz / 16-bit, in place, for the published build.
 
-Everything in the pack is decrypted client-side before the gate opens, so an
-extra 13 MB of inaudible headroom is 13 MB the room waits for. 2:1 decimation
+Removing 13 MB of inaudible headroom keeps audio downloads smaller. 2:1 decimation
 is exact at these rates; the only real question is aliasing, so the signal is
 low-passed with a binomial kernel before every second sample is taken. What
 folds down without it lives above 24 kHz, which is nobody's hearing, but it
