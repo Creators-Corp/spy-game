@@ -4,13 +4,12 @@
 
 1. Open the game on the laptop or TV browser. Keep that tab open and active.
 2. Press **CONNECT PHONES**.
-3. If asked, enter the hosting **seat token** once on this screen.
-4. Scan the **same QR code on both phones**, or use **COPY LINK** and open that
+3. Scan the **same QR code on both phones**, or use **COPY LINK** and open that
    address on each phone.
-5. One phone chooses **PLAYER 1 · ASSANE**. The other chooses **PLAYER 2 · BENJAMIN**.
+4. One phone chooses **PLAYER 1 · ASSANE**. The other chooses **PLAYER 2 · BENJAMIN**.
    A role that is already taken is disabled.
-6. Benjamin chooses the contract. Both players press **READY** on their phones.
-7. Close the connection panel on the main screen and play.
+5. Benjamin chooses the contract. Both players press **READY** on their phones.
+6. Close the connection panel on the main screen and play.
 
 Assane moves and interacts with puzzles. Benjamin has the map, dossier and support
 controls. They need to describe what they see and talk each other through the job.
@@ -37,7 +36,7 @@ With the Render address, each phone only needs an internet connection.
 | **WAITING FOR THE MAIN SCREEN…** | Keep the main game tab open and active, and check its internet connection. |
 | The phone was deliberately disconnected | Choose a free role again. It will not take its old role back automatically. |
 | No **CONNECT PHONES** button | This copy has no relay. Use the Render version or run `python serve.py`. |
-| The main screen asks for a token | Enter the hosting seat token there. Neither phone needs to type it. |
+| The main screen asks for a hosting token | This is an older build. Deploy the updated client and server together, then reload all devices. The current version shows its QR automatically. |
 | **Another page is hosting** | Use the original main screen. After a refresh, wait a few seconds. To move to a different screen, close the old one and wait about 30 seconds. |
 | **Continue your heist?** | Choose **RESUME GAME** to keep progress and the connected phones, or **START NEW GAME** for a fresh run. |
 

@@ -33,8 +33,9 @@ GitHub Pages runs the three panes on one screen; it has no phone relay.
 
 - Build: `pip install --disable-pip-version-check segno && python tools/pack.py && python tools/verify.py`
 - Start: `python serve.py`
-- Set `SEAT_TOKEN` for the phone relay. This token controls joining the
-  player roles; it does not lock the game page.
+- Phone invitations are generated automatically for the active host. No hosting
+  token needs to be entered. Legacy `SEAT_TOKEN` environment settings are ignored
+  and can be removed from existing services.
 - On hosts other than Render, set `PUBLIC_URL` to the site's public address.
   `PORT` defaults to 8080.
 
@@ -99,7 +100,7 @@ node tools/test_link.cjs
 
 Open CONNECT PHONES on the main screen. Both phones scan the same QR code and
 choose different roles. The join address uses `?join=1`; the QR includes the
-configured seat token so phones never need to enter it. Legacy `?role=p1` and
+automatically generated invitation, so nobody needs to enter a password. Legacy `?role=p1` and
 `?role=p2` links can request a role directly, but cannot take an occupied role.
 
 Role claims are atomic and held by a per-phone ticket. Each state request renews
@@ -109,7 +110,7 @@ P2 may choose a contract before readying and operate the support levers. Both
 phones may request a restart from the result screen. Local dossier browsing
 stays on P2’s phone.
 
-Deploy protocol version 4 to client and server together and reload all devices.
+Deploy protocol version 5 to client and server together and reload all devices.
 
 ## Main-screen ownership and refresh recovery
 
@@ -117,15 +118,23 @@ The relay grants one main screen an opaque host lease. Publishing state, reading
 or acknowledging inputs, disconnecting other players, and reading server
 diagnostics require that lease. Phone tickets can release only their own role.
 Host credentials stay in the main tab's session storage, outside phone snapshots,
-QR codes and diagnostics. A second main screen waits instead of overwriting the
+QR codes and diagnostics. A separate invitation derived from the host secret is
+embedded in the phone QR; it grants no host privileges and remains stable when
+the same host reconnects after a relay restart. A second main screen waits instead of overwriting the
 active game. There is still one game per service, not multiple rooms.
 
-A refreshed main screen waits for the previous page's four-second heartbeat
-window, then receives a new lease that invalidates the old page's requests.
-Backoff can make that wait a few seconds longer. An unrelated main screen may
+A normal refresh passes a one-use handoff through the tab's session storage and
+receives a new lease immediately, invalidating the old page's requests. If the
+page crashes before saving that handoff, the four-second heartbeat window applies;
+retry backoff can make that fallback wait a few seconds longer. An unrelated main screen may
 start a fresh game after the previous host has been absent for 30 seconds;
 that clears the old game and phone claims. Keep the presenting tab active.
 Ownership is in memory and is reset by a server restart; first claim wins again.
+
+Hosted artwork, fonts, styles and scripts may be cached, but must be revalidated
+on each use; unchanged files return 304 without downloading their contents again.
+The entry page, QR and relay responses remain uncached. Local development keeps
+no-cache headers for all files.
 
 Checkpoints save the contract, full state, named pending puzzle transitions,
 run ID, sequence and applied input IDs together. They are saved on render/ready,

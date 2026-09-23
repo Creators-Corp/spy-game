@@ -8,8 +8,8 @@ and send role-scoped inputs. The relay retains inputs until acknowledged and
 reserves disconnected seats for 30 seconds. Keep one service instance.
 
 PORT defaults to 8080. PUBLIC_URL (or RENDER_EXTERNAL_URL) supplies the join
-address. SEAT_TOKEN, when set, is entered on the main screen and included in
-its QR code so neither phone has to type it. Hosted mode serves dist/;
+address. The host gets a private phone join link automatically; nobody types
+a hosting password. Legacy SEAT_TOKEN settings are ignored. Hosted mode serves dist/;
 local mode serves the working tree with no-cache headers.
 """
 import os
@@ -17,6 +17,7 @@ import os
 import http.server
 import socketserver
 import json
+import hashlib
 import socket
 import sys
 import threading
@@ -30,7 +31,6 @@ PORT = int(os.environ.get("PORT") or 8080)
 HOSTED = bool(os.environ.get("RENDER") or os.environ.get("PUBLIC_URL"))
 PUBLIC_URL = (os.environ.get("PUBLIC_URL")
               or os.environ.get("RENDER_EXTERNAL_URL") or "").rstrip("/")
-SEAT_TOKEN = os.environ.get("SEAT_TOKEN") or ""
 
 # ------------------------------------------------------------------ le relais
 # Two role-owned phones, one presenter, everything in memory, nothing on disk. A version
@@ -44,7 +44,7 @@ RECEIVED = OrderedDict()             # deduplicate a phone retry after a lost re
 SEATS = {role: {"client": None, "ticket": None, "seen": 0.0} for role in ("p1", "p2")}
 GUEST_GRACE = 30.0                   # tolerate a short mobile network interruption
 INTENT_TTL = 10.0                    # never replay old movement after a long outage
-HOST = {"client": None, "secret": None, "page": None, "lease": None, "seen": 0.0}
+HOST = {"client": None, "secret": None, "page": None, "lease": None, "join": None, "seen": 0.0}
 HOST_GRACE = 30.0
 HOST_REFRESH_DELAY = 4.0
 DIAG_LOCK = threading.Lock()
@@ -101,14 +101,24 @@ def lan_ip():
 JOIN_URL = None          # filled in by main(), so the QR and the page agree
 
 
+def phone_join_url():
+    return JOIN_URL + "&" + urlencode({"t": HOST["join"]}) if JOIN_URL and HOST["join"] else None
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     protocol_version = "HTTP/1.1"     # reuse connections for the frequent small polls
     timeout = 15                    # release idle keep-alive sockets
 
     def end_headers(self):
-        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
+        path = urlsplit(self.path).path
+        if HOSTED and path.startswith(("/art/", "/styles/", "/js/")):
+            # SimpleHTTPRequestHandler answers conditional requests with 304.
+            # Reuse unchanged artwork/fonts without caching live relay state.
+            self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
+        else:
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
         super().end_headers()
 
     def log_message(self, fmt, *args):
@@ -153,24 +163,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return parse_qs(urlsplit(self.path).query).get(key, [""])[0]
 
     def _allowed(self):
-        """The optional hosting token is shared through the main screen’s QR code."""
-        return not SEAT_TOKEN or self._query("t") == SEAT_TOKEN
+        """A host lease or the automatically generated phone invitation."""
+        return self._host() or bool(HOST["join"] and self._query("t") == HOST["join"])
 
     # ------------------------------------------------------------------- GET
     def do_GET(self):
         path = self.path.split("?", 1)[0]
 
-        # ASKING IS FREE, BEING TOLD IS NOT. /link/status has to answer without
-        # a token or the presenter's page decides there is no relay and hides
-        # the button that would have let them supply one. It gives away only
-        # that a relay exists and whether a seat is taken; the join address,
-        # which carries the token, is held back until the token is supplied.
+        # Discovery is public; only the active host receives the invitation.
         if path == "/link/status":
-            ok = self._allowed()
-            out = {"relay": True, "protocol": 4, "needsToken": bool(SEAT_TOKEN) and not ok, **presence()}
-            if ok:
-                out["join"] = JOIN_URL
-                out["hostReady"] = bool(STATE["updated"] and time.monotonic() - STATE["updated"] < 5)
+            with LOCK:
+                out = {"relay": True, "protocol": 5, "joinRequired": not self._allowed(), **presence(),
+                       "hostReady": bool(STATE["updated"] and time.monotonic() - STATE["updated"] < 5)}
+                if self._host():
+                    out["join"] = phone_join_url()
             return self._json(out)
 
         if path.startswith("/link/") and not self._allowed():
@@ -209,15 +215,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with LOCK:
                 if not self._host():
                     return self._json({"error": "host required"}, 403)
-                out = {"protocol": 4, "queuedInputs": len(INTENTS),
+                out = {"protocol": 5, "queuedInputs": len(INTENTS),
                        "hostAge": time.monotonic() - HOST["seen"], "seats": presence()["seats"]}
             with DIAG_LOCK:
                 out.update(requests=dict(DIAG["requests"]), errors=dict(DIAG["errors"]), events=list(DIAG["events"]))
             return self._json(out)
 
         if path == "/qr.svg":
-            if not self._allowed():
-                return self.send_error(403, "no token")
+            with LOCK:
+                if not self._allowed():
+                    return self.send_error(403, "invitation required")
+                invitation_url = phone_join_url()
             try:
                 import io as _io
                 import segno
@@ -225,8 +233,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # xmlns and the prolog, and the inline form omits both because it
                 # is meant to be pasted into a page that already has them.
                 buf = _io.BytesIO()
-                segno.make(JOIN_URL, error="m").save(
-                    buf, kind="svg", scale=8, border=2, dark="#111111", light="#ffffff")
+                segno.make(invitation_url, error="m").save(
+                    buf, kind="svg", scale=8, border=4, dark="#111111", light="#ffffff")
                 body = buf.getvalue()
             except Exception:
                 return self.send_error(404, "no qr")
@@ -242,7 +250,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         path = self.path.split("?", 1)[0]
 
-        if path.startswith("/link/") and not self._allowed():
+        if path.startswith("/link/") and path != "/link/host" and not self._allowed():
             return self.send_error(403, "no token")
 
         if path == "/link/host":
@@ -253,9 +261,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with LOCK:
                 now = time.monotonic()
                 same = HOST["client"] == msg["client"] and HOST["secret"] == msg["secret"]
+                resume = msg.get("resume")
+                # The leaving page writes this proof to its own sessionStorage
+                # on pagehide. Ordinary duplicate tabs do not inherit it.
+                handoff = (same and isinstance(resume, dict) and HOST["lease"]
+                           and resume.get("lease") == HOST["lease"]
+                           and resume.get("page") == HOST["page"])
                 if HOST["client"] and not same and now - HOST["seen"] < HOST_GRACE:
                     return self._json({"error": "another screen is hosting"}, 409)
-                if same and HOST["page"] != msg["page"] and now - HOST["seen"] < HOST_REFRESH_DELAY:
+                if same and HOST["page"] != msg["page"] and not handoff and now - HOST["seen"] < HOST_REFRESH_DELAY:
                     return self._json({"error": "waiting for previous page"}, 409)
                 if not same:
                     STATE.update(v=0, payload=None, host=None, seq=-1, updated=0)
@@ -266,9 +280,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not same or HOST["page"] != msg["page"]:
                     HOST["lease"] = uuid.uuid4().hex
                     record_event("host_resumed" if same else "host_claimed")
-                HOST.update(client=msg["client"], secret=msg["secret"], page=msg["page"], seen=now)
+                # Stable for this host across refreshes and relay restarts, but
+                # grants no presenter privileges and changes with a new host.
+                invitation = hashlib.sha256(("phone-join:" + msg["secret"]).encode()).hexdigest()
+                HOST.update(client=msg["client"], secret=msg["secret"], page=msg["page"], seen=now, join=invitation)
                 # Ownership secret never travels in the public game snapshot.
-                return self._json({"lease": HOST["lease"], "epoch": EPOCH})
+                return self._json({"lease": HOST["lease"], "epoch": EPOCH, "join": phone_join_url()})
 
         if path == "/link/claim":
             msg = self._read()
@@ -401,16 +418,14 @@ def main():
         os.chdir(root)
         base = "http://%s:%d" % (lan_ip(), PORT)
 
-    JOIN_URL = base + "/?" + urlencode({"join": "1", **({"t": SEAT_TOKEN} if SEAT_TOKEN else {})})
+    JOIN_URL = base + "/?" + urlencode({"join": "1"})
 
     with Threaded(("0.0.0.0", PORT), Handler) as httpd:
         if HOSTED:
             print("prototype build on %s  (port %d)" % (base, PORT))
         else:
             print("prototype   ->  http://127.0.0.1:%d/index.html" % PORT)
-        print("join phones ->  %s" % JOIN_URL)
-        if SEAT_TOKEN:
-            print("               the relay needs that token; without it nobody joins")
+        print("join phones ->  open CONNECT PHONES on the main screen for its QR code")
         try:
             import segno  # noqa: F401
             print("               the same address is on screen as a QR code")

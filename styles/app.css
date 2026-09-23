@@ -173,12 +173,16 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
   display:flex;gap:8px;align-items:center;flex-wrap:nowrap;
 }
 .chip{
+  --chip-edge:var(--ink);
   font-size:11px;letter-spacing:.16em;text-transform:uppercase;
   padding:6px 12px;border-radius:999px;
   background:var(--orange);color:var(--on-color);
-  border:var(--stroke) solid var(--ink);
+  /* Keep the border's layout space, but paint the pill with an inset ring.
+     This avoids rounded-border seams inside the transformed game canvas. */
+  border:var(--stroke) solid transparent;
+  box-shadow:inset 0 0 0 var(--stroke) var(--chip-edge);
 }
-.chip--ghost{background:transparent;color:var(--zinc-lt);border-color:var(--zinc);}
+.chip--ghost{background:transparent;color:var(--zinc-lt);--chip-edge:var(--zinc);}
 .chip--btn{background:var(--paper);color:var(--ink);}
 .chip--btn:hover{background:var(--gold);}
 .chip--btn.is-on{background:#FD6A1A;color:#0C1118;}
@@ -186,9 +190,9 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
    same guards, which is what a rehearsed walkthrough needs. It lives next to
    RESTART because that is the button that used to throw it away. */
 .chip--roster{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 12px;
-  background:transparent;border-color:var(--zinc);color:var(--zinc-lt);}
+  background:transparent;--chip-edge:var(--zinc);color:var(--zinc-lt);}
 .chip--roster b{font-size:11px;letter-spacing:.16em;}
-.chip--roster.is-pinned{border-color:var(--gold);color:var(--gold);}
+.chip--roster.is-pinned{--chip-edge:var(--gold);color:var(--gold);}
 .chip--roster input{
   width:52px;font:inherit;font-family:var(--mono);font-size:12px;letter-spacing:.08em;
   text-align:center;color:var(--on-color);background:var(--night-2);
@@ -196,14 +200,16 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 }
 .chip--roster.is-pinned input{color:var(--gold);border-color:var(--gold);}
 .chip--roster button{
+  --chip-edge:var(--ink);
   font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
   padding:5px 9px;border-radius:999px;color:var(--ink);background:var(--paper);
-  border:var(--stroke) solid var(--ink);
+  border:var(--stroke) solid transparent;
+  box-shadow:inset 0 0 0 var(--stroke) var(--chip-edge);
 }
 .chip--roster button:hover{background:var(--gold);}
 
 /* the two-position switch: which player is holding the stage */
-.chip--swap{display:inline-flex;padding:0;overflow:hidden;background:transparent;border-color:var(--zinc);}
+.chip--swap{display:inline-flex;padding:0;overflow:hidden;background:transparent;--chip-edge:var(--zinc);}
 .chip--swap button{
   font:inherit;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
   padding:6px 12px;background:transparent;color:var(--zinc-lt);border:0;
@@ -274,7 +280,9 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 }
 
 /* Consistent inverted hover treatment for every interactive top setting. */
-.stage__chrome button:hover,
+.stage__chrome button:hover{
+  background:#FFE8C2;color:#0C1118;--chip-edge:#FFE8C2;
+}
 .stage__chrome .chip--roster input:hover{
   background:#FFE8C2;color:#0C1118;border-color:#FFE8C2;
 }
@@ -343,27 +351,6 @@ body.is-guest .guestnote.is-lost{color:var(--red);}
 body.is-guest.link-waiting .phone__screen{pointer-events:none;opacity:.65;}
 
 
-/* the join card has two faces: the QR when this browser may see the address,
-   and a single field when it may not */
-.seat__lock{display:none;}
-.seat.is-locked .seat__qr,
-.seat.is-locked .seat__url,
-.seat.is-locked > .seat__note,
-.seat.is-locked > .seat__h{display:none;}
-.seat.is-locked .seat__lock{display:block;}
-.seat__lock input{
-  display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 12px;
-  border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--stone);color:var(--ink);font-family:var(--mono);font-size:13px;
-}
-.seat__lock button{
-  display:block;width:100%;padding:11px;
-  border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--gold);color:var(--on-gold);
-  font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;
-}
-
-
 /* ============ ONE SCREEN AT A TIME ============
    The stage is a fixed 1680x840 canvas holding a television and two phones
    side by side, scaled down until it fits the room. That is right for a
@@ -430,6 +417,7 @@ body.is-guest .solobar{display:none;}
 .seat__h{padding:0 18px;line-height:1.5;}
 .seat__note{font-size:14px;line-height:1.5;}
 .seat__qr{width:210px;height:210px;margin:16px auto;}
+.seat__qr[hidden]{display:none;}
 .seat__close{position:absolute;right:6px;top:6px;width:44px;height:44px;border:0;background:transparent;color:var(--ink);font-size:20px;cursor:pointer;}
 .seat__link{display:flex;gap:6px;margin:12px 0;}
 .seat__link input{min-width:0;flex:1;font:12px var(--mono);padding:8px;border:1px solid var(--ink);border-radius:4px;}
@@ -437,7 +425,6 @@ body.is-guest .solobar{display:none;}
 .seat__players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
 .seat__players>div{display:flex;flex-direction:column;gap:8px;padding:12px 8px;background:var(--stone);border-radius:6px;}
 .seat__players b{font-size:13px;}.seat__players span{font-size:13px;}.seat__players button:disabled{opacity:.4;cursor:default;}
-.seat.is-locked .seat__link,.seat.is-locked .seat__players{display:none;}
 .join-picker,.guest-tools{display:none;}
 body.is-guest.is-picking .stage-fit,body.is-guest.is-picking .guest-tools{display:none;}
 body.is-guest.is-picking{overflow:auto;}

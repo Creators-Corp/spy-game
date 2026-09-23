@@ -100,7 +100,7 @@ service instance and one game at a time.
 |---|---|
 | **same room** | Run `python serve.py`; phones scan the on-screen QR. They must be on a network that can reach the laptop. |
 | **GitHub Pages** | Static hosting has no relay, so use the three panes on one screen. |
-| **Render** (`render.yaml`) | Both phones can join from anywhere through the hosted relay. If `SEAT_TOKEN` is set, enter it once on the main screen; the QR handles it for both phones. |
+| **Render** (`render.yaml`) | Both phones can join from anywhere through the hosted relay. The main screen automatically creates the QR invitation for both phones; no hosting token is needed. |
 
 The prototype serves the same code to all devices. Roles keep the normal UI and
 controls separate, but do not hide puzzle answers from someone using devtools.

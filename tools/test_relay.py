@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -26,7 +27,6 @@ class RelayTests(unittest.TestCase):
         cls.thread.join()
 
     def setUp(self):
-        serve.SEAT_TOKEN = ""
         serve.EPOCH = "relay-a"
         serve.STATE.update(v=0, payload=None, host=None, seq=-1, updated=0)
         for seat in serve.SEATS.values():
@@ -34,12 +34,15 @@ class RelayTests(unittest.TestCase):
         self.tickets = {}
         serve.INTENTS.clear()
         serve.RECEIVED.clear()
-        serve.HOST.update(client=None, secret=None, page=None, lease=None, seen=0)
+        serve.HOST.update(client=None, secret=None, page=None, lease=None, join=None, seen=0)
+        serve.JOIN_URL = 'http://localhost:8080/?join=1'
         self.host = {"client": "presenter-123456789", "secret": "secret-123456789012", "page": "page-12345678901234"}
         self.lease = None
         self.lease = self.request('/link/host', self.host)[1]['lease']
 
-    def request(self, path, body=None, lease=True):
+    def request(self, path, body=None, lease=True, invitation=True):
+        if invitation and serve.HOST['join']:
+            path += ('&' if '?' in path else '?') + urlencode({'t': serve.HOST['join']})
         conn = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=2)
         try:
             conn.request("GET" if body is None else "POST", path,
@@ -133,11 +136,47 @@ class RelayTests(unittest.TestCase):
             self.assertEqual(self.tap("phone:%d" % i)[0], 200)
         self.assertEqual(self.tap("overflow")[0], 503)
 
-    def test_encoded_seat_token(self):
-        serve.SEAT_TOKEN = "a+b &c/é"
-        path = "/link/status?" + urlencode({"t": serve.SEAT_TOKEN})
-        self.assertFalse(self.request(path)[1]["needsToken"])
-        self.assertEqual(self.request("/link/intent")[0], 403)
+    def test_invitation_is_private_and_only_qr_guests_can_claim(self):
+        self.state()
+        status = self.request('/link/status', lease=False, invitation=False)[1]
+        self.assertTrue(status['joinRequired'])
+        self.assertNotIn('join', status)
+        self.assertEqual(self.request('/link/claim', {'role': 'p1', 'client': 'phone'}, lease=False, invitation=False)[0], 403)
+        self.assertEqual(self.request('/link/claim', {'role': 'p1', 'client': 'phone'}, lease=False)[0], 200)
+        join = self.request('/link/status')[1]['join']
+        self.assertIn(serve.HOST['join'], join)
+        self.assertNotIn(self.host['secret'], join)
+        self.assertNotIn(self.lease, join)
+
+    def test_host_gets_join_code_without_legacy_hosting_password(self):
+        from unittest.mock import patch
+        with patch.dict(serve.os.environ, {'SEAT_TOKEN': 'old-render-password'}):
+            status, response = self.request('/link/host', self.host, lease=False, invitation=False)
+        self.assertEqual(status, 200)
+        self.assertIn('?join=1&t=', response['join'])
+        self.assertNotIn('old-render-password', response['join'])
+
+    def test_same_host_invitation_survives_server_restart(self):
+        original = serve.HOST['join']
+        serve.HOST.update(client=None, secret=None, page=None, lease=None, join=None, seen=0)
+        status, response = self.request('/link/host', self.host, lease=False, invitation=False)
+        self.assertEqual(status, 200)
+        self.assertIn(original, response['join'])
+
+    def test_generated_qr_loads_and_both_phones_join_without_host_credentials(self):
+        self.state()
+        # The QR generator is optional locally, installed by the Render build.
+        import importlib.util
+        if importlib.util.find_spec('segno'):
+            status, image = self.request('/qr.svg', lease=False)
+            self.assertEqual(status, 200)
+            self.assertIn(b'<svg', image)
+        self.assertEqual(self.request('/qr.svg', lease=False, invitation=False)[0], 403)
+        for role in ('p1', 'p2'):
+            status, response = self.request('/link/claim', {'role': role, 'client': role + '-phone'}, lease=False)
+            self.assertEqual(status, 200)
+            self.assertTrue(response['ticket'])
+        self.assertTrue(serve.seat_taken('p1') and serve.seat_taken('p2'))
 
     def test_two_phones_claim_distinct_roles(self):
         self.state()
@@ -226,6 +265,47 @@ class RelayTests(unittest.TestCase):
         self.assertEqual(serve.INTENTS, [])
         self.assertEqual(self.state(99)[0], 403)
 
+    def test_refresh_handoff_is_immediate_single_use_and_keeps_game(self):
+        self.state(8)
+        self.tap()
+        old_lease = self.lease
+        proof = {'page': self.host['page'], 'lease': old_lease}
+        refreshed = dict(self.host, page='refreshed-page-123456', resume=proof)
+        for invalid in [None, {}, dict(proof, lease='wrong'), dict(proof, page='wrong')]:
+            self.assertEqual(self.request('/link/host', dict(refreshed, resume=invalid))[0], 409)
+        self.assertEqual(self.request('/link/host', dict(refreshed, secret='wrong-secret-123456'))[0], 409)
+        status, claim = self.request('/link/host', refreshed)
+        self.assertEqual(status, 200)
+        self.lease = claim['lease']
+        self.assertNotEqual(self.lease, old_lease)
+        self.assertEqual(serve.STATE['payload']['S']['turn'], 8)
+        self.assertTrue(serve.seat_taken('p1'))
+        self.assertEqual(len(serve.INTENTS), 1)
+        self.assertEqual(self.request('/link/host', dict(refreshed, page='third-page-123456789'))[0], 409)
+        self.assertEqual(self.request('/link/state', {'host': self.host['client'], 'seq': 99,
+                                                    'session': 'run-a', 'S': {}}, lease=old_lease)[0], 403)
+
+    def test_hosted_assets_revalidate_but_game_and_local_files_are_not_cached(self):
+        def fetch(path, headers=None):
+            conn = http.client.HTTPConnection('127.0.0.1', self.server.server_port, timeout=2)
+            try:
+                conn.request('GET', path, headers=headers or {})
+                response = conn.getresponse()
+                return response.status, dict(response.getheaders()), response.read()
+            finally:
+                conn.close()
+        with patch.object(serve, 'HOSTED', True):
+            status, headers, body = fetch('/js/link.js')
+            self.assertEqual(status, 200)
+            self.assertTrue(body)
+            self.assertEqual(headers['Cache-Control'], 'public, max-age=0, must-revalidate')
+            status, _, body = fetch('/js/link.js', {'If-Modified-Since': headers['Last-Modified']})
+            self.assertEqual((status, body), (304, b''))
+            for path in ['/', '/link/status', '/qr.svg']:
+                self.assertIn('no-store', fetch(path)[1]['Cache-Control'])
+        with patch.object(serve, 'HOSTED', False):
+            self.assertIn('no-store', fetch('/js/link.js')[1]['Cache-Control'])
+
     def test_phone_can_release_only_its_own_role(self):
         self.state()
         self.claim('p1', 'alice')
@@ -246,7 +326,7 @@ class RelayTests(unittest.TestCase):
         self.assertEqual(len(report['events']), 100)
         self.assertIn('/link/host', report['requests'])
         raw = json.dumps(report)
-        for secret in [self.host['secret'], self.lease, self.tickets[('p1', 'phone')], 'run-a']:
+        for secret in [self.host['secret'], self.lease, serve.HOST['join'], self.tickets[('p1', 'phone')], 'run-a']:
             self.assertNotIn(secret, raw)
 
 

@@ -5,10 +5,9 @@
   var U = L.util, E = L.engine, C = L.content, N = L.net, R = L.recovery;
   var query = new URLSearchParams(window.location.search);
   var ROLE = query.has('join') || /^(p1|p2)$/.test(query.get('role')) ? 'guest' : 'host';
-  var POLL = 220, TOKEN = query.get('t') || '';
+  var POLL = 220, TOKEN = ROLE === 'guest' ? query.get('t') || '' : '';
   function saved(key) { try { return sessionStorage.getItem(key) || ''; } catch (e) { return ''; } }
   function save(key, value) { try { sessionStorage.setItem(key, value); } catch (e) {} }
-  TOKEN = TOKEN || saved('dc-seat-token');
   function id() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2); }
   var client = saved('dc-phone-client') || id();
   save('dc-phone-client', client);
@@ -24,7 +23,7 @@
   var P2 = { ready: 1, restart: 1, selectJob: 1, pullLever: 1 };
   var seats = { p1: { taken: false, age: null }, p2: { taken: false, age: null } };
   var link = { role: ROLE, player: null, relay: false, wanted: false, panel: false,
-    needsToken: false, join: '', seen: 0, sent: 0, session: null };
+    join: '', seen: 0, sent: 0, session: null };
   link.taken = function (role) { return ROLE === 'host' && seats[role].taken; };
   link.paused = function () {
     if (ROLE === 'host' && (R.pending || R.blocked)) return true;
@@ -44,6 +43,19 @@
 
   function runHost() {
     var host = R.identity.client, page = R.id();
+    function readHandoff() {
+      try { return JSON.parse(saved('dc-host-handoff') || 'null'); } catch (e) { return null; }
+    }
+    var handoff = readHandoff();
+    window.addEventListener('pagehide', function () {
+      if (owner && lease) save('dc-host-handoff', JSON.stringify({ page: page, lease: lease }));
+    });
+    window.addEventListener('pageshow', function (event) {
+      if (!event.persisted) return;
+      // Back/forward cache restores the document instead of booting it again.
+      handoff = readHandoff(); page = R.id(); owner = false; lease = '';
+      R.block('Restoring the main screen connection…'); push.kick();
+    });
     function session() {
       link.session = R.sync().session;
       return link.session;
@@ -57,9 +69,11 @@
       paintHostUI();
     }
     var push = N.loop(function () {
-      if (!link.wanted || link.needsToken) return;
-      return post('/link/host', { client: host, secret: R.identity.secret, page: page }).then(function (claim) {
+      if (!link.wanted) return;
+      return post('/link/host', { client: host, secret: R.identity.secret, page: page, resume: handoff }).then(function (claim) {
         lease = claim.lease; owner = true; R.block('');
+        handoff = null; save('dc-host-handoff', '');
+        setJoin(claim.join);
         if (R.pending) return;
         var run = session(), seq = ++R.meta.seq;
         R.save();
@@ -70,7 +84,7 @@
         });
     }, 1000, hostError);
     N.loop(function () {
-      if (!link.wanted || link.needsToken || !owner || R.pending || R.blocked) return;
+      if (!link.wanted || !owner || R.pending || R.blocked) return;
       return get('/link/intent').then(function (r) {
         observe(r);
         var current = session(), acknowledged = [];
@@ -236,16 +250,16 @@
     var lobby = N.loop(function () {
       if (link.player) return;
       return get('/link/status').then(function (r) {
-        if (r.protocol !== 4) { picker('Update the main screen, then reload this page.'); return; }
+        if (r.protocol !== 5) { picker('Update the main screen, then reload this page.'); return; }
         seats = r.seats || seats;
-        picker(r.needsToken ? 'Scan the QR code on the main screen to join.' :
+        picker(r.joinRequired ? 'Scan the QR code on the main screen to join.' :
           !r.hostReady ? 'Waiting for the main screen. Keep it open.' :
           seats.p1.taken && seats.p2.taken ? 'Both players are connected. To switch phones, disconnect a player on the main screen.' :
           'Pick a different role on each phone.');
         ['p1', 'p2'].forEach(function (role) {
-          document.getElementById('join-' + role).disabled = claiming || r.needsToken || !r.hostReady || seats[role].taken;
+          document.getElementById('join-' + role).disabled = claiming || r.joinRequired || !r.hostReady || seats[role].taken;
         });
-        if (suggested && r.hostReady && !r.needsToken) {
+        if (suggested && r.hostReady && !r.joinRequired) {
           var role = suggested; suggested = null;
           if (!seats[role].taken) return claim(role);
         }
@@ -260,7 +274,6 @@
     var count = ['p1', 'p2'].filter(function (role) { return seats[role].taken; }).length;
     btn.textContent = count ? 'PHONES: ' + count + '/2 CONNECTED' : 'CONNECT PHONES';
     panel.classList.toggle('is-on', link.panel);
-    panel.classList.toggle('is-locked', link.needsToken);
     document.getElementById('save-status').textContent = R.storageOK ? 'Progress is saved in this tab for refresh recovery.' : 'Browser storage is unavailable. Refresh recovery is unavailable in this tab.';
     ['p1', 'p2'].forEach(function (role) {
       var seat = seats[role], el = document.getElementById(role);
@@ -270,21 +283,25 @@
       var message = seat.taken ? (seat.age > 5 || stale ? 'Reconnecting…' : 'Connected ✓') : 'Waiting for phone';
       if (text && text.textContent !== message) text.textContent = message;
       var reclaim = document.getElementById('reclaim-' + role);
-        if (reclaim) reclaim.disabled = !seat.taken || !owner;
+      if (reclaim) reclaim.disabled = !seat.taken || !owner;
     });
+  }
+  function setJoin(join) {
+    if (!join || join === link.join) return;
+    link.join = join;
+    document.getElementById('seat-url').value = join;
+    var token = new URLSearchParams(join.split('?')[1]).get('t') || '';
+    var qr = document.getElementById('seat-qr');
+    qr.hidden = false;
+    qr.src = '/qr.svg?t=' + encodeURIComponent(token);
+    document.getElementById('seat-join-status').textContent = '';
   }
   function checkStatus() {
     return get('/link/status').then(function (r) {
-      if (!r.relay || r.protocol !== 4) { var error = new Error('Update required'); error.status = 426; throw error; }
-      link.relay = true; link.needsToken = !!r.needsToken;
+      if (!r.relay || r.protocol !== 5) { var error = new Error('Update required'); error.status = 426; throw error; }
+      link.relay = true;
       observe(r);
-      var join = r.join || '';
-      if (join !== link.join) {
-        link.join = join;
-        document.getElementById('seat-url').value = join;
-        if (join) document.getElementById('seat-qr').src = wire('/qr.svg?cb=' + Date.now());
-      }
-      return !link.needsToken;
+      setJoin(r.join);
     });
   }
   function boot() {
@@ -297,7 +314,7 @@
         var panel = document.getElementById('report-panel'), output = document.getElementById('report-text');
         var download = document.getElementById('report-download');
         panel.hidden = false; output.value = 'Preparing connection report…'; download.hidden = true;
-        var report = { protocol: 4, generatedAt: new Date().toISOString(), role: ROLE,
+        var report = { protocol: 5, generatedAt: new Date().toISOString(), role: ROLE,
           player: link.player, recoveryAvailable: R.storageOK, client: N.diagnostics() };
         var server = owner ? get('/link/diagnostics').catch(function () { return { unavailable: true }; }) : Promise.resolve(null);
         server.then(function (data) {
@@ -310,6 +327,10 @@
       });
     });
     if (ROLE === 'guest') { runGuest(); return; }
+    document.getElementById('seat-qr').addEventListener('error', function () {
+      this.hidden = true;
+      document.getElementById('seat-join-status').textContent = 'The QR image could not load. Use COPY LINK to open the game on both phones.';
+    });
     R.block('Checking the main screen connection…');
     var started = false;
     document.getElementById('btn-seat').addEventListener('click', function () {
@@ -329,18 +350,9 @@
         post('/link/release', { role: role }).then(observe).catch(function () {});
       });
     });
-    document.getElementById('seat-token-form').addEventListener('submit', function (event) {
-      event.preventDefault();
-      var input = document.getElementById('seat-token');
-      TOKEN = input.value.trim(); save('dc-seat-token', TOKEN);
-      checkStatus().then(function (ok) {
-        if (!ok) { input.value = ''; input.placeholder = 'THAT TOKEN WAS REFUSED'; }
-      }).catch(function () { input.placeholder = 'CONNECTION FAILED — TRY AGAIN'; });
-    });
     var discovery = N.loop(function () {
       return checkStatus().then(function () {
         document.getElementById('btn-seat').hidden = false;
-        if (link.needsToken) R.block('');
         if (!started) { started = true; link.wanted = true; runHost(); }
         discovery.stop();
       });

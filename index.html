@@ -193,6 +193,7 @@
   <h2 class="seat__h">ONE SCREEN. TWO PHONES.</h2>
   <p class="seat__note">Scan this code on <b>both phones</b>.<br>Choose Assane on one and Benjamin on the other.</p>
   <img class="seat__qr" id="seat-qr" alt="Scan on both phones to join">
+  <p class="seat__note" id="seat-join-status" role="status"></p>
   <div class="seat__link"><input id="seat-url" readonly aria-label="Phone join link"><button id="seat-copy" type="button">COPY LINK</button></div>
   <div class="seat__players">
     <div><b>P1 · ASSANE</b><span id="seat-status-p1">Waiting for phone</span><button id="reclaim-p1" type="button" disabled>Disconnect P1</button></div>
@@ -201,12 +202,6 @@
   <p class="seat__note">Keep this main screen open. Once connected, press READY on each phone.</p>
   <p class="seat__note" id="save-status"></p>
   <button class="report-button" type="button" data-diagnostics>CONNECTION REPORT</button>
-  <form class="seat__lock" id="seat-token-form">
-    <p class="seat__h">CONNECT YOUR PHONES</p>
-    <p class="seat__note">Enter the hosting seat token once on this screen. The QR code handles the phones automatically.</p>
-    <input id="seat-token" type="password" autocomplete="off" spellcheck="false" aria-label="Seat token">
-    <button type="submit">SHOW JOIN CODE</button>
-  </form>
 </div>
 <div class="join-picker" id="join-picker">
   <p class="join-picker__brand">DEUX COMPLICES</p>
