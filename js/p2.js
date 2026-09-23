@@ -265,7 +265,7 @@
            '" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>';
       /* a guard who has stopped to look at something wears a dashed ring, so
          Benjamin can see his phone call landed */
-      if (g.alert > 0) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
+      if (g.alert > 0 && !g.fooled) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="var(--red)" stroke="var(--map-void)" stroke-width="1.5"/>';
       s += '<text x="' + cx + '" y="' + (cy + 2.6) + '" font-size="7" font-weight="500" text-anchor="middle"' +
            ' font-family="var(--font)" fill="var(--on-color)">' + g.badge + '</text>';
