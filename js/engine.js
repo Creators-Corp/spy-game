@@ -1267,6 +1267,8 @@
   function darken() { S.dark = true; startLink(); toast('MONITORS DEAD', 'bad'); }
 
   function takePrize() {
+    if (S.phase !== 'module' || S.moduleId !== 'prize' || S.codeFeedback) return;
+    codeFeedback(true);
     U.sfx.unlock();
     S.hasManuscript = true;
     S.loot.dossier = true;

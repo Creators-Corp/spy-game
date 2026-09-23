@@ -60,6 +60,17 @@
     hatch:   'M18 18 L82 18 L82 82 L18 82 Z M50 50 m-13 0 a13 13 0 1 0 26 0 a13 13 0 1 0 -26 0 M50 37 L50 26 M18 50 L30 50 M70 50 L82 50'
   };
 
+  // Level 1's dossier: supplied filled artwork on an 800x800 canvas.
+  // Keep its paths intact and scale into the shared 100x100 icon system.
+  G.dossier = {
+    scale: 0.125,
+    paths: [
+      'M666.667,221.628l-0,445.039c-0,36.572 -30.095,66.666 -66.667,66.666l-400,0c-36.572,0 -66.667,-30.094 -66.667,-66.666l0,-533.334c0,-36.572 30.095,-66.666 66.667,-66.666l400,-0l-60.067,66.666l-339.933,0l-0,533.334l400,-0l-0,-378.379l-0.139,-0.139l66.806,-66.521Zm-400,345.039c-0,-18.286 15.047,-33.334 33.333,-33.334l200,0c18.286,0 33.333,15.048 33.333,33.334c0,18.286 -15.047,33.333 -33.333,33.333l-200,-0c-18.286,-0 -33.333,-15.047 -33.333,-33.333Zm-0,-133.334c-0,-18.286 15.047,-33.333 33.333,-33.333l200,-0c18.286,-0 33.333,15.047 33.333,33.333c0,18.286 -15.047,33.334 -33.333,33.334l-200,-0c-18.286,-0 -33.333,-15.048 -33.333,-33.334Z',
+      'M478.201,296.958l-68.444,-68.444c-13.009,-13.009 -13.009,-34.132 -0,-47.141c13.008,-13.009 34.131,-13.009 47.14,0l44.874,44.874l121.198,-121.198c13.009,-13.008 34.132,-13.008 47.141,0c13.009,13.009 13.009,34.132 -0,47.141l-144.768,144.768c-13.009,13.009 -34.132,13.009 -47.141,0Z',
+      'M266.667,306.715c-0,-18.286 15.047,-33.334 33.333,-33.334l100,0l74.405,66.667l-174.405,-0c-18.286,-0 -33.333,-15.047 -33.333,-33.333Z'
+    ]
+  };
+
   var sprite = null;
   function build() {
     var ns = 'http://www.w3.org/2000/svg';
@@ -68,14 +79,22 @@
       var sym = document.createElementNS(ns, 'symbol');
       sym.setAttribute('id', 'g-' + id);
       sym.setAttribute('viewBox', '0 0 100 100');
-      var p = document.createElementNS(ns, 'path');
-      p.setAttribute('d', G[id]);
-      p.setAttribute('fill', 'none');
-      p.setAttribute('stroke', 'currentColor');
-      p.setAttribute('stroke-width', '7');
-      p.setAttribute('stroke-linecap', 'round');
-      p.setAttribute('stroke-linejoin', 'round');
-      sym.appendChild(p);
+      var definition = G[id], filled = typeof definition !== 'string';
+      (filled ? definition.paths : [definition]).forEach(function (path) {
+        var p = document.createElementNS(ns, 'path');
+        p.setAttribute('d', path);
+        p.setAttribute('fill', filled ? 'currentColor' : 'none');
+        p.setAttribute('stroke', filled ? 'none' : 'currentColor');
+        if (filled) {
+          p.setAttribute('transform', 'scale(' + definition.scale + ')');
+          p.setAttribute('fill-rule', 'evenodd');
+        } else {
+          p.setAttribute('stroke-width', '7');
+          p.setAttribute('stroke-linecap', 'round');
+          p.setAttribute('stroke-linejoin', 'round');
+        }
+        sym.appendChild(p);
+      });
       svg.appendChild(sym);
     }
     document.getElementById('glyph-sprite').appendChild(svg);

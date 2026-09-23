@@ -265,7 +265,7 @@
       /* The desk. For now it hands over the dossier and nothing more —
          the full Bureau puzzle is the stretch goal, and a placeholder that
          works beats a half-built module that does not. */
-      { id: 'prize',       x: 12, y: 2,  name: 'LE BUREAU',      icon: 'desk' }
+      { id: 'prize',       x: 12, y: 2,  name: 'LE BUREAU',      icon: 'dossier' }
     ],
 
     /* LA GRILLE — the handshake.

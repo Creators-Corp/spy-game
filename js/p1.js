@@ -314,11 +314,12 @@
   /* ------------------------------------------------------------ LE DOSSIER */
   function viewPrize() {
     var S = E.S;
+    var prize = C.MODULES.filter(function (m) { return m.id === 'prize'; })[0];
     return screen([
       head('LE BUREAU'),
       body([
         el('div', { class: 'waiting' }, [
-          (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
+          (function () { var i = G.icon(prize.icon); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
           el('p', { class: 'note', text: 'It is on the desk, exactly where Benjamin said it would be. Take it and get back to the stairs.' })
         ])
       ]),
