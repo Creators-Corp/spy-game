@@ -509,16 +509,10 @@
 .dpad button.is-shut:hover{background:var(--paper);}
 
 /* ---- plain-language furniture ------------------------------------------
-   A numbered instruction strip, a small caption for anything that had a name
-   in the prose but no name on the screen, and an undo for the safe dial. */
-.howto{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:7px;}
-.howto li{display:flex;gap:9px;font-size:12px;line-height:1.45;color:var(--ink-soft);}
-.howto b{
-  flex:none;width:18px;height:18px;border-radius:999px;
-  background:var(--ink);color:var(--paper);font-size:10px;font-weight:600;
-  display:grid;place-items:center;margin-top:1px;
-}
-.howto em{font-style:normal;color:var(--ink);}
+   A small caption for anything that had a name in the prose but no name on
+   the screen, and an undo for the safe dial. The numbered instruction strip
+   that used to live here is gone: the steps are read off the television now,
+   where both players see the same ones at the same moment. */
 .lbl{
   display:block;font-size:9px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--ink-soft);margin:0 0 3px;
@@ -1087,9 +1081,7 @@ body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
 .pscreen--tchatche .tchp1__desc b,
 .dossier__faces > .h,
 .dossier__faces .dirt > .h{color:#FD6A1A;}
-.pscreen--tchatche .note,
-.pscreen--tchatche .howto,
-.dossier__faces .howto{color:#FFEFCC;}
+.pscreen--tchatche .note{color:#FFEFCC;}
 .pscreen--tchatche .lines .btn{
   position:relative;isolation:isolate;min-height:60px;padding:12px;
   border:0;border-radius:0;background:transparent;color:#FFEFCC;
@@ -1115,17 +1107,12 @@ body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
 .pscreen--tchatche button:focus-visible,
 .dossier__faces button:focus-visible{outline:2px solid #FFEFCC;outline-offset:3px;}
 
-.pscreen--tchatche .howto em,
-.dossier__faces .howto em{color:#FFEFCC;}
-.pscreen--tchatche .howto b,
-.dossier__faces .howto b{background:#090C11;color:#FD6A1A;border-color:#4C93E4;}
 
 /* Remaining puzzle and end screens. Gameplay swatches and artwork retain
    their own palette; these rules style the surrounding interface. */
 .ui-polish{color:#FFEFCC;}
-.ui-polish :is(.note,.howto em,.notes,.proc dd,.lbl,.plate__word){color:#FFEFCC;}
+.ui-polish :is(.note,.notes,.proc dd,.lbl,.plate__word){color:#FFEFCC;}
 .ui-polish :is(.h,.mod__head h2){color:#FD6A1A;}
-.ui-polish .howto b{background:#090C11;color:#FD6A1A;border:1px solid #4C93E4;}
 .ui-polish :is(.safe__plate,.plate,.readout,.manual__seq,.board__result,.warn,.proc),
 .pscreen--dossier .keyboard{
   border:2px solid #778495;border-radius:0;background:#0C1118;
@@ -1134,7 +1121,7 @@ body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
 }
 .ui-polish .proc{padding:12px;}
 .pscreen--dossier .keyboard{padding:12px;}
-.pscreen--dossier .keyboard :is(.note,.howto em){color:#FFEFCC;}
+.pscreen--dossier .keyboard .note{color:#FFEFCC;}
 .pscreen--dossier .keyboard .h{color:#FD6A1A;}
 .ui-polish :is(.desk,.padlock,.canvas__art,.keyring),
 .pscreen--dossier .deadscreen{

@@ -496,11 +496,12 @@
   /* ------------------------------------------------------------ LA GRILLE */
   /* Benjamin's half of the handshake: which symbol is which key. It sits on the
      plan, not on a tab of its own, because at this moment he has never seen a
-     tab appear and the first exchange should cost him nothing to find. */
+     tab appear and the first exchange should cost him nothing to find. The
+     board is the whole of his half — what to do with it is on the television,
+     where Assane is reading the same two lines at the same moment. */
   function keyBoard() {
     var wrap = el('div', { class: 'keyboard' }, [
-      el('p', { class: 'h', text: 'SERVICE GATE · KEYS' }),
-      el('p', { class: 'note', style: 'margin:0 0 6px', text: 'Assane has the keys on a ring, and nothing is written on any of them. Ask what is stamped on the padlock’s tag, then describe the key beside it.' })
+      el('p', { class: 'h', text: 'SERVICE GATE · KEYS' })
     ]);
     var rows = el('div', { class: 'keyboard__rows' });
     C.GRILLE.board.forEach(function (b) {
@@ -522,50 +523,30 @@
 
   /* -------------------------------------------------- BEING ASKED A THING */
   /* BENJAMIN WAS NEVER TOLD HE HAD BEEN ASKED A QUESTION.
-     Assane's phone says "describe the four marks, he has the floor plan" and
-     Benjamin's said nothing whatsoever — his screen carried on reporting which
-     room Assane was standing in while Assane waited for an answer. Both halves
-     of this module are lookups on pages he already has, and neither page
-     announces itself: the badge is in STAFF, the mark is on the plan he is
-     already looking at, and nothing anywhere connected either to the desk.
+     His screen used to carry on reporting which room Assane was standing in
+     while Assane waited for an answer. Both halves of this module are lookups
+     on pages he already has, and neither page announces itself: the badge is
+     in STAFF, the mark is on the plan he is already looking at, and nothing
+     anywhere connected either to the desk.
 
      So whatever has him stopped speaks up, on every tab, for exactly as long
-     as it is open. It says he has been asked and what he has been asked for.
-     It never says the answer.
-
-     HOW MUCH IT POINTS AT IS PER MODULE, and the difference is deliberate. The
-     desk names the page, because both its answers are ordinary lookups in a
-     book he has been carrying all night and hunting for the index is not the
-     puzzle. LE CLAVIER names nothing: the emergency procedures are filed under
-     the safes, nowhere near the roster they need, and finding them at the
-     moment the lights go out IS the module — see the note over the procedures
-     in viewManuel(). Telling him he is being asked something is not the same
-     as telling him where to look, and only the second one would spoil it. */
+     as it is open — and now it does so in a single heading. What is being
+     asked is on the television, said to both of them at once; what this strip
+     still does, and the television cannot, is follow Benjamin from tab to tab
+     so that the question does not vanish the moment he goes looking for the
+     answer. It never says the answer. */
   function askBoard(id) {
     var S = E.S;
 
     if (id === 'clavier') {
       return el('div', { class: 'keyboard' }, [
-        el('p', { class: 'h', text: 'SERVICE HATCH · LOCKED' }),
-        el('p', { class: 'note', style: 'margin:0', text:
-          'The way out shut itself when the power went, and Assane is standing at the keypad in the ' +
-          'dark. He can see which three keys are worn smooth and he cannot see the order. ' +
-          'Everything you need to give him the order is somewhere in this dossier — you have ' +
-          'not needed it until now.' })
+        el('p', { class: 'h', text: 'SERVICE HATCH · LOCKED' })
       ]);
     }
 
     var second = S.bureauStep === 1;
     return el('div', { class: 'keyboard' }, [
-      el('p', { class: 'h', text: second ? 'SECURITY DESK · THE RELEASE' : 'SECURITY DESK · THE TERMINAL' }),
-      el('p', { class: 'note', style: 'margin:0', html: second
-        ? 'The terminal is open and showing Assane four marks. One of them releases <b>' +
-          ((C.DOORS.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0] || {}).to || 'the locked room') +
-          '</b>. That door is drawn on your plan, locked and gold, with its mark on it. ' +
-          'Have him describe the four; tell him which one is on your door.'
-        : 'Assane is at the desk and it wants four digits. Have him read you all of it — the badge, ' +
-          'the post, and the note stuck to the screen. The note says which number the terminal is ' +
-          'asking for. Whatever it turns out to be, it is in <b>STAFF</b>.' })
+      el('p', { class: 'h', text: second ? 'SECURITY DESK · THE RELEASE' : 'SECURITY DESK · THE TERMINAL' })
     ]);
   }
 
@@ -726,11 +707,7 @@
   function viewPorteTab() {
     var K = C.PORTE;
     var wrap = el('div', {}, [
-      el('p', { class: 'h', text: 'DOOR CODES · ' + K.sign }),
-      U.howto([
-        'Ask Assane what is engraved under the 0 on the door. Tap that symbol here — the ring numbers itself from it.',
-        'Assane has four more symbols on his keypad. He describes each one; you find it on the ring and tell him its number.'
-      ])
+      el('p', { class: 'h', text: 'DOOR CODES · ' + K.sign })
     ]);
 
     wrap.appendChild(el('p', { class: 'lbl lbl--c', style: 'margin:16px 0 0',
@@ -751,11 +728,7 @@
   /* ---------------------------------------------------------- LE MANUEL */
   function viewManuel() {
     var wrap = el('div', {}, [
-      el('p', { class: 'h', text: 'SAFES · OPENING SEQUENCES' }),
-      U.howto([
-        'Ask Assane for the number on the safe door and the colour of the ring around the dial. The same number is in here more than once — only the colour separates them.',
-        'Open the matching row and describe its four symbols to Assane, in order. They have no names. Invent them.'
-      ])
+      el('p', { class: 'h', text: 'SAFES · OPENING SEQUENCES' })
     ]);
     C.COFFRE.manual.forEach(function (m, i) {
       var row = el('button', {
@@ -866,16 +839,12 @@
     var wrap = el('div', {}, [
       el('p', { class: 'h', text: 'STAFF · NIGHT SHIFT' })
     ]);
-    /* Where he is going. The POST line on each file is only useful next to
-       this — without it Benjamin is reading postings with nothing to compare
-       them against, and the disguise comes down to a coin toss. Shown only
-       while the cloakroom is open, because that is the only time it decides
-       anything. */
-    if (E.S.moduleId === 'deguisement' && C.DEGUISEMENT) {
-      wrap.appendChild(el('p', { class: 'warn', style: 'margin:0 0 12px', html:
-        'Assane is heading for <b>' + C.DEGUISEMENT.targetPost + '</b>. Find the one uniform ' +
-        'he can actually build from that rack whose owner is posted there.' }));
-    }
+    /* WHERE ASSANE IS GOING USED TO BE PRINTED HERE, and it was the one fact
+       that made the POST line on every file mean anything — without it
+       Benjamin is reading postings with nothing to compare them against. It is
+       still said, on the television, at the top of the cloakroom's own
+       instructions, which is better: both players hear the destination, so
+       Assane knows what Benjamin is working from. */
     C.PERSONNEL.forEach(function (p) {
       var open = openBadge === p.badge;
       var file = el('div', { class: 'file' + (open ? ' is-on' : '') });
@@ -918,11 +887,7 @@
   function viewVisages() {
     var S = E.S, t = S.tchatche;
     var wrap = el('div', { class: 'dossier__faces' }, [
-      el('p', { class: 'h', text: 'FACES · NIGHT SHIFT' }),
-      U.howto([
-        'Assane describes the guard standing in front of him. Tap that face.',
-        'The guard’s file opens underneath. Read Assane the one fact that is lit up, and he will find something to say about it.'
-      ])
+      el('p', { class: 'h', text: 'FACES · NIGHT SHIFT' })
     ]);
     var grid = el('div', { class: 'faces' });
     Object.keys(C.FACES).forEach(function (badge) {

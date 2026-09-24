@@ -150,7 +150,23 @@
 }
 .modstate__pips i.is-set{background:var(--gold);}
 .modstate__pips i.is-bad{background:var(--red);}
-.modstate__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+/* THE INSTRUCTION LINE, AND IT IS NO LONGER ONE LINE. It carries the steps for
+   the module now, written with hard breaks in tv.js — pre-line is what keeps
+   them. The measure is capped because a column of centred text is taken in at
+   a glance from across a room and a full 876px one is not, and the size is up
+   from 14 because at 14 this was a caption under a picture, not something two
+   people are meant to work from.
+
+   700 IS NOT A ROUND NUMBER, it is the longest authored line in STEPS plus a
+   little: LA PORTE's second beat measures 671px here, and at 620 it wrapped
+   with the single word "numbers." stranded on a line of its own. Shrink this
+   and check that screen. */
+.modstate__line{
+  margin:0 auto;max-width:700px;
+  font-size:17px;line-height:1.5;
+  white-space:pre-line;
+  color:var(--ink-soft);min-height:20px;
+}
 
 /* --- LA TCHATCHE --- */
 .tvview--tchatche{align-items:center;justify-content:center;background:var(--stone);}
@@ -174,7 +190,14 @@
 }
 .tch__rounds i.is-won{background:var(--gold);}
 .tch__rounds i.is-lost{background:var(--red);}
-.tch__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+/* same deal as .modstate__line, one size down: this view spends 180px of its
+   height on the two figures before the words start */
+.tch__line{
+  margin:0 auto;max-width:700px;
+  font-size:16px;line-height:1.5;
+  white-space:pre-line;
+  color:var(--ink-soft);min-height:20px;
+}
 
 /* --- RANK --- */
 .tvview--rank{align-items:center;justify-content:center;background:var(--orange);}

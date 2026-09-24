@@ -234,6 +234,55 @@
 
   var CLAVIER_TILE = { id: 'clavier', name: 'LE CLAVIER', icon: 'lock' };
 
+  /* ------------------------------------------------------- HOW IT IS PLAYED
+     These used to be numbered steps on each phone, which meant the pair read
+     the rules off two small screens, separately, at two different moments —
+     and neither of them ever knew whether the other had read the same thing.
+     The steps live on the television now: one surface, both players already
+     looking at it, and the phones left holding nothing but what each of them
+     can actually see.
+
+     THE LINE BREAKS ARE LOAD-BEARING. .modstate__line is white-space:pre-line,
+     so a \n here is a line on the screen. Each one is a beat of the exchange;
+     run them together and the instruction reads as a paragraph nobody finishes. */
+  var STEPS = {
+    grille:
+      'Assane describes the mark on the padlock to Benjamin.\n' +
+      'Benjamin tells Assane which key matches.',
+    porte:
+      'Assane describes the mark under 0, which tells Benjamin where the ring starts.\n' +
+      'Then Assane describes the four symbols on the keypad, and Benjamin answers with numbers.',
+    prize:
+      'The file is on the desk, exactly where Benjamin said it would be. ' +
+      'Assane must take it and get back to the stairs.',
+    bureau:
+      'Assane sees the desktop, valuable clues littered around it.\n' +
+      'Benjamin has information on every guard working here.\n' +
+      'Together, find out who this desk belongs to and what the password might be.',
+    release:
+      'The computer is open. Now Assane must open the right door, marked by a ' +
+      'symbol only Benjamin can see.',
+    coffre:
+      'Benjamin has the manual. Assane can see the serial number and the color key.\n' +
+      'Getting the right symbolic code requires both color and number to be correct.',
+    clavier:
+      'Assane can feel the keypad, and knows which keys are worn.\n' +
+      'Benjamin has the procedure, somewhere in the mess of papers.\n' +
+      'Get the code right to escape.'
+  };
+
+  /* THE DESTINATION IS THE WHOLE PUZZLE, and it used to be printed on
+     Benjamin's phone alone. Said out loud on the television it costs the pair
+     nothing to find and still gives away nothing: only Benjamin's roster says
+     who is posted there, and only Assane can see what is actually on the rack.
+     The fallback covers a contract with no cloakroom, where this is never
+     reached anyway. */
+  function deguisementSteps() {
+    if (!C.DEGUISEMENT) return 'A rack. Nine pieces. Nothing is labelled.';
+    return 'Assane’s destination is ' + C.DEGUISEMENT.targetPost + '.\n' +
+           'Benjamin must find who’s posted there, and tell Assane what they’re wearing.';
+  }
+
   function renderModule() {
     var S = E.S;
     var m = S.moduleId === 'clavier' ? CLAVIER_TILE
@@ -251,15 +300,17 @@
       for (var i = 0; i < 4; i++) {
         pips.appendChild(U.el('i', { class: i < S.coffreEntry.length ? (wrong ? 'is-bad' : 'is-set') : '' }));
       }
+      /* a wrong code keeps the steps up rather than replacing them: the moment
+         they need reading again is the moment one of the two was misheard */
       line = S.solved.coffre ? 'The safe swings open.'
-           : wrong ? 'Nothing. The mechanism resets itself.'
-           : 'The dial turns. Four notches.';
+           : wrong ? 'Nothing. The mechanism resets itself.\n' + STEPS.coffre
+           : STEPS.coffre;
     } else if (S.moduleId === 'deguisement') {
       ['head', 'torso', 'legs'].forEach(function (k) {
         pips.appendChild(U.el('i', { class: S.outfit && S.outfit[k] ? 'is-set' : '' }));
       });
       line = S.solved.deguisement ? 'Assane looks like somebody who works here.'
-           : 'A rack. Nine pieces. Nothing is labelled.';
+           : deguisementSteps();
     } else if (S.moduleId === 'ecoute') {
       C.ECOUTE.transmission.forEach(function (p, i) {
         pips.appendChild(U.el('i', { class: S.solved.ecoute ? 'is-set' : '' }));
@@ -273,22 +324,20 @@
            : 'Assane takes the forgery. He does not know it yet.';
     } else if (S.moduleId === 'grille') {
       pips.appendChild(U.el('i', { class: S.solved.grille ? 'is-set' : '' }));
-      line = S.solved.grille ? 'The gate swings open.'
-           : 'A service gate, padlocked. Three keys on a ring.';
+      line = S.solved.grille ? 'The gate swings open.' : STEPS.grille;
     } else if (S.moduleId === 'clavier') {
       for (var d = 0; d < 4; d++) {
         pips.appendChild(U.el('i', { class: d < S.clavierEntry.length ? 'is-set' : '' }));
       }
-      line = S.solved.clavier ? 'The door opens onto the street.'
-           : 'A fire door. Three keys worn smooth.';
+      line = S.solved.clavier ? 'The door opens onto the street.' : STEPS.clavier;
     } else {
       for (var j = 0; j < 2; j++) pips.appendChild(U.el('i', { class: j < S.bureauStep ? 'is-set' : '' }));
       line = S.moduleId === 'porte'
-             ? (S.solved.porte ? 'The lock gives.' : 'A keypad, and a room number beside it.')
-           : S.moduleId === 'prize' ? 'The desk. Whatever is on it is what they came for.'
+             ? (S.solved.porte ? 'The lock gives.' : STEPS.porte)
+           : S.moduleId === 'prize' ? STEPS.prize
            : S.solved.bureau ? 'Somewhere, a lock gives.'
-           : S.bureauStep ? 'The computer is open. One door to release.'
-           : 'A security post. It wants a code.';
+           : S.bureauStep ? STEPS.release
+           : STEPS.bureau;
     }
     $('#modstate-line').textContent = line;
   }
@@ -300,10 +349,16 @@
     for (var i = 0; i < 3; i++) {
       r.appendChild(U.el('i', { class: i < t.round ? 'is-won' : '' }));
     }
+    /* The steps stay up for all three exchanges — this is the one module where
+       a pair who lose the thread cannot stop and read, because the guard is
+       standing there. The strike line is appended rather than swapped in: how
+       it is played does not change just because they got one wrong. */
     var s = $('#tch-line');
-    s.textContent = t.strikes === 0
-      ? 'The guard is not moving. He is waiting to hear what you say.'
-      : 'The guard is looking at you differently now. One more slip and it is over.';
+    s.textContent =
+      'Assane has been stopped. No running, no fighting. Blending in is the only way out.\n' +
+      'Assane describes the guard’s face. Benjamin finds their file and gives personal ' +
+      'information, one piece at a time.' +
+      (t.strikes ? '\nThe guard is looking at Assane differently now. One more slip and it is over.' : '');
     $('#tch-spark').style.opacity = t.strikes ? 0.4 : 1;
   }
 

@@ -171,7 +171,10 @@
         readout,
         pad
       ]),
-      foot([ el('p', { class: 'note', text: 'Tell Benjamin which keys are worn. He has the procedure — and he has to find who is posted here tonight.' }) ])
+      /* no foot: how this is played is on the television now. What is left on
+         this phone is the door, the worn keys and the pad — the three things
+         only Assane can see. */
+      null
     ]);
   }
 
@@ -222,10 +225,6 @@
     return screen([
       head('LA GRILLE'),
       body([
-        U.howto([
-          'Describe the mark stamped on the padlock to Benjamin.',
-          'Benjamin has the three keys drawn on his card and will describe the one that fits. Tap it on the ring.'
-        ]),
         padlock,
         el('p', { class: 'lbl lbl--c', style: 'margin:10px 0 6px', text: 'TAP THE KEY HE DESCRIBES' }),
         ring
@@ -295,10 +294,6 @@
     return screen([
       head('LA PORTE'),
       body([
-        U.howto([
-          'Describe the mark under the 0 to Benjamin. It tells him where the ring starts.',
-          'Then describe the four symbols on the keypad, one at a time. Benjamin answers each with a number — tap it.'
-        ]),
         plate,
         readout,
         pad
@@ -317,9 +312,10 @@
     return screen([
       head('LE BUREAU'),
       body([
+        /* the thing itself and the one button that takes it. Where it is and
+           where to go with it is on the television. */
         el('div', { class: 'waiting' }, [
-          (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),
-          el('p', { class: 'note', text: 'It is on the desk, exactly where Benjamin said it would be. Take it and get back to the stairs.' })
+          (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })()
         ])
       ]),
       foot([ el('button', { class: 'btn btn--go', text: 'TAKE IT',
@@ -374,8 +370,12 @@
       body([
         el('div', { class: 'mirrorwrap' }, [
           mirror,
+          /* the room, not the instruction. Who is posted where Assane is going
+             is Benjamin's half and it is announced on the television; all this
+             line does is say what he is standing in. It stays because the
+             mirror is 64px wide and the panel it sits in is not. */
           el('p', { class: 'note', style: 'margin:0', text:
-            'The staff cloakroom. Describe all nine to Benjamin — he knows whose is whose, and who is posted where you are going.' })
+            'The staff cloakroom. Nine pieces on the rack, and not one of them is labelled.' })
         ]),
         racks
       ]),
@@ -716,10 +716,6 @@
     return screen([
       head('LE COFFRE'),
       body([
-        U.howto([
-          'Read Benjamin the number and the colour below. He needs both — his book lists this safe more than once.',
-          'Benjamin will describe four symbols. Tap them on the door, in the order he gives them.'
-        ]),
         el('div', { class: 'safe__plate' }, [
           el('span', {}, [
             el('em', { class: 'lbl', text: 'NUMBER ON THE DOOR' }),
@@ -767,10 +763,9 @@
         head('LE BUREAU'),
         body([
           el('div', { class: 'mod__head' }, [ el('span', { class: 'tag tag--gold', text: 'ACCESS OPEN' }) ]),
-          el('p', { class: 'note', text: 'The computer is open. Four doors on the release schedule, four marks. Only one of them is La Réserve — and only Benjamin can see which.' }),
           grid
         ]),
-        foot([ el('p', { class: 'note', text: 'Describe the four marks. Benjamin has the floor plan.' }) ])
+        null
       ]);
     }
 
@@ -816,7 +811,7 @@
     return screen([
       head('LE BUREAU'),
       body([ desk, readout, pad ]),
-      foot([ el('p', { class: 'note', text: 'Tell Benjamin what is on the desk. All of it. He has the staff files.' }) ])
+      null
     ]);
   }
 
@@ -837,28 +832,23 @@
 
     var face = L.face.portrait(tr, 'tchp1__face');
 
-    /* "Describe him" was the whole instruction, and then the screen offered
-       three sentences about football and night classes. Nothing said that
-       describing the face is step one, that Benjamin answers with a fact about
-       the man, or that the buttons are how you say that fact back. A player who
-       does not already know how a co-op game works was being asked to guess the
-       verb. The two dots were unlabelled as well — they read as decoration
-       until the first one turns red, which is exactly too late. */
+    /* WHAT IS LEFT ON THIS PHONE IS THE MAN'S FACE. Describing the face, and
+       what Benjamin does with the description, is read off the television —
+       said once, to both of them, which is also the only way either player
+       learns that the other was told the same thing. The line beside the
+       portrait is the situation, not a step: it is the caption on the picture,
+       and the picture is the puzzle. The two dots stay labelled — unlabelled
+       they read as decoration until the first one turns red, which is exactly
+       too late. */
     var view = screen([
       head('LA TCHATCHE'),
       body([
         /* Portrait beside the situation rather than above it, and the count and
-           the strikes on one line. The explanations added here are worth their
-           height only if the three answers are still on screen underneath them,
-           and at full width they were not — all three sat below the fold. */
+           the strikes on one line, so the three answers stay above the fold. */
         el('div', { class: 'tchp1__top' }, [
           face,
           el('div', { class: 'tchp1__desc', html:
             '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
-        ]),
-        U.howto([
-          'Describe this face out loud — head, hair, glasses, any marks. Benjamin has the night shift on file.',
-          'Benjamin finds the man and tells you one thing about his life. Tap the line that brings it up.'
         ]),
         el('div', { class: 'tch__meter' }, [
           el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
