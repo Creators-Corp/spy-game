@@ -17,3 +17,11 @@ art/tiles/computed.json
 # committed: this repository may be public, and the token is what stops a
 # stranger taking Assane. Regenerate it rather than storing it.
 DEMO-LINKS.pdf
+
+
+# The connecting-and-playing handout. No token in this one -- the join code is
+# made fresh by the main screen every session -- but it carries the live
+# address and page after page of screenshots: the artwork, the floor plan and
+# the puzzles. That is the NDA material itself, and this repository may be
+# public. Regenerate it rather than storing it.
+CONNECTING-AND-PLAYING.pdf
