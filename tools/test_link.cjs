@@ -609,6 +609,145 @@ function recoveredGame(storage = new Map()) {
   return { L, time, storage, handlers, window, nodes };
 }
 
+function guardEncounter() {
+  const p = recoveredGame(), E = p.L.engine, C = p.L.content;
+  E.ready('p1'); E.ready('p2');
+  E.S.phase = 'play'; E.S.moduleId = null;
+  C.MODULES.forEach(m => { E.S.solved[m.id] = true; });
+  const guard = E.S.guards[0];
+  E.S.guards = [guard]; E.S.cameras = [];
+  guard.alert = 100; // Hold position while testing contact, not patrol timing.
+  const tile = E.guardCone(guard)[0].split(',').map(Number);
+  E.S.assane = { x: tile[0], y: tile[1] };
+  E.act(0, 0);
+  assert.equal(E.S.phase, 'tchatche');
+  assert.equal(E.S.tchatche.guardId, guard.id);
+  return { ...p, E, C, guard };
+}
+
+function winConversation(E, C) {
+  for (let round = 0; round < 3; round++) E.tchatchePick(C.DIRT[E.S.tchatche.badge][round].t);
+}
+
+test('a successfully fooled guard loses detection and near-miss suspicion, including in darkness', () => {
+  const { E, C, guard } = guardEncounter();
+  assert.equal(guard.fooled, false);
+  winConversation(E, C);
+  assert.equal(guard.fooled, true);
+  assert.equal(E.guardCone(guard).length, 0);
+  assert.equal(Object.keys(E.threat('guards')).length, 0);
+  const suspicion = E.S.suspicion;
+  for (let i = 0; i < 6; i++) E.act(0, 0);
+  assert.equal(E.S.phase, 'play');
+  assert.equal(E.S.spotted, 1);
+  assert.equal(E.S.suspicion, suspicion);
+  E.S.blackout = true;
+  assert.equal(E.guardCone(guard).length, 0);
+  E.S.blackout = false; E.S.levers.lights = 2;
+  assert.equal(E.guardCone(guard).length, 0);
+});
+
+test('each major suspicion threshold restores all fooled guards, but lesser rises do not', () => {
+  const { E, C, guard } = guardEncounter();
+  winConversation(E, C);
+  const other = { ...guard, id: 'other', fooled: true };
+  E.S.guards.push(other);
+  function addPressure() {
+    E.S.pressureAdded = 0;
+    E.tick(E.S.lastActionAt + (C.PRESSURE.grace + C.PRESSURE.every) * 1000);
+  }
+  for (const threshold of C.ALERT) {
+    E.S.guards.forEach(g => { g.fooled = true; });
+    E.S.suspicion = threshold.at - 2;
+    addPressure();
+    assert.ok(E.S.guards.every(g => g.fooled));
+    addPressure();
+    assert.equal(E.S.suspicion, threshold.at);
+    assert.ok(E.S.guards.every(g => !g.fooled));
+    assert.ok(E.guardCone(guard).length > 0);
+  }
+});
+
+test('fooling one guard provides no grace against another guard', () => {
+  const { E, C, guard } = guardEncounter();
+  winConversation(E, C);
+  E.S.guards.push({ ...guard, id: 'second-guard', fooled: false });
+  E.act(0, 0);
+  assert.equal(E.S.phase, 'tchatche');
+  assert.equal(E.S.tchatche.guardId, 'second-guard');
+});
+
+test('camera detection remains active and its conversation never fools a patrol guard', () => {
+  const { E, C, guard } = guardEncounter();
+  winConversation(E, C);
+  const pos = E.guardAt(guard);
+  E.S.cameras = [{ id: 'c1', x: pos.x, y: pos.y, depth: 4, cycle: [guard.facing] }];
+  const tile = Object.keys(E.threat('cameras'))[0].split(',').map(Number);
+  E.S.assane = { x: tile[0], y: tile[1] };
+  E.act(0, 0);
+  assert.equal(E.S.phase, 'tchatche');
+  assert.equal(E.S.tchatche.guardId, null);
+  winConversation(E, C);
+  assert.equal(guard.fooled, false); // The camera catch crossed Attentive.
+  assert.ok(Object.keys(E.threat('cameras')).length > 0);
+});
+
+test('laser trips still raise suspicion and trigger an alarm after a guard is fooled', () => {
+  const { E, C, guard } = guardEncounter();
+  winConversation(E, C);
+  let crossing;
+  for (let y = 0; y < C.MAP.length; y++) for (let x = 0; x < C.MAP[y].length; x++) {
+    if (C.MAP[y][x] !== 'L') continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      if (!E.isWall(x - dx, y - dy)) crossing = { x, y, dx, dy };
+    }
+  }
+  assert.ok(crossing);
+  E.S.assane = { x: crossing.x - crossing.dx, y: crossing.y - crossing.dy };
+  const suspicion = E.S.suspicion;
+  E.act(crossing.dx, crossing.dy);
+  assert.ok(E.S.alarm > 0);
+  assert.ok(E.S.suspicion >= suspicion + C.ALARM.cost);
+  assert.equal(guard.fooled, true); // A sub-threshold alarm does not reset trust.
+});
+
+test('fooled guard state survives refresh recovery and resets for a new game', () => {
+  const p = guardEncounter();
+  winConversation(p.E, p.C); p.L.recovery.save();
+  const q = recoveredGame(p.storage);
+  q.handlers['resume-game:click']();
+  assert.equal(q.L.engine.S.guards[0].fooled, true);
+  assert.equal(q.L.engine.guardCone(q.L.engine.S.guards[0]).length, 0);
+  q.L.engine.reset(1234);
+  assert.ok(q.L.engine.S.guards.every(g => !g.fooled));
+});
+
+test('tile renderer removes a fooled guard sightline and near-miss outlines, then restores them', () => {
+  const p = guardEncounter();
+  p.L.util.assetURL = value => value;
+  vm.runInNewContext(source('tiles.js'), {
+    window: { DC: p.L },
+    XMLHttpRequest: class { open() {} send() {} }
+  });
+  const host = { innerHTML: '' };
+  const options = { view: 'benjamin', edges: true,
+    layers: { ground: false, walls: false, props: false, actors: false, ui: false } };
+  p.L.tiles.render(host, options);
+  assert.match(host.innerHTML, /id="tl-sight-0-m"/);
+  winConversation(p.E, p.C);
+  for (const dark of [false, true]) {
+    p.E.S.blackout = dark;
+    p.L.tiles.render(host, options);
+    assert.doesNotMatch(host.innerHTML, /id="tl-sight-0-m"/);
+    assert.doesNotMatch(host.innerHTML, /stroke-dasharray="14 10"/);
+  }
+  p.E.S.blackout = false;
+  p.E.S.suspicion = 39;
+  p.E.tick(p.E.S.lastActionAt + (p.C.PRESSURE.grace + p.C.PRESSURE.every) * 1000);
+  p.L.tiles.render(host, options);
+  assert.match(host.innerHTML, /id="tl-sight-0-m"/);
+});
+
 test('door clear also clears the authoritative engine before the next digit', () => {
   const p = recoveredGame(), E = p.L.engine;
   E.S.phase = 'module'; E.S.moduleId = 'porte';

@@ -512,7 +512,7 @@
       function sightlineFor(g, gi, depth) {
         var p = E.guardAt(g);
         if (!known(p.x, p.y) && !wallKnown(p.x, p.y)) return '';
-        var mine = E.cone(p.x, p.y, g.facing, depth);
+        var mine = E.guardCone(g);
         if (!mine.length) return '';
         var small = depth <= 0, id = 'tl-sight-' + gi, box = 10;
         var spin = { W: 0, N: 90, E: 180, S: 270 }[g.facing] || 0;
@@ -549,7 +549,7 @@
          outline below is measured off this and has to be the same set */
       var cells = {}, k;
       for (k in threat) cells[k] = 1;
-      S.guards.forEach(function (g) { var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
+      S.guards.forEach(function (g) { if (g.fooled) return; var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
 
       if (view === 'benjamin') {
         /* coneDepth() is already 0 with the lights cut or the power gone, so

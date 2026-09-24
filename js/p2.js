@@ -113,6 +113,20 @@
 
   /* ---------------------------------------------------- the floor plan */
   var TT = 20;
+  function objectiveTargets() {
+    var S = E.S;
+    var step = (C.MAP_OBJECTIVES || []).filter(function (item) {
+      return !item.until || !S.solved[item.until];
+    })[0];
+    if (!step) return [];
+    var unlocking = S.phase === 'module' && S.moduleId === 'bureau' && S.bureauStep === 1;
+    var targets = unlocking && step.unlockTargets ? step.unlockTargets : step.targets;
+    return targets.filter(function (id) { return !S.solved[id]; }).map(function (id) {
+      if (id === 'exit') return S.hasManuscript ? E.hatchTile() : null;
+      if (id === 'bureau-door') return S.doors.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0];
+      return C.MODULES.filter(function (m) { return m.id === id; })[0];
+    }).filter(Boolean);
+  }
   /* Same floor-plan treatment as the TV: fill the floor, outline its boundary,
      and put nothing inside it. Benjamin's map carries far more than Assane's —
      every cone, every camera, every patrol — so the architecture underneath has
@@ -265,7 +279,7 @@
            '" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>';
       /* a guard who has stopped to look at something wears a dashed ring, so
          Benjamin can see his phone call landed */
-      if (g.alert > 0) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
+      if (g.alert > 0 && !g.fooled) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="var(--red)" stroke="var(--map-void)" stroke-width="1.5"/>';
       s += '<text x="' + cx + '" y="' + (cy + 2.6) + '" font-size="7" font-weight="500" text-anchor="middle"' +
            ' font-family="var(--font)" fill="var(--on-color)">' + g.badge + '</text>';
@@ -281,6 +295,19 @@
         s += '<text x="' + (r.x * TT + 3) + '" y="' + (r.y * TT + 9) + '" font-size="5.5" letter-spacing="0.6"' +
              ' font-weight="500" fill="var(--map-edge)" opacity=".75" font-family="var(--font)">' + r.name + '</text>';
       });
+    }
+    objectiveTargets().forEach(function (target) {
+      s += '<g transform="translate(' + (target.x * TT + TT / 2) + ',' + (target.y * TT + TT / 2) + ')">' +
+           '<circle class="objective-ring" r="14" fill="none" stroke="#FD6A1A" stroke-width="1.5"' +
+           ' pointer-events="none" aria-hidden="true"/></g>';
+    });
+    // Once the prize is taken, mark the escape destination on both map layers.
+    var exit = E.hatchTile();
+    if (S.hasManuscript && exit) {
+      s += '<text x="' + (exit.x * TT + TT / 2) + '" y="' + (exit.y * TT - 9) +
+           '" text-anchor="middle" font-size="7" font-weight="600" letter-spacing="0.5"' +
+           ' font-family="var(--font)" fill="var(--gold)" stroke="var(--map-void)"' +
+           ' stroke-width="2" paint-order="stroke" pointer-events="none">EXIT</text>';
     }
     /* THE RULER. Both displays count squares the same way — letters across,
        numbers down — so a square has one name in the room and on the plan. The

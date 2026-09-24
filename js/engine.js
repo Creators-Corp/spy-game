@@ -160,7 +160,7 @@
            the contract. */
         if (!(at >= 0 && at < path.length)) at = 0;
         var man = { id: g.id, badge: g.badge, depth: g.depth, path: path,
-                    at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0 };
+                    at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0, fooled: false };
         man.facing = faceOf(man);
         return man;
       }),
@@ -418,6 +418,11 @@
     if (S.levers.lights > 0 || S.blackout) return 0;
     return g.depth + S.alert + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
   }
+  function guardCone(g) {
+    if (g.fooled) return [];
+    var p = guardAt(g);
+    return cone(p.x, p.y, g.facing, coneDepth(g));
+  }
 
   /* EVERY point of suspicion goes through here, so the building's alert level
      can never drift out of step with the number on the bar. */
@@ -431,6 +436,7 @@
     var lv = alertOf(S.suspicion);
     if (lv > S.alert) {
       S.alert = lv;
+      S.guards.forEach(function (g) { g.fooled = false; });
       var a = C.ALERT[lv - 1];
       toast('ALERT · ' + a.name, 'bad');
       S.sense = a.line;
@@ -448,8 +454,7 @@
   function threat(kind) {
     var map = {};
     if (kind !== 'cameras') S.guards.forEach(function (g) {
-      var p = guardAt(g);
-      cone(p.x, p.y, g.facing, coneDepth(g)).forEach(function (k) { (map[k] = map[k] || []).push(g.id); });
+      guardCone(g).forEach(function (k) { (map[k] = map[k] || []).push(g.id); });
     });
     /* the cameras are down in a blackout — emergency power runs the feeds on
        P2's phone for looking, not for catching */
@@ -1267,6 +1272,8 @@
   function darken() { S.dark = true; startLink(); toast('MONITORS DEAD', 'bad'); }
 
   function takePrize() {
+    if (S.phase !== 'module' || S.moduleId !== 'prize' || S.codeFeedback) return;
+    codeFeedback(true);
     U.sfx.unlock();
     S.hasManuscript = true;
     S.loot.dossier = true;
@@ -1310,7 +1317,8 @@
   function getSpotted(byId) {
     unlock('visages'); unlock('personnel');   /* a face to find means the roster matters now */
     var badge = byId;
-    var g = S.guards.filter(function (x) { return x.id === byId; })[0];
+    // Scripted guard encounters may supply a badge; camera IDs never confer trust.
+    var g = S.guards.filter(function (x) { return x.id === byId || x.badge === byId; })[0];
     if (g) badge = g.badge;
     if (byId === 'c1' || byId === 'c2') badge = '6620';   /* the desk answers the camera */
     /* ...if this contract employs them. Falling back to a hard-coded badge was
@@ -1327,7 +1335,7 @@
        being seen that both players can hold in their heads: three and out. */
     if (S.spotted >= 3) { S.jailLine = 'THIRD TIME. THEY KNOW HIS FACE.'; jail(); return; }
     S.phase = 'tchatche';
-    S.tchatche = { badge: badge, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
+    S.tchatche = { badge: badge, guardId: g ? g.id : null, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
     S.flash = Date.now();
     /* the stab first, then the sting under it: sfx.spot() is synthesised and
@@ -1353,7 +1361,10 @@
       t.round++;
       if (t.round >= 3) {
         S.phase = 'play';
-        S.grace = 3;                 /* he backs away — two clean beats */
+        // Only the guard who believed the story stands down. Other guards and
+        // electronic traps remain dangerous, including on the very next move.
+        S.guards.forEach(function (g) { if (g.id === t.guardId) g.fooled = true; });
+        S.grace = 0;
         touch();
         S.tchatche = null;
         setObjective();
@@ -1442,7 +1453,7 @@
     coordOf: coordOf,
     coffreUndo: coffreUndo,
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
-    guardAt: guardAt, coneDepth: coneDepth,
+    guardAt: guardAt, coneDepth: coneDepth, guardCone: guardCone,
     seesAssane: seesAssane, linkDown: linkDown, linkLive: linkLive, nearestCam: nearestCam,
     leverInert: leverInert,
     startBlackout: startBlackout, darken: darken, clavierSubmit: clavierSubmit,

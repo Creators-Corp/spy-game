@@ -309,13 +309,14 @@
   /* ------------------------------------------------------------ LE DOSSIER */
   function viewPrize() {
     var S = E.S;
+    var prize = C.MODULES.filter(function (m) { return m.id === 'prize'; })[0];
     return screen([
       head('LE BUREAU'),
       body([
         /* the thing itself and the one button that takes it. Where it is and
            where to go with it is on the television. */
         el('div', { class: 'waiting' }, [
-          (function () { var i = G.icon('manu'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })()
+          (function () { var i = G.icon(prize.icon); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })()
         ])
       ]),
       foot([ el('button', { class: 'btn btn--go', text: 'TAKE IT',
