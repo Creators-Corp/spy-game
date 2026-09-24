@@ -274,7 +274,7 @@
     } else if (S.moduleId === 'grille') {
       pips.appendChild(U.el('i', { class: S.solved.grille ? 'is-set' : '' }));
       line = S.solved.grille ? 'The gate swings open.'
-           : 'A service gate, padlocked. Three keys on a ring.';
+           : 'Assane describes the mark on the padlock to Benjamin. Benjamin tells Assane which key matches.';
     } else if (S.moduleId === 'clavier') {
       for (var d = 0; d < 4; d++) {
         pips.appendChild(U.el('i', { class: d < S.clavierEntry.length ? 'is-set' : '' }));

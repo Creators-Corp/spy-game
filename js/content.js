@@ -40,7 +40,7 @@
     study:     'You are still doing the night classes? That is serious discipline.',
     car:       'That is your car in the bay, no? They are ticketing it as we speak.',
     coffee:    'The machine on three is broken again, by the way. Thought you should know.',
-    boss:      'Between us — I do not know how you work for that man.'
+    boss:      'Between us — I do not know how you can stand the floor manager.'
   };
   var TOPICS = Object.keys(LINES);
 
@@ -622,7 +622,7 @@
       '2071': [{ t: 'study', s: 'Night classes. Law. Second year.' },
                { t: 'car', s: 'Parks in the loading bay. Gets ticketed.' },
                { t: 'promotion', s: 'Applied for shift lead. Waiting to hear.' }],
-      '3308': [{ t: 'football', s: 'Saint-Étienne. Home and away.' },
+      '3308': [{ t: 'football', s: 'Saint-Étienne football fan. Home and away.' },
                { t: 'boss', s: 'Covers for the floor manager. Constantly.' },
                { t: 'coffee', s: 'Brings her own flask. Refuses the machine.' }],
       '5195': [{ t: 'wife', s: 'Married. Hélène. Twenty-two years.' },

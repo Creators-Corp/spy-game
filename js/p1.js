@@ -223,8 +223,8 @@
       head('LA GRILLE'),
       body([
         U.howto([
-          'Describe the mark stamped on the padlock to Benjamin.',
-          'Benjamin has the three keys drawn on his card and will describe the one that fits. Tap it on the ring.'
+          'Describe the mark stamped on the padlock.',
+          'Benjamin will describe the right key. Tap it.'
         ]),
         padlock,
         el('p', { class: 'lbl lbl--c', style: 'margin:10px 0 6px', text: 'TAP THE KEY HE DESCRIBES' }),
@@ -296,7 +296,7 @@
       head('LA PORTE'),
       body([
         U.howto([
-          'Describe the mark under the 0 to Benjamin. It tells him where the ring starts.',
+          'Describe the mark under 0 to Benjamin.',
           'Then describe the four symbols on the keypad, one at a time. Benjamin answers each with a number — tap it.'
         ]),
         plate,
@@ -376,7 +376,7 @@
         el('div', { class: 'mirrorwrap' }, [
           mirror,
           el('p', { class: 'note', style: 'margin:0', text:
-            'The staff cloakroom. Describe all nine to Benjamin — he knows whose is whose, and who is posted where you are going.' })
+            'The staff cloakroom. Describe all nine to Benjamin — he knows who wears what, and who is posted where you are going.' })
         ]),
         racks
       ]),
@@ -719,7 +719,7 @@
       body([
         U.howto([
           'Read Benjamin the number and the colour below. He needs both — his book lists this safe more than once.',
-          'Benjamin will describe four symbols. Tap them on the door, in the order he gives them.'
+          'Benjamin will describe four symbols. Tap them in that order.'
         ]),
         el('div', { class: 'safe__plate' }, [
           el('span', {}, [
