@@ -432,17 +432,17 @@
        after the last one, so every square keeps the name it had. */
     MAP: [
       '########################',
-      '########################',
       '#################....###',
       '#################....###',
-      '#################....###',
-      '#X.............#####+###',
-      '#................L...###',
-      '#..#.#.#.#..##.###LLL###',
-      '#..#........##.......###',
+      '#X...############....###',
+      '#....###############.###',
+      '#...................+###',
+      '#..#.................###',
       '#..#.#.#.#..##.###...###',
-      '#....L...............###',
-      '#....L...............###',
+      '#..#........##.......###',
+      '#..##..#.#..##.###...###',
+      '#...L........L.......###',
+      '#...L........L.......###',
       '###########+########/###',
       '#######...L......#...###',
       '#######...L......#...###',
@@ -499,17 +499,15 @@
          at each end when he did */
       { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1 },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
-      { id: 'g2', badge: '2071', from: { x: 20, y: 5 }, to: { x: 20, y: 11 }, at: 0, dir: 1, depth: 2 },
+      { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
-      { id: 'g3', badge: '5195', from: { x: 10, y: 6 }, to: { x: 16, y: 6 }, at: 6, dir: -1, depth: 1 },
-      /*Protecting the Exit guard */
-      { id: 'g4', badge: '1184', from: { x: 2, y: 5 }, to: { x: 2, y: 6 }, at: 6, dir: -1, depth: 1 }
+      { id: 'g3', badge: '5195', from: { x: 2, y: 4 }, to: { x: 2, y: 5 }, at: 6, dir: -1, depth: 1 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
     CAMERAS: [
-      { id: 'c1', x: 7,  y: 0, depth: 2, cycle: ['S'],             label: 'CAM 1' },
-      { id: 'c2', x: 12, y: 0, depth: 2, cycle: ['S', null, null], label: 'CAM 2' }
+      { id: 'c1', x: 18,  y: 0, depth: 2, cycle: ['S'],             label: 'CAM 1' }
+      /*{ id: 'c2', x: 12, y: 0, depth: 2, cycle: ['S', null, null], label: 'CAM 2' }*/
     ],
     /* fewer pulls than contract three. The van is further away tonight. */
     LEVIERS: [LEVER.lights, LEVER.laser, lever(LEVER.camera, { uses: 2 })],
@@ -546,7 +544,7 @@
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
-      { id: 'coffre',      x: 18,  y: 3,  name: 'LE COFFRE',      icon: 'safe' }
+      { id: 'coffre',      x: 18,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
 
     /* LA GRILLE, contract one's handshake on the kitchen gate. Same padlock
