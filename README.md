@@ -209,8 +209,16 @@ The d-pad greys out walls instead of drawing a diagram of them. The plan carries
 six-row key, each symbol drawn exactly as the map draws it, each with a sentence.
 Le Coffre captions its two lookup keys and names the ring colour in words —
 *amber* and *camel* are both tan, and Benjamin's book lists the same serial three
-times, so a colour the players cannot **say** is a colour they cannot use. Both
-two-step screens now number their steps.
+times, so a colour the players cannot **say** is a colour they cannot use.
+
+**Where the steps ended up.** They were numbered strips on each phone to begin
+with, one per player. That fixed the wrong half of the problem: each player
+could now read their own half, and still had no idea the other had been handed a
+matching one — so the pair spent the first thirty seconds of every module
+reading silently at two small screens instead of talking. The steps are on the
+television now, written out in full, one set for both of them. Nobody has to
+take anybody's word for what their screen says, and the phones went back to
+holding nothing but what each player can actually see. See `STEPS` in `tv.js`.
 
 **What was deliberately left alone: the dial symbols still have no names.**
 Inventing "the backwards Z" together is the reason the module is a conversation

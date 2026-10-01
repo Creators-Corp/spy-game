@@ -21,16 +21,6 @@ window.DC = window.DC || {};
     });
     return n;
   }
-  /* A numbered "do this, and then this" strip.
-     Four screens in this build ask a player to do one thing and then a
-     different thing, and every one of them used to say so in a single run-on
-     sentence that only parsed if you already knew the answer. Two numbered
-     lines is the cheapest fix there is, and it costs six lines of layout. */
-  function howto(steps) {
-    return el('ol', { class: 'howto' }, steps.map(function (t, i) {
-      return el('li', {}, [el('b', { text: String(i + 1) }), el('em', { text: t })]);
-    }));
-  }
   /* Assets use the same relative paths locally and in the published build. */
   function assetURL(path) {
     return path;
@@ -448,7 +438,7 @@ window.DC = window.DC || {};
   }
 
   L.util = {
-    el: el, howto: howto, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
+    el: el, assetURL: assetURL, $: $, $$: $$, clear: clear, preloadArt: preloadArt,
     keepScroll: keepScroll, codeFeedback: codeFeedback,
     polishScreen: polishScreen, phoneHeader: phoneHeader, artSlot: artSlot, hydrateStaticSlots: hydrateStaticSlots,
     on: on, emit: emit,

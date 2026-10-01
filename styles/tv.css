@@ -136,6 +136,16 @@
 .room__toast.is-on{opacity:1;animation:pop .18s;}
 .room__toast.is-bad{background:var(--red);color:var(--on-color);}
 .room__toast.is-good{background:var(--gold);}
+/* the refuse card: a module that will not open yet. Holds while he stands there. */
+.room__gate{
+  position:absolute;left:50%;top:18px;transform:translateX(-50%);
+  display:none;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 22px;border:var(--stroke) solid var(--ink);border-radius:10px;
+  background:var(--paper);text-align:center;max-width:70%;
+}
+.room__gate.is-on{display:flex;animation:pop .18s;}
+.room__gate b{font-size:16px;letter-spacing:.24em;color:var(--red);}
+.room__gate span{font-size:13px;letter-spacing:.04em;color:var(--ink);}
 
 /* --- MODULE consequence --- */
 .tvview--module{align-items:center;justify-content:center;background:var(--stone);}
@@ -150,7 +160,23 @@
 }
 .modstate__pips i.is-set{background:var(--gold);}
 .modstate__pips i.is-bad{background:var(--red);}
-.modstate__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+/* THE INSTRUCTION LINE, AND IT IS NO LONGER ONE LINE. It carries the steps for
+   the module now, written with hard breaks in tv.js — pre-line is what keeps
+   them. The measure is capped because a column of centred text is taken in at
+   a glance from across a room and a full 876px one is not, and the size is up
+   from 14 because at 14 this was a caption under a picture, not something two
+   people are meant to work from.
+
+   700 IS NOT A ROUND NUMBER, it is the longest authored line in STEPS plus a
+   little: LA PORTE's second beat measures 671px here, and at 620 it wrapped
+   with the single word "numbers." stranded on a line of its own. Shrink this
+   and check that screen. */
+.modstate__line{
+  margin:0 auto;max-width:700px;
+  font-size:17px;line-height:1.5;
+  white-space:pre-line;
+  color:var(--ink-soft);min-height:20px;
+}
 
 /* --- LA TCHATCHE --- */
 .tvview--tchatche{align-items:center;justify-content:center;background:var(--stone);}
@@ -174,7 +200,14 @@
 }
 .tch__rounds i.is-won{background:var(--gold);}
 .tch__rounds i.is-lost{background:var(--red);}
-.tch__line{margin:0;font-size:14px;color:var(--ink-soft);min-height:20px;}
+/* same deal as .modstate__line, one size down: this view spends 180px of its
+   height on the two figures before the words start */
+.tch__line{
+  margin:0 auto;max-width:700px;
+  font-size:16px;line-height:1.5;
+  white-space:pre-line;
+  color:var(--ink-soft);min-height:20px;
+}
 
 /* --- RANK --- */
 .tvview--rank{align-items:center;justify-content:center;background:var(--orange);}
@@ -375,3 +408,19 @@
 .tv__screen .room__toast.is-good{background:#090C11;color:#FD6A1A;border-color:#778495;}
 .tvbar__phase{background:#FD6A1A;color:#090C11;border-color:#778495;}
 .tvbar__phase.is-night{background:#090C11;color:#FD6A1A;}
+
+/* --- dev skip buttons (js/devtools.js): local copies only, never in the room --- */
+.devtools{
+  position:absolute;top:52px;right:8px;z-index:50;
+  display:flex;align-items:center;gap:6px;
+  padding:5px 7px;border-radius:6px;
+  background:rgba(0,0,0,.7);border:1px dashed var(--gold);
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--gold);
+}
+.devtools[hidden]{display:none;}
+.devtools button{
+  font:inherit;color:var(--ink);background:transparent;cursor:pointer;
+  border:1px solid var(--ink-soft);border-radius:4px;padding:3px 7px;
+}
+.devtools button:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.devtools button:disabled{opacity:.35;cursor:default;}
