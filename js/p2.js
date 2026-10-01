@@ -10,6 +10,7 @@
   var el = U.el, $ = U.$;
 
   var tab = 'plan';
+  var manualSeen = false;   /* has he opened MANUAL since the hatch locked? */
   var openSerial = -1, openBadge = null, pickedFace = null;
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
   /* THE LAYERS. The plan shows the people or the wiring, never both. Two
@@ -102,10 +103,20 @@
   function tabBar() {
     if (availableTabs().length === 1) return null;
     var bar = el('div', { class: 'tabs' });
+    /* THE HATCH POINTS AT THE MANUAL. When the lights go and the keypad comes
+       up, the procedures he needs are under the safes on MANUAL — so that tab
+       pulses until he opens it. */
+    var S = E.S, hatch = S.phase === 'module' && S.moduleId === 'clavier';
+    if (!hatch) manualSeen = false;
     availableTabs().forEach(function (t) {
+      var flash = hatch && !manualSeen && t[0] === 'manuel';
       bar.appendChild(buttonArt(el('button', {
-        class: tab === t[0] ? 'is-on' : '',
-        onclick: function () { tab = t[0]; U.sfx.tap(); U.emit('render'); }
+        class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
+        onclick: function () {
+          tab = t[0];
+          if (t[0] === 'manuel' && hatch) manualSeen = true;
+          U.sfx.tap(); U.emit('render');
+        }
       }, [el('span', { text: t[1] })]), 'tab'));
     });
     return bar;
@@ -848,8 +859,8 @@
     }
 
     /* The emergency procedures live down here, under the safes, nowhere near
-       the roster they need. Finding this at the moment the lights go out is
-       the job — the game will not point at it. */
+       the roster they need. When the lights go out the MANUAL tab pulses
+       until he opens it — see tabBar(). */
     wrap.appendChild(el('div', { class: 'rule' }));
     wrap.appendChild(el('p', { class: 'h', text: 'EMERGENCY PROCEDURES' }));
     var dl = el('dl', { class: 'proc' });
@@ -1016,7 +1027,7 @@
      anybody reads here, so losing its place is the most expensive. */
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
-    tab = 'plan'; openSerial = -1; openBadge = null; pickedFace = null;
+    tab = 'plan'; manualSeen = false; openSerial = -1; openBadge = null; pickedFace = null;
     tapped = []; queryResult = null; layer = 'patrols';
   } };
 })(window.DC);

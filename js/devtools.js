@@ -1,4 +1,4 @@
-/* devtools.js — skip buttons for level work, drawn in the corner of the TV.
+/* devtools.js — skip buttons for level work, in the chrome row above the screens.
    Never part of the game. It shows only on a local copy (localhost, 127.0.0.1
    or file://), or anywhere with ?dev in the URL, and never on a joined phone.
 
@@ -53,21 +53,24 @@
   }
 
   var ACTIONS = [
-    ['SKIP PUZZLE', skipPuzzle, function (S) { return S.phase === 'module'; }],
-    ['SKIP TALK', skipTalk, function (S) { return S.phase === 'tchatche'; }],
-    ['OPEN DOORS', openDoors, function (S) { return S.doors.some(function (d) { return d.locked; }); }]
+    ['PUZZLE', skipPuzzle, function (S) { return S.phase === 'module'; }, 'Solve the open puzzle'],
+    ['TALK', skipTalk, function (S) { return S.phase === 'tchatche'; }, 'Talk past the guard'],
+    ['DOORS', openDoors, function (S) { return S.doors.some(function (d) { return d.locked; }); }, 'Unlock every door']
   ];
 
   function build() {
-    var screen = document.getElementById('tv-screen');
-    if (!screen) return;
-    var box = document.createElement('div');
-    box.className = 'devtools';
-    box.innerHTML = '<b>DEV</b>';
+    var row = document.querySelector('.stage__chrome');
+    if (!row) return;
+    var box = document.createElement('span');
+    box.className = 'chip devtools';
+    box.innerHTML = '<b>DEV SKIP</b>';
+    /* the row is full without it: the tagline chip gives up its place */
+    document.body.classList.add('has-devtools');
     var buttons = ACTIONS.map(function (a) {
       var b = document.createElement('button');
       b.type = 'button';
       b.textContent = a[0];
+      b.title = a[3];
       b.addEventListener('click', function () {
         if (isGuest()) return;
         a[1]();
@@ -76,13 +79,17 @@
       box.appendChild(b);
       return b;
     });
-    screen.appendChild(box);
+    row.appendChild(box);
 
     function paint() {
       box.hidden = isGuest();
       ACTIONS.forEach(function (a, i) { buttons[i].disabled = !E.S || !a[2](E.S); });
     }
     U.on('render', paint);
+    /* Not every redraw goes through the 'render' event — the keyboard, the
+       clock and a restart call main's render() directly — so a puzzle or a
+       stop could open with these still greyed out. Re-check on a short beat. */
+    setInterval(paint, 250);
     paint();
   }
 

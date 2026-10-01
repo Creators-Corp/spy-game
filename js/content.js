@@ -953,6 +953,10 @@
         clav.worn = distinct(clav.code);
       }
       L.content.CLAVIER = clav;
+      /* the procedure now ends on the answer itself, rolled with the roster */
+      if (job.PROCEDURES) L.content.PROCEDURES = job.PROCEDURES.map(function (r) {
+        return r.k === 'RELEASE CODE' ? { k: r.k, v: r.v + ' ' + clav.code } : r;
+      });
     }
 
     if (job.BUREAU) {

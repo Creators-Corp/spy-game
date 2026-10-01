@@ -409,18 +409,21 @@
 .tvbar__phase{background:#FD6A1A;color:#090C11;border-color:#778495;}
 .tvbar__phase.is-night{background:#090C11;color:#FD6A1A;}
 
-/* --- dev skip buttons (js/devtools.js): local copies only, never in the room --- */
-.devtools{
-  position:absolute;top:52px;right:8px;z-index:50;
-  display:flex;align-items:center;gap:6px;
-  padding:5px 7px;border-radius:6px;
-  background:rgba(0,0,0,.7);border:1px dashed var(--gold);
-  font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--gold);
+/* --- dev skip buttons (js/devtools.js): local copies only, never in the room.
+       A chip in the chrome row with the rest of the presenter buttons. --- */
+.chip.devtools{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 12px;
+  background:transparent;--chip-edge:var(--gold);color:var(--gold);
 }
 .devtools[hidden]{display:none;}
+.has-devtools .stage__chrome .chip--ghost{display:none;}
+.devtools b{font-size:11px;letter-spacing:.16em;}
 .devtools button{
-  font:inherit;color:var(--ink);background:transparent;cursor:pointer;
-  border:1px solid var(--ink-soft);border-radius:4px;padding:3px 7px;
+  --chip-edge:var(--ink);
+  font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 9px;border-radius:999px;color:var(--ink);background:var(--paper);cursor:pointer;
+  border:var(--stroke) solid transparent;
+  box-shadow:inset 0 0 0 var(--stroke) var(--chip-edge);
 }
-.devtools button:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.devtools button:hover:not(:disabled){background:var(--gold);}
 .devtools button:disabled{opacity:.35;cursor:default;}

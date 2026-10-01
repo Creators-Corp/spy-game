@@ -910,6 +910,12 @@ body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
 .pscreen--dossier .layers button:active,
 .pscreen--dossier .tabs button.is-on,
 .pscreen--dossier .tabs button:active{color:#FD6A1A;}
+/* MANUAL pulses while the hatch is locked and he has not opened it yet */
+@keyframes tabflash{0%,100%{filter:none;}50%{filter:drop-shadow(0 0 6px rgba(253,106,26,.6)) brightness(1.15);}}
+.pscreen--dossier .tabs button.is-flash{color:#FD6A1A;animation:tabflash 1.6s ease-in-out infinite;}
+@media (prefers-reduced-motion:reduce){
+  .pscreen--dossier .tabs button.is-flash{animation:none;filter:drop-shadow(0 0 5px rgba(253,106,26,.6));}
+}
 .pscreen--dossier .dossier__art{
   position:absolute;inset:0;width:100%;height:100%;z-index:-1;
   pointer-events:none;user-select:none;visibility:hidden;
