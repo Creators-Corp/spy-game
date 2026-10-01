@@ -438,11 +438,11 @@
       '#################....###',
       '#X.............#####+###',
       '#................L...###',
-      '#..###.#....##.###LLL###',
-      '#..###......##.......###',
-      '#..###.#....##.###...###',
-      '#..L.................###',
-      '#..L.................###',
+      '#..#.#.#.#..##.###LLL###',
+      '#..#........##.......###',
+      '#..#.#.#.#..##.###...###',
+      '#....L...............###',
+      '#....L...............###',
       '###########+########/###',
       '#######...L......#...###',
       '#######...L......#...###',
@@ -499,9 +499,11 @@
          at each end when he did */
       { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1 },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
-      { id: 'g2', badge: '2071', from: { x: 12, y: 10 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
+      { id: 'g2', badge: '2071', from: { x: 20, y: 5 }, to: { x: 20, y: 11 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
-      { id: 'g3', badge: '5195', from: { x: 5, y: 6 }, to: { x: 16, y: 6 }, at: 6, dir: -1, depth: 1 }
+      { id: 'g3', badge: '5195', from: { x: 10, y: 6 }, to: { x: 16, y: 6 }, at: 6, dir: -1, depth: 1 },
+      /*Protecting the Exit guard */
+      { id: 'g4', badge: '1184', from: { x: 2, y: 5 }, to: { x: 2, y: 6 }, at: 6, dir: -1, depth: 1 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
