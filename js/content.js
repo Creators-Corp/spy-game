@@ -432,29 +432,29 @@
        after the last one, so every square keeps the name it had. */
     MAP: [
       '########################',
-      '#####.....#....#########',
-      '#####.....#....#########',
-      '#####.....#....#########',
-      '#####+#####/############',
-      '#....................X##',
-      '#.....................##',
-      '#..######LLLLL######..##',
-      '#..######.....######..##',
-      '#..######LLLLL######..##',
-      '#.....................##',
-      '#.....................##',
-      '######+#################',
-      '#.....................##',
-      '#.....................##',
-      '#.....................##',
-      '######.E.###############',
-      '######...###############',
+      '########################',
+      '#################....###',
+      '#################....###',
+      '#################....###',
+      '#X.............#####+###',
+      '#................L...###',
+      '#..###.#.#..##.###LLL###',
+      '#..###......##.......###',
+      '#..###.#.#..##.###...###',
+      '#..L.................###',
+      '#..L.................###',
+      '###########+########/###',
+      '#######...L......#...###',
+      '#######...L......#...###',
+      '###...#...L......#...###',
+      '###E..##+###############',
+      '##.......###############',
       '########################',
       '########################'
     ],
     ROOMS: [
       { name: 'LA RÉSERVE',      x: 5,  y: 1,  w: 5,  h: 3, tint: 'cool' },
-      { name: 'BUREAU',          x: 11, y: 1,  w: 4,  h: 3, tint: 'olive' },
+      { name: 'BUREAU',          x: 15, y: 2,  w: 4,  h: 3, tint: 'olive' },
       { name: 'GALERIE HAUTE',   x: 1,  y: 5,  w: 22, h: 2, tint: 'neutral' },
       { name: 'AILE OUEST',      x: 1,  y: 7,  w: 2,  h: 3, tint: 'neutral' },
       { name: 'COULOIR CENTRAL', x: 9,  y: 7,  w: 5,  h: 3, tint: 'olive' },
@@ -497,11 +497,11 @@
       /* the beat stops two short of each wall: a guard who walks into the
          corner makes the corner a trap, and the scan found four dead states
          at each end when he did */
-      { id: 'g1', badge: '4412', from: { x: 3, y: 14 }, to: { x: 11, y: 14 }, at: 0, dir: 1, depth: 1 },
+      { id: 'g1', badge: '4412', from: { x: 13, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1 },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
-      { id: 'g2', badge: '2071', from: { x: 20, y: 5 }, to: { x: 20, y: 11 }, at: 0, dir: 1, depth: 2 },
+      { id: 'g2', badge: '2071', from: { x: 12, y: 10 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
-      { id: 'g3', badge: '5195', from: { x: 5, y: 6 }, to: { x: 17, y: 6 }, at: 6, dir: -1, depth: 1 }
+      { id: 'g3', badge: '5195', from: { x: 5, y: 6 }, to: { x: 16, y: 6 }, at: 6, dir: -1, depth: 1 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
@@ -532,15 +532,15 @@
       dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
-      { x: 5,  y: 4,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
-      { x: 11, y: 4,  locked: false, mark: 'chevrons', to: 'BUREAU' },
+      { x: 20,  y: 5,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
+      { x: 11, y: 12,  locked: false, mark: 'chevrons', to: 'BUREAU' },
       { x: 6,  y: 12, locked: true,  mark: 'dbar',     to: 'GALERIE BASSE' },
     ],
     MODULES: [
-      { id: 'porte',       x: 6,  y: 13, name: 'LA PORTE',       icon: 'lock' },
-      { id: 'deguisement', x: 18, y: 14, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
-      { id: 'bureau',      x: 12, y: 2,  name: 'LE BUREAU',      icon: 'desk' },
-      { id: 'coffre',      x: 7,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
+      { id: 'porte',       x: 11,  y: 12, name: 'LA PORTE',       icon: 'lock' },
+      { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
+      { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
+      { id: 'coffre',      x: 18,  y: 3,  name: 'LE COFFRE',      icon: 'safe' }
     ],
 
     /* the same cipher as contract three, a different zero, and one fewer try */
