@@ -450,6 +450,14 @@
     var cutting = !!S.blackoutAt && (Date.now() - S.blackoutAt) < 1800;
     $('#tv-cut').classList.toggle('is-on', cutting);
 
+    /* standing at a module that is not ready for him: STAFF ONLY, and why */
+    var gate = S.phase === 'play' ? S.gate : null;
+    $('#room-gate').classList.toggle('is-on', !!gate);
+    if (gate) {
+      $('#room-gate b').textContent = gate.title;
+      $('#room-gate span').textContent = gate.line;
+    }
+
     if (S.phase === 'plan') { show('plan'); renderPlan(); }
     else if (S.phase === 'play') { show('room'); renderRoom(); }
     else if (S.phase === 'module') { show('module'); renderModule(); }

@@ -391,7 +391,9 @@
             else U.emit('render');
           }
         }),
-        el('button', { class: 'btn disguise__confirm', text: 'GO IN AS YOU ARE',
+        /* where the disguise is required, walking away is only "later" */
+        el('button', { class: 'btn disguise__confirm',
+          text: C.MODULES.some(function (m) { return m.id === 'deguisement' && m.optional; }) ? 'GO IN AS YOU ARE' : 'NOT YET',
           onclick: function () { E.declineModule(); U.emit('render'); } })
       ])
     ]);

@@ -196,6 +196,7 @@
       jailLine: null,
       unlocked: {},            /* which dossier tabs Benjamin has earned */
       declined: {},            /* optional modules he has chosen to walk past */
+      gate: null,              /* the refuse card of a module he is standing at too early */
       disguised: false,        /* out of uniform every cone reaches further */
       loot: { manuscrit: false, tableau: false },
       outfit: { head: null, torso: null, legs: null },
@@ -315,6 +316,13 @@
   function moduleAt(x, y) {
     for (var i = 0; i < C.MODULES.length; i++) if (C.MODULES[i].x === x && C.MODULES[i].y === y) return C.MODULES[i];
     return null;
+  }
+  /* A MODULE CAN ASK FOR ANOTHER ONE FIRST. A module with `needs` will not
+     open until that one is solved, and while it is waiting its square says
+     why — the `refuse` card on the television. */
+  function gateAt(x, y) {
+    var m = moduleAt(x, y);
+    return m && m.needs && !S.solved[m.needs] ? m : null;
   }
   /* A cut camera is dead everywhere at once — it stops watching AND it shows
      as dark on Player 2's plan, because both read through this one function. */
@@ -851,8 +859,8 @@
     if (dx || dy) {
       var n1 = { x: S.assane.x + dx, y: S.assane.y + dy };
       if (isWall(n1.x, n1.y)) {
-        var d = doorAt(n1.x, n1.y);
-        toast(d ? 'LOCKED' : 'WALL', 'bad');
+        var d = doorAt(n1.x, n1.y), held = d && gateAt(S.assane.x, S.assane.y);
+        toast(held ? held.refuse.title : d ? 'LOCKED' : 'WALL', 'bad');
         U.sfx.block(); U.buzz('p1');
         return { ok: false, blocked: true };
       }
@@ -944,6 +952,10 @@
       var mm = C.MODULES.filter(function (x) { return x.id === id; })[0];
       if (mm && (mm.x !== S.assane.x || mm.y !== S.assane.y)) delete S.declined[id];
     }
+
+    var gate = gateAt(S.assane.x, S.assane.y);
+    S.gate = gate ? gate.refuse : null;
+    if (gate) { U.buzz('p1'); return { ok: true, gated: gate.id }; }
 
     var m = moduleAt(S.assane.x, S.assane.y);
     if (m && !S.solved[m.id] && !S.declined[m.id]) { openModule(m.id); return { ok: true, module: m.id }; }
@@ -1400,9 +1412,9 @@
                                          : hatchTile() ? 'Assane has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
                                          : C.PORTE ? 'Assane has it. Back round the ring and down the stairs.'
                                                      : 'La Sortie. Assane has the manuscript. Get him out through the vestibule.';
-    else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = 'The cloakroom first — or go in as you are, and be seen from further away.';
-    else if (C.PORTE && !S.solved.porte) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
-    else if (C.PORTE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';
+    else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = O.cloak || 'The cloakroom first — or go in as you are, and be seen from further away.';
+    else if ((C.PORTE && !S.solved.porte) || (C.GRILLE && !S.solved.grille)) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
+    else if (C.PORTE || C.GRILLE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';
     else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
     else S.objective = 'Find the security desk. Open La Réserve.';
   }
