@@ -52,6 +52,65 @@
     E.S.doors.forEach(function (d) { d.locked = false; });
   }
 
+  /* ---- GO TO: a save state for every puzzle on the floor ----
+     The level's puzzles in the order they have to be played: a module that
+     `needs` another comes after it, and the keypad on the way out, if this
+     floor has one, comes last. */
+  function route() {
+    var out = [];
+    function byId(id) { return C.MODULES.filter(function (m) { return m.id === id; })[0]; }
+    function add(m) {
+      if (!m || out.indexOf(m) >= 0) return;
+      if (m.needs) add(byId(m.needs));
+      out.push(m);
+    }
+    C.MODULES.forEach(add);
+    if (C.CLAVIER) out.push({ id: 'clavier', name: 'LE CLAVIER' });
+    return out;
+  }
+
+  /* where a puzzle is stood on: its own square, or for the keypad the way out */
+  function spotOf(m) {
+    if (m.x !== undefined) return { x: m.x, y: m.y };
+    var h = E.hatchTile();
+    if (h) return h;
+    for (var y = 0; y < C.MAP.length; y++) {
+      var x = C.MAP[y].indexOf('E');
+      if (x >= 0) return { x: x, y: y };
+    }
+    return E.S.assane;
+  }
+
+  function standAndOpen(m) {
+    var p = spotOf(m);
+    E.S.assane = { x: p.x, y: p.y };
+    delete E.S.solved[m.id];
+    delete E.S.declined[m.id];
+    E.openModule(m.id);
+  }
+
+  /* As if the run had been played up to here: the same roster from the top,
+     every required puzzle before this one solved through its own answer path
+     (so doors, the uniform, the safe and the blackout all land as they would),
+     then Assane stood on this one with it open. Optional puzzles on the way
+     are left alone. */
+  function jumpTo(id) {
+    var order = route(), at = order.map(function (m) { return m.id; }).indexOf(id);
+    if (at < 0) return;
+    U.silence();
+    E.reset(E.S.seed);
+    L.p1.resetTyped();
+    L.p2.reset();
+    E.ready('p1'); E.ready('p2');
+    order.slice(0, at).forEach(function (m) {
+      if (m.optional || !SOLVE[m.id]) return;
+      standAndOpen(m);
+      SOLVE[m.id]();
+      E.flushTransitions();
+    });
+    standAndOpen(order[at]);
+  }
+
   var ACTIONS = [
     ['PUZZLE', skipPuzzle, function (S) { return S.phase === 'module'; }, 'Solve the open puzzle'],
     ['TALK', skipTalk, function (S) { return S.phase === 'tchatche'; }, 'Talk past the guard'],
@@ -63,7 +122,7 @@
     if (!row) return;
     var box = document.createElement('span');
     box.className = 'chip devtools';
-    box.innerHTML = '<b>DEV SKIP</b>';
+    box.innerHTML = '<b>DEV</b>';
     /* the row is full without it: the tagline chip gives up its place */
     document.body.classList.add('has-devtools');
     var buttons = ACTIONS.map(function (a) {
@@ -79,6 +138,39 @@
       box.appendChild(b);
       return b;
     });
+
+    /* GO TO ▾ drops the level's puzzles under the row; rebuilt on every open
+       because changing the contract changes the list */
+    var go = document.createElement('button');
+    go.type = 'button';
+    go.textContent = 'GO TO \u25BE';
+    go.title = 'Jump to a puzzle, as if the run had reached it';
+    var menu = document.createElement('div');
+    menu.className = 'devtools__menu';
+    menu.hidden = true;
+    go.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (!menu.hidden) { menu.hidden = true; return; }
+      menu.innerHTML = '';
+      route().forEach(function (m, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = (i + 1) + '. ' + (m.name || m.id.toUpperCase()) + (m.optional ? ' (optional)' : '');
+        b.addEventListener('click', function () {
+          menu.hidden = true;
+          if (isGuest()) return;
+          jumpTo(m.id);
+          U.emit('render');
+        });
+        menu.appendChild(b);
+      });
+      menu.hidden = false;
+    });
+    document.addEventListener('click', function (ev) {
+      if (!menu.contains(ev.target)) menu.hidden = true;
+    });
+    box.appendChild(go);
+    box.appendChild(menu);
     row.appendChild(box);
 
     function paint() {

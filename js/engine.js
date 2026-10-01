@@ -19,23 +19,31 @@
     var timer = setTimeout(function () {
       timers = timers.filter(function (t) { return t !== timer; });
       if (S !== owner || S.transitions.indexOf(transition) < 0) return;
-      S.transitions = S.transitions.filter(function (t) { return t !== transition; });
-      S.codeFeedback = null;
-      switch (transition.kind) {
-        case 'close': closeModule(true); break;
-        case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
-        case 'safe-caught': getSpotted('1184'); break;
-        case 'safe-clear': S.coffreEntry = []; break;
-        case 'finish': S.moduleId = null; finish(); break;
-        case 'door-caught': getSpotted('g1'); break;
-        case 'door-clear': S.porteEntry = ''; break;
-        case 'clavier-clear': S.clavierEntry = ''; break;
-        case 'bureau-open': S.bureauStep = 1; S.bureauEntry = ''; break;
-        case 'bureau-clear': S.bureauEntry = ''; break;
-      }
+      runTransition(transition);
       U.emit('render');
     }, Math.max(0, transition.at - Date.now()));
     timers.push(timer);
+  }
+  function runTransition(transition) {
+    S.transitions = S.transitions.filter(function (t) { return t !== transition; });
+    S.codeFeedback = null;
+    switch (transition.kind) {
+      case 'close': closeModule(true); break;
+      case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
+      case 'safe-caught': getSpotted('1184'); break;
+      case 'safe-clear': S.coffreEntry = []; break;
+      case 'finish': S.moduleId = null; finish(); break;
+      case 'door-caught': getSpotted('g1'); break;
+      case 'door-clear': S.porteEntry = ''; break;
+      case 'clavier-clear': S.clavierEntry = ''; break;
+      case 'bureau-open': S.bureauStep = 1; S.bureauEntry = ''; break;
+      case 'bureau-clear': S.bureauEntry = ''; break;
+    }
+  }
+  /* devtools only: play out every pending beat now instead of on its timer.
+     The timers still fire later, find their transition gone, and do nothing. */
+  function flushTransitions() {
+    while (S.transitions.length) runTransition(S.transitions[0]);
   }
   function defer(kind, delay) {
     var transition = { kind: kind, at: Date.now() + delay };
@@ -160,7 +168,8 @@
            the contract. */
         if (!(at >= 0 && at < path.length)) at = 0;
         var man = { id: g.id, badge: g.badge, depth: g.depth, path: path,
-                    at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0, fooled: false };
+                    at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0, fooled: false,
+                    linger: g.investigate || 0, probe: null };
         man.facing = faceOf(man);
         return man;
       }),
@@ -624,6 +633,28 @@
 
   function advanceGuards() {
     S.guards.forEach(function (g) {
+      /* THE MAN WHO CHECKS THE BEAM. A guard authored with `investigate`
+         does not chase the bell: he takes the shortest way to the beam that
+         broke, ignores Assane on the way, stands on it looking round for
+         `investigate` moves, then walks back to his round like anyone else. */
+      if (g.probe) {
+        var at = guardAt(g), p = g.probe;
+        if (at.x !== p.x || at.y !== p.y) {
+          var go = stepToward(at, p);
+          if (!go) { g.probe = null; return; }
+          g.facing = dirToward(at, go);
+          /* never onto Assane's square: the doorstep is the catch, as below */
+          if (go.x === S.assane.x && go.y === S.assane.y) return;
+          g.away = go;
+          return;
+        }
+        if (p.hold > 0) {
+          p.hold--;
+          g.facing = { N: 'E', E: 'S', S: 'W', W: 'N' }[g.facing] || 'N';
+          return;
+        }
+        g.probe = null;   /* done looking: the walk home below starts this turn */
+      }
       /* a guard who has heard something stops walking and turns to look —
          which is exactly why running is expensive */
       if (g.alert > 0) {
@@ -635,7 +666,7 @@
          One square a turn, the same speed Assane moves, so distance is the
          whole of it — a man six squares away never reaches you in five, and a
          man two squares away does. */
-      if (S.alarm > 0) {
+      if (S.alarm > 0 && !g.linger) {
         var here = guardAt(g), step = stepToward(here, S.assane);
         if (!step) return;                          /* no way through to him */
         g.facing = dirToward(here, step);
@@ -675,10 +706,15 @@
      everybody where you are and gives them five moves to get there, which on a
      good turn is nothing and on a bad one is the end of the job. The cost is
      paid once, at the beam; the chase is the rest of the price. */
-  function tripAlarm() {
+  function tripAlarm(beam) {
     var A = C.ALARM || { turns: 5, cost: 12 };
     S.alarm = A.turns;
     S.guards.forEach(function (g) { g.alert = 0; });   /* nobody is standing and listening now */
+    /* the one sent to look goes to where the beam broke, not to where he is */
+    beam = beam || S.assane;
+    S.guards.forEach(function (g) {
+      if (g.linger) g.probe = { x: beam.x, y: beam.y, hold: g.linger };
+    });
     raise(A.cost);
     toast('ALARM · BEAM BROKEN', 'bad');
     /* through alertNote, not S.sense: act() recomputes the sense line further
@@ -880,7 +916,8 @@
 
     S.turn++;
     /* a beam he has just walked through, and the beams are live */
-    if (!(S.levers.laser > 0) && crossed.some(function (k) { return charAt(k.x, k.y) === 'L'; })) tripAlarm();
+    var beams = crossed.filter(function (k) { return charAt(k.x, k.y) === 'L'; });
+    if (!(S.levers.laser > 0) && beams.length) tripAlarm(beams[0]);
     advanceGuards();
     markSeen();
     if (S.grace > 0) S.grace--;
@@ -1478,6 +1515,6 @@
     porteCodeSymbols: porteCodeSymbols, takePrize: takePrize,
     tchatchePick: tchatchePick, rank: rank, setObjective: setObjective,
     grilleTry: grilleTry, pullLever: pullLever, maxStrikes: maxStrikes,
-    tick: tick, hatchTile: hatchTile
+    tick: tick, hatchTile: hatchTile, flushTransitions: flushTransitions
   };
 })(window.DC);
