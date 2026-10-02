@@ -539,7 +539,7 @@
     /* THE FIRST BEAM ASKS BEFORE IT RINGS. The first step into a live beam on
        this contract does not happen: the television says what a beam is, and
        the same step again commits. Once a run. */
-    BEAM_CARD: { title: 'THE BEAMS', line: 'Cross one and the alarm goes — every guard comes for him. Step again to cross.' },
+    BEAM_CARD: { title: 'THE BEAMS', line: 'Cross one and the alarm goes — someone will come to see who did it. Step again to cross.' },
     MAP_OBJECTIVES: [
       { until: 'porte', targets: ['deguisement', 'porte'] },
       { until: 'bureau', targets: ['bureau'], unlockTargets: ['bureau-door'] },
@@ -549,13 +549,14 @@
     OBJ: {
       cloak: 'Staff only past the kitchen door. Get Assane into the right uniform first — the cloakroom is by the stairs.',
       door:  'A padlocked gate at the back of the kitchens. P1 has the keys; P2 knows which is which.',
+      porte: 'A locked door out of the kitchens. P1 has the keypad; P2 has the code.',
       after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
       out:   'Assane has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
       dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
       { x: 20,  y: 5,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
-      { x: 11, y: 12,  locked: false, mark: 'chevrons', to: 'BUREAU' },
+      { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'BUREAU' },
       { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'GALERIE BASSE' },
     ],
     MODULES: [
@@ -564,6 +565,9 @@
       { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
+      /* LA PORTE, back on the kitchen's north door: the keypad is on the
+         kitchen side, so it comes after the beam and the man by the stoves */
+      { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
       { id: 'coffre',      x: 18,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
@@ -580,6 +584,18 @@
               { sym: 'trident',  key: 1, shape: 'keyWard',   at: 0.66, wide: 0.32 }],
       door: { x: 8, y: 16 },
       rattle: 3
+    },
+
+    /* the same cipher as contract one, a different zero, and one fewer try.
+       The code is rolled with the roster; this one is roster 0's. */
+    PORTE: {
+      code: '7180',
+      sign: 'SALLE 10',
+      zero: 'star4',
+      door: { x: 11, y: 12 },
+      ring: ['drop', 'star4', 'spiral', 'chevrons', 'hook',
+             'bisect', 'crescent', 'trident', 'ladder', 'backz'],
+      fails: 2
     },
 
     /* contract one's dial, a new serial. Three rows share it; the ring colour

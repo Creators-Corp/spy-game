@@ -165,7 +165,7 @@
      that nobody hears. Benjamin dropping the beams first is a different
      matter, and also not modelled. */
   function shut(x, y) {
-    return E.isWall(x, y) || (E.charAt(x, y) === 'L' && !(E.S.levers.laser > 0));
+    return E.isWall(x, y) || E.beamLive(x, y);
   }
 
   var STEPS = [[0, -1, 'N'], [0, 1, 'S'], [-1, 0, 'W'], [1, 0, 'E'], [0, 0, '.']];

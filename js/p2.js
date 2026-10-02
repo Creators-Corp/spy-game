@@ -179,7 +179,7 @@
       /* the beams belong to the wiring page. On the people page a laser
          square is drawn as plain floor, so the plan does not read as if the
          building had holes in it. */
-      if (ch === 'L' && !(S.levers.laser > 0) && layer === 'electronics') return false;
+      if (ch === 'L' && E.beamLive(x, y) && layer === 'electronics') return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -218,7 +218,7 @@
     for (var ly = 0; ly < C.MAP.length; ly++) {
       for (var lx = 0; lx < C.MAP[ly].length; lx++) {
         if (C.MAP[ly][lx] !== 'L' || layer !== 'electronics') continue;
-        var px2 = lx * TT, py2 = ly * TT, off = S.levers.laser > 0;
+        var px2 = lx * TT, py2 = ly * TT, off = !E.beamLive(lx, ly);
         if (!off) s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
              '" fill="var(--red)" opacity=".22"/>';
         s += '<line x1="' + px2 + '" y1="' + (py2 + TT / 2) + '" x2="' + (px2 + TT) +

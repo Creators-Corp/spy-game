@@ -33,7 +33,7 @@
       case 'safe-caught': getSpotted('1184'); break;
       case 'safe-clear': S.coffreEntry = []; break;
       case 'finish': S.moduleId = null; finish(); break;
-      case 'door-caught': getSpotted('g1'); break;
+      case 'door-caught': getSpotted('g1', true); break;
       case 'door-clear': S.porteEntry = ''; break;
       case 'clavier-clear': S.clavierEntry = ''; break;
       case 'bureau-open': S.bureauStep = 1; S.bureauEntry = ''; break;
@@ -210,6 +210,7 @@
       gate: null,              /* the refuse card of a module he is standing at too early */
       disguised: false,        /* out of uniform every cone reaches further */
       beamWarned: false,       /* the first-beam card has been shown */
+      beamsOff: {},            /* beams that are dead for the rest of the run, by "x,y" */
       loot: { manuscrit: false, tableau: false },
       outfit: { head: null, torso: null, legs: null },
       /* WHICH CANVAS IS THE REAL ONE, off the seed rather than off Math.random.
@@ -310,6 +311,12 @@
     var d = doorAt(x, y);
     if (d) return d.locked;
     return false;
+  }
+  /* A BEAM THAT WILL RING if he steps into it: a laser square, with the van
+     not holding the beams down, and not one of the beams that has burned out
+     for the night (see tripAlarm). Every "is this beam live" asks here. */
+  function beamLive(x, y) {
+    return charAt(x, y) === 'L' && !(S.levers.laser > 0) && !(S.beamsOff && S.beamsOff[x + ',' + y]);
   }
   /* ONE ADDRESS FOR A SQUARE, shared by both displays.
      Columns A-O across, rows 1-N down, counted from the outer wall so the
@@ -736,6 +743,7 @@
      paid once, at the beam; the chase is the rest of the price. */
   function tripAlarm(beam) {
     var A = C.ALARM || { turns: 5, cost: 12 };
+    var before = { alarm: S.alarm, probes: S.guards.map(function (g) { return g.probe; }) };
     S.alarm = A.turns;
     S.guards.forEach(function (g) { g.alert = 0; });   /* nobody is standing and listening now */
     /* the one sent to look goes to where the beam broke, not to where he is */
@@ -744,15 +752,41 @@
       if (g.linger) g.probe = { x: beam.x, y: beam.y, hold: g.linger };
     });
     /* the man posted to this room comes to have a word */
-    var room = roomAt(beam.x, beam.y);
+    var room = roomAt(beam.x, beam.y), local = false;
     S.guards.forEach(function (g) {
       if (g.stand && g.hears && !g.stoodDown && room && room.name === g.hears) {
-        g.summoned = true;
+        g.summoned = true; local = true;
         /* Benjamin gets the faces and the files while the man is still
            walking over — the time to look him up is before he arrives */
         unlock('visages'); unlock('personnel');
       }
     });
+    /* A ROOM WITH ITS OWN MAN KEEPS ITS OWN BELL. The kitchen is where the
+       beams and the conversations are first taught, one man and one talk; a
+       building-wide chase on top of it sent the beam-checker the length of
+       the floor to meet Assane in the gallery a dozen moves later, as a real
+       spot nobody had been warned about. So nobody else hears it: no chase,
+       no one sent to look. The suspicion is still paid. */
+    if (local) {
+      /* THE KITCHEN BEAMS GO DEAD ONCE TRIPPED. They have done their job —
+         the lesson is the bell and the man it sends — and a second trip on
+         the way back through would just be the same lesson as a fine. */
+      for (var by = room.y; by < room.y + room.h; by++) {
+        for (var bx = room.x; bx < room.x + room.w; bx++) {
+          if (charAt(bx, by) === 'L') S.beamsOff[bx + ',' + by] = true;
+        }
+      }
+      /* ...and a chase already under way from somewhere else carries on */
+      S.alarm = before.alarm;
+      S.guards.forEach(function (g, i) { if (!g.stand) g.probe = before.probes[i]; });
+      raise((C.ALARM || {}).cost || 12);
+      toast('ALARM · BEAM BROKEN', 'bad');
+      S.alertNote = 'A bell in the kitchen, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
+      S.flash = Date.now();
+      U.sfx.spot();
+      U.buzz('both', true);
+      return;
+    }
     raise(A.cost);
     toast('ALARM · BEAM BROKEN', 'bad');
     /* through alertNote, not S.sense: act() recomputes the sense line further
@@ -957,7 +991,7 @@
       /* the first live beam of the night asks first: the card goes up on the
          television and the step does not happen. No turn passes. The same
          step again is a decision, and it crosses. */
-      if (C.BEAM_CARD && !S.beamWarned && charAt(n1.x, n1.y) === 'L' && !(S.levers.laser > 0)) {
+      if (C.BEAM_CARD && !S.beamWarned && beamLive(n1.x, n1.y)) {
         S.beamWarned = true;
         S.gate = C.BEAM_CARD;
         U.sfx.block(); U.buzz('p1');
@@ -979,7 +1013,7 @@
 
     S.turn++;
     /* a beam he has just walked through, and the beams are live */
-    var beams = crossed.filter(function (k) { return charAt(k.x, k.y) === 'L'; });
+    var beams = crossed.filter(function (k) { return beamLive(k.x, k.y); });
     if (!(S.levers.laser > 0) && beams.length) tripAlarm(beams[0]);
     advanceGuards();
     markSeen();
@@ -1042,7 +1076,7 @@
         /* standing in a beam when it comes back is the same event as walking
            into one, and it used to be an instant catch — a harsher rule than
            the thing it is a special case of */
-        if (charAt(S.assane.x, S.assane.y) === 'L') tripAlarm();
+        if (beamLive(S.assane.x, S.assane.y)) tripAlarm();
       }
     } else if (S.levers.laserCd > 0) {
       S.levers.laserCd--;
@@ -1441,7 +1475,7 @@
   }
 
   /* ---------------------------------------------------------------- spotted */
-  function getSpotted(byId) {
+  function getSpotted(byId, real) {
     unlock('visages'); unlock('personnel');   /* a face to find means the roster matters now */
     var badge = byId;
     // Scripted guard encounters may supply a badge; camera IDs never confer trust.
@@ -1459,7 +1493,7 @@
        through him, so being stopped by him is the plan, not a mistake: no
        suspicion, and it is not one of the three. Getting the talk wrong
        still costs what it always costs. */
-    var scripted = !!(g && g.stand && !g.stoodDown);
+    var scripted = !real && !!(g && g.stand && !g.stoodDown);
     if (!scripted) {
       S.spotted++;
       raise(20);
@@ -1542,7 +1576,8 @@
                                          : C.PORTE ? 'Assane has it. Back round the ring and down the stairs.'
                                                      : 'La Sortie. Assane has the manuscript. Get him out through the vestibule.';
     else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = O.cloak || 'The cloakroom first — or go in as you are, and be seen from further away.';
-    else if ((C.PORTE && !S.solved.porte) || (C.GRILLE && !S.solved.grille)) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
+    else if (C.GRILLE && !S.solved.grille) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
+    else if (C.PORTE && !S.solved.porte) S.objective = O.porte || O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
     else if (C.PORTE || C.GRILLE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';
     else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
     else S.objective = 'Find the security desk. Open La Réserve.';
@@ -1596,7 +1631,7 @@
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth, guardCone: guardCone,
     seesAssane: seesAssane, linkDown: linkDown, linkLive: linkLive, nearestCam: nearestCam,
-    leverInert: leverInert, leverLocked: leverLocked, leverCooldown: leverCooldown,
+    leverInert: leverInert, beamLive: beamLive, leverLocked: leverLocked, leverCooldown: leverCooldown,
     startBlackout: startBlackout, darken: darken, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,
