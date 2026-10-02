@@ -88,7 +88,6 @@
        Locked until LE BUREAU is cracked (on a floor that has one), and then
        not a single pull but a lever on a cooldown: once the beams come back
        on, the van needs six of Assane's moves before it can drop them again. */
-    laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 5, uses: 1,
               cooldown: 6, needs: 'bureau',
               blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
@@ -233,12 +232,10 @@
        exist without Benjamin looping it. CAM 2 watches the keypad every other
        beat — that one can be timed, if somebody in the van is counting. */
     CAMERAS: [
-      { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' },
       { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' }
       /* on, off, on, off. Two-on/two-off left the square under it a trap on the
          beat it woke (four dead states); every other beat leaves none, and is
          the easiest rhythm there is to count out loud. */
-      { id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
       /*{ id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }*/
     ],
     LEVIERS: [LEVER.lights, LEVER.laser, LEVER.camera],
@@ -259,9 +256,6 @@
     HATCH: 'niche',
     PRIZE: { dark: true, name: 'DOSSIER' },
     MAP_OBJECTIVES: [
-      { until: 'porte', targets: ['deguisement', 'porte'] },
-      { until: 'prize', targets: ['prize'] },
-      { targets: ['exit'] }
       { until: 'grille', targets: ['deguisement', 'porte'] },
       { until: 'porte', targets: ['grille'] },
       { until: 'bureau', targets: ['porte'] },
@@ -457,9 +451,6 @@
       '#...L........L.......###',
       '#...L........L.......###',
       '###########+########/###',
-      '#######..........#...###',
-      '#######..........#...###',
-      '###...#..........#...###',
       '#######.....L....#...###',
       '#######.....L....#...###',
       '###...#.....L....#...###',
