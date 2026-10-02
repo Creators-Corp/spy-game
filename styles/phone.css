@@ -614,7 +614,7 @@
 .warn.warn--talk b{display:block;}
 
 /* LA PORTE — an actual ring, because "count round" has to look round. */
-.ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:290px;}
+.ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:340px;}
 .ringdial__cell rect{fill:var(--paper);stroke:var(--ink);stroke-width:2;}
 .ringdial__cell{cursor:pointer;}
 .ringdial__cell:hover rect{fill:var(--stone);}
