@@ -439,7 +439,7 @@
       '########################',
       '#################....###',
       '#################....###',
-      '#X...############....###',
+      '#X...############LLLL###',
       '#....###############.###',
       '#...................+###',
       '#...#................###',
@@ -449,9 +449,9 @@
       '#...L........L.......###',
       '#...L........L.......###',
       '###########+########/###',
-      '#######...L......#...###',
-      '#######...L......#...###',
-      '###...#...L......#...###',
+      '#######..........#...###',
+      '#######..........#...###',
+      '###...#..........#...###',
       '###E..##+###############',
       '##.......###############',
       '########################',
@@ -511,7 +511,7 @@
          encounter: it does not count as being spotted. Talk him round and he
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
-      { id: 'g1', badge: '4412', from: { x: 14, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1,
+      { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
         stand: true, facing: 'W', hears: 'LES CUISINES' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
@@ -718,7 +718,7 @@
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
-      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, digits reversed.' },
+      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone:' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],
 
