@@ -84,7 +84,12 @@
   var LEVER = {
     lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
               blurb: 'For three moves, every guard sees only the squares beside him.' },
+    /* THE BEAMS ARE EARNED, AND THEN THEY ARE A RHYTHM.
+       Locked until LE BUREAU is cracked (on a floor that has one), and then
+       not a single pull but a lever on a cooldown: once the beams come back
+       on, the van needs six of Assane's moves before it can drop them again. */
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
+              cooldown: 6, needs: 'bureau',
               blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
@@ -497,7 +502,17 @@
       /* the beat stops two short of each wall: a guard who walks into the
          corner makes the corner a trap, and the scan found four dead states
          at each end when he did */
-      { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1 },
+      /* THE KITCHEN MAN, AND THE LESSON IN THE BEAMS. He does not walk a
+         round: he stands at the east end of the kitchen looking west, down
+         the room at the beam column every route through it has to cross.
+         Break a beam in LES CUISINES (`hears`) and he walks to Assane and
+         stops him, wherever he has got to — the first alarm and the first
+         conversation, taught together and on purpose. It is a scripted
+         encounter: it does not count as being spotted. Talk him round and he
+         walks back to this square and stands down for the night. Was a
+         two-square beat at (15,14)-(14,14). */
+      { id: 'g1', badge: '4412', from: { x: 14, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1,
+        stand: true, facing: 'W', hears: 'LES CUISINES' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
@@ -521,6 +536,10 @@
        time. This contract is the one that earns it: the safe is three rooms
        and two floors from the only way out. */
     PRIZE: { name: 'MANUSCRIPT', hatchHidden: true },
+    /* THE FIRST BEAM ASKS BEFORE IT RINGS. The first step into a live beam on
+       this contract does not happen: the television says what a beam is, and
+       the same step again commits. Once a run. */
+    BEAM_CARD: { title: 'THE BEAMS', line: 'Cross one and the alarm goes — every guard comes for him. Step again to cross.' },
     MAP_OBJECTIVES: [
       { until: 'porte', targets: ['deguisement', 'porte'] },
       { until: 'bureau', targets: ['bureau'], unlockTargets: ['bureau-door'] },
@@ -723,7 +742,7 @@
   var JOB_FIELDS = ['id', 'HATCH', 'venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'LINK', 'CLAVIER', 'PORTE',
-    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'OBJ', 'MAP_OBJECTIVES'];
+    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'BEAM_CARD', 'OBJ', 'MAP_OBJECTIVES'];
 
   function loadJob(i) {
     var job = JOBS[i] || JOBS[0];

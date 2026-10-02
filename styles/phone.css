@@ -623,6 +623,9 @@
 .warn--alarm{background:var(--red);color:var(--on-color);border-color:var(--ink);
   animation:alarmpulse .9s ease-in-out infinite;}
 @keyframes alarmpulse{0%,100%{opacity:1}50%{opacity:.72}}
+/* a lever has just come online. Gold, tap to dismiss. */
+.warn--unlock{background:var(--gold);color:var(--on-gold);border-color:var(--ink);cursor:pointer;margin:0 0 12px;}
+.warn--unlock u{display:block;margin-top:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;}
 
 /* LA PORTE — an actual ring, because "count round" has to look round. */
 .ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:290px;}
@@ -754,6 +757,7 @@
 .lever__uses{display:flex;gap:3px;}
 .lever__uses i{width:8px;height:8px;border-radius:99px;border:1.5px solid currentColor;display:block;}
 .lever__uses i.is-on{background:currentColor;}
+.lever__cd{font-family:var(--mono);font-size:9px;letter-spacing:.08em;line-height:1;text-transform:uppercase;}
 .lever__cost{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--red);}
 .lever:hover .lever__cost,.lever.is-live .lever__cost{color:var(--on-gold);}
 .lever__last{margin:2px 0 4px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
@@ -1030,6 +1034,50 @@ body.is-guest .phone-heading{width:min(100%,430px);align-self:center;}
 
 .pscreen--dossier .lever.is-live .lever__txt em{color:#FFEFCC;}
 .pscreen--dossier .lever.is-live .lever__cost{color:var(--red);}
+
+/* A LEVER JUST UNLOCKED. It powers on once — a flicker, a flare, a streak of
+   light across the plate — then holds a soft orange glow until it is pulled.
+   1.8s, matched by UNLOCK_MS in p2.js; --unlock-t resumes it across redraws. */
+.lever.is-fresh{animation:leverglow 2.4s ease-in-out infinite;}
+.lever.is-unlocking{
+  position:relative;overflow:hidden;
+  animation:leverpower 1.8s cubic-bezier(.2,.8,.2,1) var(--unlock-t,0ms) both,
+            leverglow 2.4s ease-in-out calc(1.8s + var(--unlock-t,0ms)) infinite;
+}
+.lever.is-unlocking::after{
+  content:'';position:absolute;inset:-20% auto -20% -40%;width:35%;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,226,170,.85),transparent);
+  transform:translateX(-100%) skewX(-18deg);
+  animation:leversweep 1.8s ease-out var(--unlock-t,0ms) both;
+}
+.lever.is-unlocking .lever__ic{animation:levericon 1.8s linear var(--unlock-t,0ms) both;}
+.lever.is-fresh .lever__txt b{text-shadow:0 0 8px rgba(255,136,61,.7);}
+@keyframes leverpower{
+  0%  {transform:scale(.94);filter:brightness(.4) drop-shadow(0 0 0 rgba(255,136,61,0));}
+  25% {transform:scale(1.04);filter:brightness(1.6) drop-shadow(0 0 16px rgba(255,136,61,.95));}
+  45% {transform:scale(.99);filter:brightness(1.1) drop-shadow(0 0 10px rgba(255,136,61,.8));}
+  100%{transform:scale(1);filter:brightness(1) drop-shadow(0 0 7px rgba(255,136,61,.55));}
+}
+@keyframes leverglow{
+  0%,100%{filter:drop-shadow(0 0 4px rgba(255,136,61,.4));}
+  50%    {filter:drop-shadow(0 0 10px rgba(255,136,61,.8));}
+}
+@keyframes leversweep{
+  0%,15%{transform:translateX(-100%) skewX(-18deg);opacity:0;}
+  20%   {opacity:1;}
+  70%   {transform:translateX(480%) skewX(-18deg);opacity:1;}
+  100%  {transform:translateX(480%) skewX(-18deg);opacity:0;}
+}
+/* the beam icon strikes like a neon tube */
+@keyframes levericon{
+  0%,8%,16%{opacity:.15;} 4%,12%{opacity:.8;} 22%{opacity:1;transform:scale(1.25);}
+  40%,100%{opacity:1;transform:scale(1);}
+}
+@media (prefers-reduced-motion:reduce){
+  .lever.is-fresh,.lever.is-unlocking{animation:none;filter:drop-shadow(0 0 7px rgba(255,136,61,.6));}
+  .lever.is-unlocking::after{display:none;}
+  .lever.is-unlocking .lever__ic{animation:none;}
+}
 
 /* The disguise wardrobe follows the shared panel and action treatment. */
 .pscreen--disguise .disguise__racks{display:flex;flex-direction:column;gap:12px;margin-top:12px;}

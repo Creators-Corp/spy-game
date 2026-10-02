@@ -11,7 +11,11 @@
 
   var tab = 'plan';
   var manualSeen = false;   /* has he opened MANUAL since the hatch locked? */
+  var facesSeen = false;    /* has he opened FACES during the posted guard's walk-over and talk? */
   var openSerial = -1, openBadge = null, pickedFace = null;
+  var unlockSeen = null;   /* the unlock notice he has already waved off */
+  var unlockShown = null, unlockShownAt = 0;   /* when this phone first drew a lever just unlocked */
+  var UNLOCK_MS = 1800;    /* the power-on animation, matched in phone.css */
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
   /* THE LAYERS. The plan shows the people or the wiring, never both. Two
      things Benjamin has to hold in his head at once become two pages he has
@@ -108,13 +112,21 @@
        pulses until he opens it. */
     var S = E.S, hatch = S.phase === 'module' && S.moduleId === 'clavier';
     if (!hatch) manualSeen = false;
+    /* THE FIRST CONVERSATION POINTS AT THE FACES. From the moment the posted
+       guard is called over until he has been talked round, FACES glows until
+       Benjamin opens it. Once, for the run. */
+    var talk = S.guards.some(function (g) {
+      return g.stand && !g.stoodDown && (g.summoned || (S.tchatche && S.tchatche.guardId === g.id));
+    });
     availableTabs().forEach(function (t) {
-      var flash = hatch && !manualSeen && t[0] === 'manuel';
+      var flash = (hatch && !manualSeen && t[0] === 'manuel') ||
+                  (talk && !facesSeen && t[0] === 'visages');
       bar.appendChild(buttonArt(el('button', {
         class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
         onclick: function () {
           tab = t[0];
           if (t[0] === 'manuel' && hatch) manualSeen = true;
+          if (t[0] === 'visages' && talk) facesSeen = true;
           U.sfx.tap(); U.emit('render');
         }
       }, [el('span', { text: t[1] })]), 'tab'));
@@ -290,7 +302,7 @@
            '" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/>';
       /* a guard who has stopped to look at something wears a dashed ring, so
          Benjamin can see his phone call landed */
-      if (g.alert > 0 && !g.fooled) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
+      if (g.alert > 0 && !g.fooled && !g.stoodDown) s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 3"/>';
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="7.5" fill="var(--red)" stroke="var(--map-void)" stroke-width="1.5"/>';
       s += '<text x="' + cx + '" y="' + (cy + 2.6) + '" font-size="7" font-weight="500" text-anchor="middle"' +
            ' font-family="var(--font)" fill="var(--on-color)">' + g.badge + '</text>';
@@ -612,8 +624,17 @@
     list.forEach(function (L) {
       var left = S.levers.uses[L.id] || 0;
       var active = L.id === 'lights' ? S.levers.lights : L.id === 'laser' ? S.levers.laser : 0;
-      /* the power cut leaves two of these with nothing to switch */
-      var inert = E.leverInert(L.id);
+      /* the power cut leaves two of these with nothing to switch, and a
+         lever still waiting on its module is no more use than that */
+      var inert = E.leverInert(L.id) || E.leverLocked(L.id);
+      /* A LEVER ON A COOLDOWN. Its one dot is lit when it can be pulled, and
+         the line under the dot says where in the cycle it is. */
+      var cd = L.cooldown ? E.leverCooldown(L.id) : 0;
+      var cdLine = !L.cooldown || E.leverLocked(L.id) ? null
+                 : active ? 'LIVE'
+                 : cd > 0 ? cd + (cd === 1 ? ' STEP' : ' STEPS')
+                 : 'READY';
+      if (L.cooldown) left = active || cd > 0 || E.leverLocked(L.id) ? 0 : 1;
 
       /* THE CAMERA LEVER SAYS TWO THINGS, AND NEITHER IS A QUESTION.
          The title names the box a tap would take — the one nearest Assane, so
@@ -636,10 +657,25 @@
           ' MOVE' + (S.levers.cams[dark[dark.length - 1].id] > 1 || dark.length > 1 ? 'S' : '') + ' LEFT'
         : '';
 
+      /* JUST UNLOCKED. The first time this phone draws the lever after its
+         module gives, it powers on; after that it keeps a glow until it is
+         pulled. The clock is local and started on first sight, so a redraw
+         mid-animation resumes it instead of restarting or cutting it off —
+         and it plays when Benjamin actually turns to the plan, not while he
+         is still in the staff files. */
+      var u = S.levers.unlocked, fresh = !!(u && u.id === L.id && !active), powering = 0;
+      if (fresh) {
+        if (unlockShown !== u.at) { unlockShown = u.at; unlockShownAt = Date.now(); }
+        powering = Date.now() - unlockShownAt;
+        if (powering >= UNLOCK_MS) powering = 0;
+      }
+
       var ic = G.icon(L.icon);
       var b = el('button', {
-        class: 'lever' + (!inert && (active || dark.length) ? ' is-live' : ''),
-        disabled: inert || ((!live || left <= 0) && !active) ? '' : null,
+        class: 'lever' + (!inert && (active || dark.length) ? ' is-live' : '') +
+               (fresh ? ' is-fresh' : '') + (powering ? ' is-unlocking' : ''),
+        style: powering ? '--unlock-t:-' + powering + 'ms' : null,
+        disabled: inert || ((!live || left <= 0 || cd > 0) && !active) ? '' : null,
         onclick: function () {
           if (active || inert) return;
           if (E.pullLever(L.id)) U.emit('render');
@@ -650,10 +686,13 @@
           el('b', { text: L.name + (target ? ' · ' + target.label : '') }),
           el('em', { text: inert ? inert
                         : darkLine ? darkLine
-                        : active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT' : L.blurb })
+                        : active ? active + ' MOVE' + (active > 1 ? 'S' : '') + ' LEFT'
+                        : cd > 0 ? 'Recharging. Ready again in ' + cd + (cd === 1 ? ' move.' : ' moves.')
+                        : L.blurb })
         ]),
         el('span', { class: 'lever__side' }, [
           el('span', { class: 'lever__uses' }, usePips(left, L.uses)),
+          cdLine ? el('span', { class: 'lever__cd', text: cdLine }) : null,
           el('span', { class: 'lever__cost', text: '+' + L.cost })
         ])
       ]);
@@ -1017,17 +1056,30 @@
     var view = screen([
       head({ plan: 'DOSSIER', porte: 'LA PORTE', manuel: 'MANUEL', personnel: 'PERSONNEL', visages: 'VISAGES' }[tab]),
       tabBar(),
-      body(asking ? [asking, inner] : [inner])
+      body([unlockNotice(), asking, inner].filter(Boolean))
     ]);
     view.classList.add('pscreen--dossier');
     host.appendChild(view);
+  }
+
+  /* A LEVER HAS JUST COME ONLINE. Said on every tab, because Benjamin is
+     most likely in the staff files when LE BUREAU gives, nowhere near the
+     panel. It goes when he pulls the lever or waves it off. */
+  function unlockNotice() {
+    var u = E.S.levers && E.S.levers.unlocked;
+    if (!u || unlockSeen === u.at) return null;
+    return el('p', { class: 'warn warn--unlock', onclick: function () {
+      unlockSeen = u.at; U.sfx.tap(); U.emit('render');
+    }, html: '<b>NEW FROM THE VAN · ' + u.name + '</b>' +
+      'LE BUREAU is cracked and the beam circuit is yours. Drop the lasers for five moves; ' +
+      'once they are back on it needs six moves to recharge. <u>Got it</u>' });
   }
 
   /* wrapped for the same reason as P1's: the dossier is the longest thing
      anybody reads here, so losing its place is the most expensive. */
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
-    tab = 'plan'; manualSeen = false; openSerial = -1; openBadge = null; pickedFace = null;
-    tapped = []; queryResult = null; layer = 'patrols';
+    tab = 'plan'; manualSeen = false; facesSeen = false; openSerial = -1; openBadge = null; pickedFace = null;
+    tapped = []; queryResult = null; layer = 'patrols'; unlockSeen = null; unlockShown = null;
   } };
 })(window.DC);
