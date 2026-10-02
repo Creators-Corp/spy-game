@@ -89,6 +89,7 @@
        not a single pull but a lever on a cooldown: once the beams come back
        on, the van needs six of Assane's moves before it can drop them again. */
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS', cost: 10, turns: 5, uses: 1,
+    laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 5, uses: 1,
               cooldown: 6, needs: 'bureau',
               blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
@@ -233,10 +234,12 @@
        beat — that one can be timed, if somebody in the van is counting. */
     CAMERAS: [
       { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' },
+      { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' }
       /* on, off, on, off. Two-on/two-off left the square under it a trap on the
          beat it woke (four dead states); every other beat leaves none, and is
          the easiest rhythm there is to count out loud. */
       { id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }
+      /*{ id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }*/
     ],
     LEVIERS: [LEVER.lights, LEVER.laser, LEVER.camera],
     /* Taking the dossier kills the monitors. The television goes dark and the
@@ -259,6 +262,11 @@
       { until: 'porte', targets: ['deguisement', 'porte'] },
       { until: 'prize', targets: ['prize'] },
       { targets: ['exit'] }
+      { until: 'grille', targets: ['deguisement', 'porte'] },
+      { until: 'porte', targets: ['grille'] },
+      { until: 'bureau', targets: ['porte'] },
+      { until: 'prize', targets: ['bureau'] },
+      { until: 'exit', targets: ['prize'] }
     ],
     DOORS: [
       /* the service gate at the foot of the stairs. Its mark is a plain lock on
@@ -452,6 +460,9 @@
       '#######..........#...###',
       '#######..........#...###',
       '###...#..........#...###',
+      '#######.....L....#...###',
+      '#######.....L....#...###',
+      '###...#.....L....#...###',
       '###E..##+###############',
       '##.......###############',
       '########################',
@@ -565,9 +576,13 @@
       { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
+<<<<<<< HEAD
       /* LA PORTE, back on the kitchen's north door: the keypad is on the
          kitchen side, so it comes after the beam and the man by the stoves */
       { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
+=======
+      { id: 'porte',       x: 11, y: 12, name: 'LA PORTE',       icon: 'lock' },
+>>>>>>> joe-branch
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
       { id: 'coffre',      x: 18,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
@@ -586,6 +601,7 @@
       rattle: 3
     },
 
+<<<<<<< HEAD
     /* the same cipher as contract one, a different zero, and one fewer try.
        The code is rolled with the roster; this one is roster 0's. */
     PORTE: {
@@ -596,6 +612,16 @@
       ring: ['drop', 'star4', 'spiral', 'chevrons', 'hook',
              'bisect', 'crescent', 'trident', 'ladder', 'backz'],
       fails: 2
+=======
+    PORTE: {
+      code: '2549',
+      door: { x: 16, y: 13 },
+      sign: 'CHAMBRE 302',
+      zero: 'hook',
+      ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
+             'trident', 'star4', 'chevrons', 'backz', 'bisect'],
+      fails: 3
+>>>>>>> joe-branch
     },
 
     /* contract one's dial, a new serial. Three rows share it; the ring colour
