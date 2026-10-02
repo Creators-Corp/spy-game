@@ -439,9 +439,9 @@
        after the last one, so every square keeps the name it had. */
     MAP: [
       '########################',
-      '#################....###',
-      '#################....###',
-      '#X...############LLLL###',
+      '##############.#...L.###',
+      '##############.....L.###',
+      '#X...#########.#...L.###',
       '#....###############.###',
       '#...................+###',
       '#...#................###',
@@ -461,13 +461,13 @@
     ],
     ROOMS: [
       { name: 'LA RÉSERVE',      x: 5,  y: 1,  w: 5,  h: 3, tint: 'cool' },
-      { name: 'BUREAU',          x: 15, y: 2,  w: 4,  h: 3, tint: 'olive' },
+      { name: 'BUREAU',          x: 18, y: 13,  w: 3,  h: 3, tint: 'olive' },
       { name: 'GALERIE HAUTE',   x: 1,  y: 5,  w: 22, h: 2, tint: 'neutral' },
       { name: 'AILE OUEST',      x: 1,  y: 7,  w: 2,  h: 3, tint: 'neutral' },
-      { name: 'COULOIR CENTRAL', x: 9,  y: 7,  w: 5,  h: 3, tint: 'olive' },
-      { name: 'AILE EST',        x: 20, y: 7,  w: 2,  h: 3, tint: 'neutral' },
+      { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 3,  h: 5, tint: 'olive' },
+      { name: 'AILE EST',        x: 20, y: 8,  w: 2,  h: 3, tint: 'neutral' },
       { name: 'GALERIE BASSE',   x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LES CUISINES',    x: 1,  y: 13, w: 21, h: 3, tint: 'warm' },
+      { name: 'LES CUISINES',    x: 1,  y: 13, w: 21, h: 6, tint: 'warm' },
       { name: 'ESCALIER',        x: 6,  y: 16, w: 3,  h: 2, tint: 'warm' }
     ],
 
@@ -525,7 +525,7 @@
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
     CAMERAS: [
-      { id: 'c1', x: 18,  y: 0, depth: 2, cycle: ['S'],             label: 'CAM 1' }
+      { id: 'c1', x: 17,  y: 0, depth: 2, cycle: ['S'],             label: 'CAM 1' }
       /*{ id: 'c2', x: 12, y: 0, depth: 2, cycle: ['S', null, null], label: 'CAM 2' }*/
     ],
     /* fewer pulls than contract three. The van is further away tonight. */
@@ -568,7 +568,7 @@
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
       { id: 'porte',       x: 11, y: 12, name: 'LA PORTE',       icon: 'lock' },
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
-      { id: 'coffre',      x: 18,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
+      { id: 'coffre',      x: 17,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
 
     /* LA GRILLE, contract one's handshake on the kitchen gate. Same padlock
@@ -624,10 +624,10 @@
          officer posted to the keypad's zone, and while two men shared
          GALERIE HAUTE that question had two answers. */
       { badge: '2071', name: 'DELACROIX, Yann',   post: 'AILE EST',      plate: '5530', kids: [] },
-      { badge: '3308', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
+      { badge: '1184', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
       { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
-      { badge: '1184', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
+      { badge: '3308', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
     /* contract one's rack: two uniforms buildable, VIDAL (BUREAU) and KOFFI
        (LA RÉSERVE). The post decides it. */
@@ -639,22 +639,22 @@
     UNIFORMS: {
       '4412': { head: 'beret',     torso: 'veste',   legs: 'raye' },
       '2071': { head: 'calot',     torso: 'veste',   legs: 'noir' },
-      '3308': { head: 'nu',        torso: 'gilet',   legs: 'jean' },
+      '1184': { head: 'nu',        torso: 'gilet',   legs: 'jean' },
       '5195': { head: 'casquette', torso: 'blouse',  legs: 'raye' },
       '6620': { head: 'beret',     torso: 'tablier', legs: 'noir' },
-      '1184': { head: 'casquette', torso: 'tablier', legs: 'noir' }
+      '3308': { head: 'casquette', torso: 'tablier', legs: 'noir' }
     },
-    DEGUISEMENT: { answerBadge: '1184', targetPost: 'LA RÉSERVE', conePenalty: 1 },
+    DEGUISEMENT: { answerBadge: '3308', targetPost: 'LA RÉSERVE', conePenalty: 1 },
     FACES: {
       '4412': { art: 'face-4412', head: 'square', hair: 'short', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
       '2071': { art: 'face-2071', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
-      '3308': { art: 'face-3308', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone)' },
+      '1184': { art: 'face-3308', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone)' },
       /* the delivered portrait has no scar, so the trait row does not claim one.
          5195 is still clearly separable from 2071 — both are bald, but 2071
          wears glasses and is clean shaven while this one has the moustache. */
       '5195': { art: 'face-5195', head: 'square', hair: 'bald',  moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--stone-dk)' },
       '6620': { art: 'face-6620', head: 'round',  hair: 'short', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
-      '1184': { art: 'face-1184', head: 'long',   hair: 'cap',   moustache: false, beard: true,  glasses: false, scar: false, skin: '#8A5A3B' }
+      '3308': { art: 'face-1184', head: 'long',   hair: 'cap',   moustache: false, beard: true,  glasses: false, scar: false, skin: '#8A5A3B' }
     },
     DIRT: {
       '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },
@@ -778,10 +778,10 @@
      rather than walking a corridor.
 
      The desk is the one slot with a requirement. LE BUREAU asks for the eldest
-     child's birth year, and the trick is that the file lists the children in
-     the wrong order — so whoever ends up on that badge has to have at least
-     two children born in different years, or the question stops being a
-     question. The deal is redone until they do. */
+     child's birth year. On this contract the desk belongs to the only person
+     with one child, which makes the photo's child count the first clue and
+     leaves a single birth year to read from the file. Seeded deals must keep
+     that one-child person on the desk's badge. */
   var PRISTINE = {};
   function personOf(p) { return { name: p.name, plate: p.plate, kids: p.kids, faceOf: p.badge }; }
   function eldestYear(kids) {
@@ -789,7 +789,12 @@
   }
   function deskWorks(person, mode) {
     if (mode === 'plate') return !!person.plate;
-    if (!person.kids || person.kids.length < 2) return false;
+    if (!person.kids || !person.kids.length) return false;
+    /* In eldest mode, this contract's clue is that the desk owner's photo has
+       one child. The roster deal must keep that person in the Bureau slot;
+       their rolled single birth year is the keypad answer. */
+    if (mode === 'eldest') return person.kids.length === 1;
+    if (person.kids.length < 2) return false;
     return person.kids.some(function (k) { return k.y !== person.kids[0].y; });
   }
   function copyOf(o) { var c = {}; for (var k in o) c[k] = o[k]; return c; }
@@ -943,6 +948,17 @@
         if (!job.BUREAU) break;
         var slot = base.map(function (b) { return b.badge; }).indexOf(job.BUREAU.badge);
         if (slot < 0 || desk.indexOf(order[slot]) >= 0) break;
+      }
+      /* A single eligible person has a small chance not to land in the desk
+         slot during the shuffled passes. Guarantee the clue still works for
+         every seed by swapping that person into the slot after the retries. */
+      if (job.BUREAU && desk.length) {
+        var deskSlot = base.map(function (b) { return b.badge; }).indexOf(job.BUREAU.badge);
+        if (deskSlot >= 0 && desk.indexOf(order[deskSlot]) < 0) {
+          var eligibleAt = order.indexOf(desk[0]), displaced = order[deskSlot];
+          order[deskSlot] = order[eligibleAt];
+          order[eligibleAt] = displaced;
+        }
       }
       /* the car and the children are the person's, so they are rolled per
          person and travel with them into whichever slot they are dealt */
