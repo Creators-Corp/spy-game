@@ -87,14 +87,15 @@
     /* THE BEAMS ARE EARNED, AND THEN THEY ARE A RHYTHM.
        Locked until LE BUREAU is cracked (on a floor that has one), and then
        not a single pull but a lever on a cooldown: once the beams come back
-       on, the van needs six of Assane's moves before it can drop them again. */
+       on, the van needs four of Assane's moves before it can drop them again. */
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 5, uses: 1,
-              cooldown: 6, needs: 'bureau',
+              cooldown: 4, needs: 'bureau',
               blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
     camera: { id: 'camera', icon: 'eye',  name: 'LOOP A CAMERA',  cost: 4,  turns: 4, uses: 3,
+              needs: 'bureau',
               blurb: 'The box nearest Assane sees nothing for four moves, then it is back.' }
   };
 

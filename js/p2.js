@@ -663,7 +663,12 @@
          mid-animation resumes it instead of restarting or cutting it off —
          and it plays when Benjamin actually turns to the plan, not while he
          is still in the staff files. */
-      var u = S.levers.unlocked, fresh = !!(u && u.id === L.id && !active), powering = 0;
+      var u = S.levers.unlocked;
+      var fresh = !!(u && !active && (u.id === L.id ||
+        (L.needs && (C.LEVIERS || []).some(function (other) {
+          return other.id === u.id && other.needs === L.needs;
+        }))));
+      var powering = 0;
       if (fresh) {
         if (unlockShown !== u.at) { unlockShown = u.at; unlockShownAt = Date.now(); }
         powering = Date.now() - unlockShownAt;
