@@ -256,7 +256,7 @@
       /* was: y:5, the door row */
       /* investigate: a broken beam sends him straight to it, not after
          Assane, and he stands there looking round for six moves */
-      { id: 'g3', badge: '5195', from: { x: 2, y: 4 }, to: { x: 2, y: 5 }, at: 6, dir: -1, depth: 1, investigate: 6 }
+      { id: 'g3', badge: '5195', from: { x: 2, y: 3 }, to: { x: 2, y: 5 }, at: 6, dir: -1, depth: 1, investigate: 6 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */
