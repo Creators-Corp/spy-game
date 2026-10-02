@@ -567,13 +567,9 @@
       { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
-<<<<<<< HEAD
-      /* LA PORTE, back on the kitchen's north door: the keypad is on the
+        /* LA PORTE, back on the kitchen's north door: the keypad is on the
          kitchen side, so it comes after the beam and the man by the stoves */
       { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
-=======
-      { id: 'porte',       x: 11, y: 12, name: 'LA PORTE',       icon: 'lock' },
->>>>>>> joe-branch
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
       { id: 'coffre',      x: 17,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
@@ -592,27 +588,14 @@
       rattle: 3
     },
 
-<<<<<<< HEAD
-    /* the same cipher as contract one, a different zero, and one fewer try.
-       The code is rolled with the roster; this one is roster 0's. */
-    PORTE: {
-      code: '7180',
-      sign: 'SALLE 10',
-      zero: 'star4',
-      door: { x: 11, y: 12 },
-      ring: ['drop', 'star4', 'spiral', 'chevrons', 'hook',
-             'bisect', 'crescent', 'trident', 'ladder', 'backz'],
-      fails: 2
-=======
     PORTE: {
       code: '2549',
-      door: { x: 16, y: 13 },
+      door: { x: 11, y: 12 },
       sign: 'CHAMBRE 302',
       zero: 'hook',
       ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
              'trident', 'star4', 'chevrons', 'backz', 'bisect'],
       fails: 3
->>>>>>> joe-branch
     },
 
     /* contract one's dial, a new serial. Three rows share it; the ring colour
