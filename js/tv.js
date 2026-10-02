@@ -345,8 +345,9 @@
   function renderTchatche() {
     var S = E.S, t = S.tchatche;
     if (!t) return;
+    var tutorial = t.tag === 'first-beam-g1', exchanges = tutorial ? 1 : 3;
     var r = $('#tch-rounds'); U.clear(r);
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < exchanges; i++) {
       r.appendChild(U.el('i', { class: i < t.round ? 'is-won' : '' }));
     }
     /* The steps stay up for all three exchanges — this is the one module where
@@ -354,10 +355,11 @@
        standing there. The strike line is appended rather than swapped in: how
        it is played does not change just because they got one wrong. */
     var s = $('#tch-line');
-    s.textContent =
-      'Assane has been stopped. No running, no fighting. Blending in is the only way out.\n' +
-      'Assane describes the guard’s face. Benjamin finds their file and gives personal ' +
-      'information, one piece at a time.' +
+    s.textContent = tutorial
+      ? 'This is the first conversation. Choose any response to learn how Tchatche works; the tutorial ends after one answer.'
+      : 'Assane has been stopped. No running, no fighting. Blending in is the only way out.\n' +
+        'Assane describes the guard’s face. Benjamin finds their file and gives personal ' +
+        'information, one piece at a time.' +
       (t.strikes ? '\nThe guard is looking at Assane differently now. One more slip and it is over.' : '');
     $('#tch-spark').style.opacity = t.strikes ? 0.4 : 1;
   }

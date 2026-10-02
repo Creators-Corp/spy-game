@@ -12,6 +12,7 @@
 
   var S = null;
   var timers = [];
+  var beamHoldTimer = null;
   // Persist named transitions, not closures. A refresh in an unlock animation
   // resumes its remaining delay; an old run's timer cannot mutate a new run.
   function schedule(transition) {
@@ -56,12 +57,14 @@
   }
   function restore(next, savedAt) {
     timers.forEach(clearTimeout); timers = [];
+    beamHoldTimer = null;
     S = next;
     var delta = Math.max(0, Date.now() - savedAt);
     ['lastActionAt', 'flash', 'blackoutAt'].forEach(function (key) { if (S[key]) S[key] += delta; });
     if (S.toast) S.toast.at += delta;
     if (S.levers.last) S.levers.last.at += delta;
     (S.transitions || []).forEach(function (t) { t.at += delta; schedule(t); });
+    if (S.beamG1Pending) scheduleBeamHold();
   }
 
   /* ---------------------------------------------------------------- setup */
@@ -142,6 +145,7 @@
 
   function reset(seed) {
     timers.forEach(clearTimeout); timers = [];
+    beamHoldTimer = null;
     if (seed === undefined || seed === null) seed = nextSeed();
     /* the roster is who is on tonight, dealt before the state is built so the
        guards below pick up the badges it settled on */
@@ -210,6 +214,8 @@
       gate: null,              /* the refuse card of a module he is standing at too early */
       disguised: false,        /* out of uniform every cone reaches further */
       beamWarned: false,       /* the first-beam card has been shown */
+      beamG1Pending: false,    /* hold Assane for the first kitchen-guard encounter */
+      beamG1Done: false,
       beamsOff: {},            /* beams that are dead for the rest of the run, by "x,y" */
       loot: { manuscrit: false, tableau: false },
       outfit: { head: null, torso: null, legs: null },
@@ -756,6 +762,10 @@
     S.guards.forEach(function (g) {
       if (g.stand && g.hears && !g.stoodDown && room && room.name === g.hears) {
         g.summoned = true; local = true;
+        if (g.id === 'g1' && !S.beamG1Done) {
+          S.beamG1Pending = true;
+          S.beamG1Done = true;
+        }
         /* Benjamin gets the faces and the files while the man is still
            walking over — the time to look him up is before he arrives */
         unlock('visages'); unlock('personnel');
@@ -974,9 +984,37 @@
      check (running is a decision with a cost, noise; freezing is a decision
      with a cost, a turn) and if they come back they belong on the ordinary
      d-pad rather than on a mode. */
+  /* Run the requested action normally, then spend ordinary HOLD turns for
+     Assane while the first kitchen-beam encounter is pending. This keeps all
+     guard and turn rules in one path, but asks for no repeated player input. */
   function act(dx, dy, opts) {
+    var result = actTurn(dx, dy, opts);
+    if (S.beamG1Pending) scheduleBeamHold();
+    return result;
+  }
+
+  function scheduleBeamHold() {
+    if (beamHoldTimer !== null || !S.beamG1Pending || S.phase !== 'play') return;
+    var owner = S;
+    beamHoldTimer = setTimeout(function () {
+      timers = timers.filter(function (t) { return t !== beamHoldTimer; });
+      beamHoldTimer = null;
+      if (S !== owner || !S.beamG1Pending || S.phase !== 'play') return;
+      actTurn(0, 0);
+      U.emit('render');
+      if (S.beamG1Pending && S.phase === 'play') scheduleBeamHold();
+    }, 1000);
+    timers.push(beamHoldTimer);
+  }
+
+  function actTurn(dx, dy, opts) {
     opts = opts || {};
     if (S.phase !== 'play') return { ok: false };
+    if (S.beamG1Pending && (dx || dy)) {
+      toast('HOLD STILL · G1 IS COMING', null);
+      U.sfx.block(); U.buzz('p1');
+      return { ok: false, blocked: true, encounter: 'first-beam-g1' };
+    }
     touch();
 
     var crossed = [];
@@ -988,10 +1026,9 @@
         U.sfx.block(); U.buzz('p1');
         return { ok: false, blocked: true };
       }
-      /* the first live beam of the night asks first: the card goes up on the
-         television and the step does not happen. No turn passes. The same
-         step again is a decision, and it crosses. */
-      if (C.BEAM_CARD && !S.beamWarned && beamLive(n1.x, n1.y)) {
+      /* Let the first kitchen beam teach the alarm and g1 encounter. The beam
+         warning card becomes available only after that tutorial has begun. */
+      if (C.BEAM_CARD && S.beamG1Done && !S.beamWarned && beamLive(n1.x, n1.y)) {
         S.beamWarned = true;
         S.gate = C.BEAM_CARD;
         U.sfx.block(); U.buzz('p1');
@@ -1028,7 +1065,23 @@
       if (!caught && t[k.x + ',' + k.y]) caught = t[k.x + ',' + k.y][0];
     });
 
-    if (caught && S.grace === 0 && !opts.freeze) { getSpotted(caught); return { ok: true, spotted: true }; }
+    /* The first kitchen beam teaches this conversation on purpose. Keep the
+       player on the tile where the alarm was raised while g1 walks over; when
+       he reaches the doorstep, start a separately tagged Tchatche. */
+    if (S.beamG1Pending) {
+      var g1 = S.guards.filter(function (g) { return g.id === 'g1'; })[0];
+      var g1At = g1 && guardAt(g1);
+      if (g1At && Math.abs(g1At.x - S.assane.x) + Math.abs(g1At.y - S.assane.y) <= 1) {
+        S.beamG1Pending = false;
+        getSpotted('g1', false, 'first-beam-g1');
+        return { ok: true, spotted: true, encounter: 'first-beam-g1' };
+      }
+    }
+
+    /* During the scripted g1 approach, his cone (or another guard's) must not
+       start a generic Tchatche first. Wait for g1 to reach the doorstep above,
+       where the tutorial encounter is explicitly tagged and clears the lock. */
+    if (caught && S.grace === 0 && !opts.freeze && !S.beamG1Pending) { getSpotted(caught); return { ok: true, spotted: true }; }
     /* frozen, with the beam going straight over him. Not caught. Not nothing. */
     if (caught && opts.freeze) raise(3);
 
@@ -1476,7 +1529,7 @@
   }
 
   /* ---------------------------------------------------------------- spotted */
-  function getSpotted(byId, real) {
+  function getSpotted(byId, real, tag) {
     unlock('visages'); unlock('personnel');   /* a face to find means the roster matters now */
     var badge = byId;
     // Scripted guard encounters may supply a badge; camera IDs never confer trust.
@@ -1504,7 +1557,7 @@
        being seen that both players can hold in their heads: three and out. */
     if (S.spotted >= 3) { S.jailLine = 'THIRD TIME. THEY KNOW HIS FACE.'; jail(); return; }
     S.phase = 'tchatche';
-    S.tchatche = { badge: badge, guardId: g ? g.id : null, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
+    S.tchatche = { badge: badge, guardId: g ? g.id : null, tag: tag || null, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
     S.flash = Date.now();
     /* the stab first, then the sting under it: sfx.spot() is synthesised and
@@ -1523,29 +1576,22 @@
   }
 
   function tchatchePick(topic) {
-    var t = S.tchatche, correct = C.DIRT[t.badge][t.round].t;
+    var t = S.tchatche;
+    if (!t) return { win: false };
+    /* The first beam conversation is a tutorial: one selection ends it, and
+       every offered response is accepted so players can learn the exchange. */
+    if (t.tag === 'first-beam-g1') {
+      U.sfx.good();
+      t.last = 'good';
+      t.round = 1;
+      return finishTchatche(t);
+    }
+    var correct = C.DIRT[t.badge][t.round].t;
     if (topic === correct) {
       U.sfx.good();
       t.last = 'good';   /* the only report either player gets on an exchange */
       t.round++;
-      if (t.round >= 3) {
-        S.phase = 'play';
-        // Only the guard who believed the story stands down. Other guards and
-        // electronic traps remain dangerous, including on the very next move.
-        S.guards.forEach(function (g) {
-          if (g.id !== t.guardId) return;
-          g.fooled = true;
-          /* the man on the post has said his piece: he walks back to it
-             and stands down for good — an alert level rising later does
-             not put him back on duty */
-          if (g.stand) { g.stoodDown = true; g.summoned = false; }
-        });
-        S.grace = 0;
-        touch();
-        S.tchatche = null;
-        setObjective();
-        return { win: true, done: true };
-      }
+      if (t.round >= 3) return finishTchatche(t);
       t.options = rollOptions(t.badge, t.round);
       return { win: true };
     }
@@ -1555,6 +1601,24 @@
     raise(10);
     if (t.strikes >= maxStrikes()) { S.jailLine = maxStrikes() === 1 ? 'ON ALERT. ONE SLIP WAS ENOUGH.' : null; jail(); return { win: false, jail: true }; }
     return { win: false };
+  }
+
+  function finishTchatche(t) {
+    S.phase = 'play';
+    // Only the guard who believed the story stands down. Other guards and
+    // electronic traps remain dangerous, including on the very next move.
+    S.guards.forEach(function (g) {
+      if (g.id !== t.guardId) return;
+      g.fooled = true;
+      /* The posted guard remains on the tile where he finished the approach;
+         his walk back to the post advances normally on later player turns. */
+      if (g.stand) { g.stoodDown = true; g.summoned = false; }
+    });
+    S.grace = 0;
+    touch();
+    S.tchatche = null;
+    setObjective();
+    return { win: true, done: true, tutorial: t.tag === 'first-beam-g1' };
   }
 
   /* on full alert a stopped man is searched, not chatted to */

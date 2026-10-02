@@ -1076,8 +1076,8 @@
     return el('p', { class: 'warn warn--unlock', onclick: function () {
       unlockSeen = u.at; U.sfx.tap(); U.emit('render');
     }, html: '<b>NEW FROM THE VAN · ' + u.name + '</b>' +
-      'LE BUREAU is cracked and the beam circuit is yours. Drop the lasers for five moves; ' +
-      'once they are back on it needs six moves to recharge. <u>Got it</u>' });
+      'LE BUREAU is cracked and the beam circuit is yours. Drop the lasers for eight moves; ' +
+      'once they are back on it needs four moves to recharge. <u>Got it</u>' });
   }
 
   /* wrapped for the same reason as P1's: the dossier is the longest thing

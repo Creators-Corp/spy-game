@@ -88,9 +88,9 @@
        Locked until LE BUREAU is cracked (on a floor that has one), and then
        not a single pull but a lever on a cooldown: once the beams come back
        on, the van needs four of Assane's moves before it can drop them again. */
-    laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 5, uses: 1,
+    laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 8, uses: 1,
               cooldown: 4, needs: 'bureau',
-              blurb: 'The beams drop for five moves. Assane can cross one without them, but it sets off the alarm.' },
+              blurb: 'The beams drop for eight moves. Assane can cross one without them, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
@@ -178,9 +178,9 @@
       '#...L........L.......###',
       '#...L........L.......###',
       '###########+########/###',
-      '#######.....L....#...###',
-      '#######.....L....#...###',
-      '###...#.....L....#...###',
+      '#######...L......#...###',
+      '#######...L......#...###',
+      '###...#...L......#...###',
       '###E..##+###############',
       '##.......###############',
       '########################',
@@ -241,7 +241,7 @@
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
       { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
-        stand: true, facing: 'E', hears: 'LES CUISINES' },
+        stand: true, facing: 'W', hears: 'LES CUISINES' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */

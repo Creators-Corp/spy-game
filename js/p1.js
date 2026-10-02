@@ -821,8 +821,8 @@
   /* -------------------------------------------------------- LA TCHATCHE */
   function viewTchatche() {
     var S = E.S, t = S.tchatche, tr = C.FACES[t.badge];
-
-    var max = E.maxStrikes();
+    var tutorial = t.tag === 'first-beam-g1';
+    var max = tutorial ? 0 : E.maxStrikes();
     var strikes = el('div', { class: 'strikes' });
     for (var i = 0; i < max; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
 
@@ -850,21 +850,25 @@
            the strikes on one line, so the three answers stay above the fold. */
         el('div', { class: 'tchp1__top' }, [
           face,
-          el('div', { class: 'tchp1__desc', html:
-            '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
+          el('div', { class: 'tchp1__desc', html: tutorial
+            ? '<b>Tchatche tutorial</b>Choose any answer. There is no wrong choice in this first conversation.'
+            : '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
         ]),
         el('div', { class: 'tch__meter' }, [
-          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
-          el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
+          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF ' + (tutorial ? 1 : 3) }),
+          tutorial ? el('span', { class: 'lbl', text: 'NO WRONG ANSWERS' })
+                   : el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
         ]),
         t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:
           t.last === 'good' ? 'That landed. The guard is still talking.'
                             : 'Wrong man, or wrong subject. The guard is looking at you harder now.' }) : null,
         lines
       ]),
-      foot([ el('p', { class: 'note', text: max === 1
-        ? 'The building is on alert. One mistake and the guard searches you. Nothing here is timed.'
-        : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
+      foot([ el('p', { class: 'note', text: tutorial
+        ? 'Tutorial: every answer works. The conversation ends after one choice.'
+        : max === 1
+          ? 'The building is on alert. One mistake and the guard searches you. Nothing here is timed.'
+          : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])
     ]);
     view.classList.add('pscreen--tchatche');
     U.$$('.lines .btn', view).forEach(function (button) {
