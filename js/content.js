@@ -461,16 +461,16 @@
       { k: 'KITCHEN GATE', v: 'Padlocked. Staff in uniform only. The key card pairs each tag with its key.' },
       { k: 'LASER LINES',  v: 'The central corridor is beamed between rounds. Crossing one is not impossible, it is announced: every officer drops his round and converges for five minutes.' },
       { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
-      { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
+      { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
       { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, reversed:' },
-      { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
+      { k: 'EVACUATION',   v: 'Service hatch, west wall of the upper gallery. Not on the public plans.' }
     ],
 
     BEATS: [
       'Three floors, and each is worse than the one below.',
-      'The desk releases the vault. Both are under cameras.',
+      'The desk releases the vault that is under a camera.',
       'The way out is not on the plan. Read the procedures.'
     ]
   };
