@@ -196,6 +196,15 @@ window.DC = window.DC || {};
   var SCORE = { infiltration: 'art/music-infiltration.mp3', escape: 'art/music-escape.mp3' };
   var MUSIC_VOL = 0.08;
   var scoreNow = null, scoreEl = null, scoreFade = null;
+  /* the score steps aside while a stinger that owns the moment is playing —
+     see `holdsScore` in SAMPLE — and picks up where it left off after */
+  var scoreHeld = false;
+  function holdScore(on) {
+    scoreHeld = on;
+    if (!scoreEl) return;
+    if (on) scoreEl.pause();
+    else if (!muted) scoreEl.play().catch(function () {});
+  }
   function musicVolume(v) {
     if (v === undefined) return MUSIC_VOL;
     MUSIC_VOL = Math.max(0, Math.min(1, v));
@@ -203,7 +212,7 @@ window.DC = window.DC || {};
     return MUSIC_VOL;
   }
   function score(track) {
-    if (track === scoreNow) { if (scoreEl && !muted && scoreEl.paused) scoreEl.play().catch(function () {}); return; }
+    if (track === scoreNow) { if (scoreEl && !muted && !scoreHeld && scoreEl.paused) scoreEl.play().catch(function () {}); return; }
     scoreNow = track;
     /* fade the old one out rather than cutting it — a hard stop under a hard
        start is two edits where the moment only wants one */
@@ -226,7 +235,7 @@ window.DC = window.DC || {};
       a.volume = MUSIC_VOL;
       /* a browser that has not seen a gesture yet simply refuses; the next
          tap re-enters here through render() and it starts then */
-      a.play().then(function () { scoreEl = a; }).catch(function () { scoreNow = null; });
+      a.play().then(function () { scoreEl = a; if (scoreHeld) a.pause(); }).catch(function () { scoreNow = null; });
       a.addEventListener('error', function () { scoreNow = null; });
     } catch (e) { scoreNow = null; }
   }
@@ -264,7 +273,7 @@ window.DC = window.DC || {};
     /* halved from 0.60. It is fourteen seconds of orchestra arriving on top of
        a module both players have to read and talk through, so it wants to be
        the thing under the conversation rather than the thing that stops it. */
-    caught:  { src: 'art/sfx-caught.wav',  vol: 0.30, voices: 1 },
+    caught:  { src: 'art/sfx-caught.wav',  vol: 0.30, voices: 1, holdsScore: true },
     /* he is out. The rank card is the only screen in the game with nothing
        underneath it — the score has already gone quiet by then — so this one
        gets the room to itself. */
@@ -296,6 +305,7 @@ window.DC = window.DC || {};
         a.preload = 'auto';
         a.volume = def.vol;
         a.addEventListener('error', function () { samples[name] = null; });
+        if (def.holdsScore) a.addEventListener('ended', function () { holdScore(false); });
         pool.push(a);
       }
       samples[name] = pool;
@@ -312,7 +322,13 @@ window.DC = window.DC || {};
     if (!pool || !pool.length) return;
     var a = pool[voiceAt[name] % pool.length];
     voiceAt[name]++;
-    try { a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
+    var holds = SAMPLE[name].holdsScore;
+    try {
+      a.currentTime = 0;
+      /* only hold the score once the sting is actually sounding: a missing
+         file or a refused play must not leave the level silent */
+      a.play().then(function () { if (holds) holdScore(true); }).catch(function () {});
+    } catch (e) {}
   }
   /* SILENCE MEANS SILENCE, BUT ONLY WHEN A JOB ENDS AND ANOTHER BEGINS.
      This used to run from score(null), which covers the rank card — and the
@@ -329,6 +345,8 @@ window.DC = window.DC || {};
         try { pool[i].pause(); pool[i].currentTime = 0; } catch (e) {}
       }
     }
+    /* a stopped sting never reaches 'ended', so let the score go here */
+    scoreHeld = false;
   }
 
   var sfx = {
@@ -349,7 +367,8 @@ window.DC = window.DC || {};
     impact: function () { sample('impact'); },
     /* a hand on his shoulder. Runs under LA TCHATCHE rather than stopping for
        it — the strings are the building's verdict, the talking is the answer
-       to it, and the two are meant to overlap. */
+       to it, and the two are meant to overlap. The level score pauses while
+       it plays (holdsScore) so the two tracks never sound at once. */
     caught: function () { sample('caught'); },
     /* the wiretap. Long and short differ in DURATION and in pitch, so the
        two are distinguishable by ear, on screen, and through a phone speaker

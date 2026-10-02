@@ -17,11 +17,6 @@
   var unlockShown = null, unlockShownAt = 0;   /* when this phone first drew a lever just unlocked */
   var UNLOCK_MS = 1800;    /* the power-on animation, matched in phone.css */
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
-  /* THE LAYERS. The plan shows the people or the wiring, never both. Two
-     things Benjamin has to hold in his head at once become two pages he has
-     to flip between while Assane waits — which is exactly the load the
-     dossier is supposed to put on him. */
-  var layer = 'patrols';
 
   function head(now) { return U.phoneHeader('p2', now); }
   function screen(kids) { return el('div', { class: 'pscreen' }, kids); }
@@ -34,22 +29,6 @@
     var view = screen([
       head('LE PLAN'),
       body([
-        el('div', { class: 'contracts' }, [
-          el('p', { class: 'h', style: 'margin-bottom:6px', text: 'TONIGHT’S CONTRACT' })
-        ].concat(C.JOBS.map(function (j, i) {
-          return el('button', {
-            class: 'contract' + (C.jobIndex === i ? ' is-on' : ''),
-            disabled: S.ready.p2 ? '' : null,
-            onclick: function () { U.sfx.tap(); U.emit('job', i); }
-          }, [
-            el('b', { text: j.contract }),
-            el('span', { text: j.venue }),
-            /* only the chosen contract explains itself. Two full descriptions
-               pushed Benjamin's own role card off the bottom of the very first
-               screen he sees, which is a bad trade for text he has read once. */
-            C.jobIndex === i ? el('em', { text: j.blurb }) : null
-          ]);
-        }))),
         el('div', { class: 'role' }, [
           U.artSlot('p2-role-benjamin'),
           el('h2', { class: 'role__name', text: 'BENJAMIN' }),
@@ -155,7 +134,7 @@
      every cone, every camera, every patrol — so the architecture underneath has
      to be quiet or the threat on top of it cannot be read at a glance. */
   function planSVG() {
-    var S = E.S, t = E.threat(layer === 'patrols' ? 'guards' : 'cameras'), s = '';
+    var S = E.S, t = E.threat(), s = '';
     var W = C.MAP[0].length * TT, H = C.MAP.length * TT;
 
     /* IN THE DARK THE PLAN IS WHOLE OR IT IS GONE. It used to be quartered by
@@ -176,10 +155,7 @@
     function open(x, y) {
       var ch = E.charAt(x, y);
       if (ch === '#') return false;
-      /* the beams belong to the wiring page. On the people page a laser
-         square is drawn as plain floor, so the plan does not read as if the
-         building had holes in it. */
-      if (ch === 'L' && E.beamLive(x, y) && layer === 'electronics') return false;
+      if (ch === 'L' && E.beamLive(x, y)) return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -217,7 +193,7 @@
        building's procedures, and knowing where they are is not the puzzle. */
     for (var ly = 0; ly < C.MAP.length; ly++) {
       for (var lx = 0; lx < C.MAP[ly].length; lx++) {
-        if (C.MAP[ly][lx] !== 'L' || layer !== 'electronics') continue;
+        if (C.MAP[ly][lx] !== 'L') continue;
         var px2 = lx * TT, py2 = ly * TT, off = !E.beamLive(lx, ly);
         if (!off) s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
              '" fill="var(--red)" opacity=".22"/>';
@@ -272,7 +248,7 @@
     });
 
     S.cameras.forEach(function (c) {
-      if (night || layer !== 'electronics') return;
+      if (night) return;
       var on = !!E.cameraDir(c);
       s += '<rect x="' + (c.x * TT + 4) + '" y="' + (c.y * TT + 4) + '" width="' + (TT - 8) + '" height="' + (TT - 8) +
            '" rx="1.5" fill="' + (on ? 'var(--red)' : 'var(--map-void)') + '" stroke="' + EDGE + '" stroke-width="1.5"/>';
@@ -280,7 +256,7 @@
            ' font-family="var(--font)" fill="' + (on ? 'var(--on-color)' : EDGE) + '">' + c.id.replace('c', '') + '</text>';
     });
 
-    /* the hatch: on both layers, because it is the way out */
+    /* the hatch, because it is the way out */
     (function () {
       var h = E.hatchTile();
       if (!h) return;
@@ -294,7 +270,6 @@
     })();
 
     S.guards.forEach(function (g) {
-      if (layer !== 'patrols') return;
       var p = E.guardAt(g);
       var cx = p.x * TT + TT / 2, cy = p.y * TT + TT / 2;
       var v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[g.facing];
@@ -324,7 +299,7 @@
            '<circle class="objective-ring" r="14" fill="none" stroke="#FD6A1A" stroke-width="1.5"' +
            ' pointer-events="none" aria-hidden="true"/></g>';
     });
-    // Once the prize is taken, mark the escape destination on both map layers.
+    // Once the prize is taken, mark the escape destination.
     var exit = E.hatchTile();
     if (S.hasManuscript && exit) {
       s += '<text x="' + (exit.x * TT + TT / 2) + '" y="' + (exit.y * TT - 9) +
@@ -449,17 +424,15 @@
                        '<circle cx="10" cy="10" r="3" fill="var(--gold)"/>',
                        '<b>Objective</b> Something Assane has to reach.'));
     }
-    var people = layer === 'patrols';
-    if (people && E.S.guards.length) {
+    if (E.S.guards.length) {
       rows.push(keyRow('<path d="M10 10 L19 10" stroke="var(--red)" stroke-width="3"/>' +
                        '<circle cx="9" cy="10" r="7" fill="var(--red)"/>',
                        night ? '<b>Torch</b> A guard. The line is the way he faces.'
                              : '<b>Guard</b> Steps when Assane steps. The line is the way he faces.'));
     }
     rows.push(keyRow('<rect width="20" height="20" fill="var(--map-floor)"/><rect width="20" height="20" fill="var(--red)" opacity=".55"/>',
-                     people ? '<b>Sightline</b> A guard can see this square now.'
-                            : '<b>Sightline</b> A camera can see this square now.'));
-    if (!people && hasChar('L')) {
+                     '<b>Sightline</b> A guard or camera can see this square now.'));
+    if (hasChar('L')) {
       rows.push(keyRow('<rect x="0" y="7" width="20" height="6" fill="var(--red)" opacity=".9"/>',
                        '<b>Lasers</b> Sealed. Go around — unless you drop them from the van.'));
     }
@@ -467,11 +440,11 @@
       rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)"/>',
                        '<b>Dark</b> The power is out. Nobody sees past arm’s length, guards included.'));
     } else {
-      if (!people && C.CAMERAS && C.CAMERAS.length) {
+      if (C.CAMERAS && C.CAMERAS.length) {
         rows.push(keyRow('<rect x="4" y="4" width="12" height="12" rx="1.5" fill="var(--red)" stroke="var(--map-edge)" stroke-width="2"/>',
                          '<b>Camera</b> Filled means it is watching. You can loop one from the van — for a while.'));
       }
-      if (!people && E.S.doors.some(function (d) { return d.locked; })) {
+      if (E.S.doors.some(function (d) { return d.locked; })) {
         rows.push(keyRow('<rect x="2" y="8" width="16" height="5" rx="1.5" fill="var(--map-edge)"/>',
                          '<b>Locked door</b> It needs a code or a mark.'));
       }
@@ -514,10 +487,13 @@
         'Assane broke a beam. Every one of them has left his round and is walking straight at him — ' +
         'they are on this plan, off their lines. Call the way out; in ' + S.alarm +
         (S.alarm === 1 ? ' move' : ' moves') + ' they turn round and walk back.' }) : null,
-      down ? null : layerBar(),
+      /* the first conversation: point him at the page that has his half */
+      S.beamG1Pending || (S.tchatche && S.tchatche.tag === 'first-beam-g1')
+        ? el('p', { class: 'warn warn--talk', html: '<b>ASSANE IS BEING STOPPED</b>' +
+            'Open FACES, match the face he describes, and read him the gold line.' }) : null,
       down ? deadLink()
            : el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
-      endgame ? linkStrip() : (layer === 'electronics' ? camCycles() : null),
+      endgame ? linkStrip() : camCycles(),
       /* THE VAN IS STILL THERE IN THE DARK. This used to be `night ? null`,
          which took the whole panel away the moment the power went — including
          CUT THE LASERS, the one lever that still does something, on the exact
@@ -529,18 +505,6 @@
         ? 'It comes back. Keep Assane still until it does, or walk him from memory and hope.'
         : 'The link drops for a move or two at a time. Give Assane his next three squares while you still have him.' }) : null
     ]);
-  }
-
-  /* one layer at a time. Not a filter — a page turn. */
-  function layerBar() {
-    var bar = el('div', { class: 'layers' });
-    [['patrols', 'PATROLS'], ['electronics', 'ELECTRONICS']].forEach(function (L) {
-      bar.appendChild(buttonArt(el('button', {
-        class: layer === L[0] ? 'is-on' : '',
-        onclick: function () { layer = L[0]; U.sfx.tap(); U.emit('render'); }
-      }, [el('b', { text: L[1] })]), 'tab'));
-    });
-    return bar;
   }
 
   /* ------------------------------------------------------------ LA GRILLE */
@@ -1085,6 +1049,6 @@
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
     tab = 'plan'; manualSeen = false; facesSeen = false; openSerial = -1; openBadge = null; pickedFace = null;
-    tapped = []; queryResult = null; layer = 'patrols'; unlockSeen = null; unlockShown = null;
+    tapped = []; queryResult = null; unlockSeen = null; unlockShown = null;
   } };
 })(window.DC);

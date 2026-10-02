@@ -851,21 +851,22 @@
         el('div', { class: 'tchp1__top' }, [
           face,
           el('div', { class: 'tchp1__desc', html: tutorial
-            ? '<b>Tchatche tutorial</b>Choose any answer. There is no wrong choice in this first conversation.'
+            ? '<b>A guard has stopped you</b>Only one answer works, and Benjamin has it in his files.'
             : '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
         ]),
         el('div', { class: 'tch__meter' }, [
-          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF ' + (tutorial ? 1 : 3) }),
-          tutorial ? el('span', { class: 'lbl', text: 'NO WRONG ANSWERS' })
+          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
+          tutorial ? el('span', { class: 'lbl', text: 'MISTAKES DON’T COUNT HERE' })
                    : el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
         ]),
         t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:
           t.last === 'good' ? 'That landed. The guard is still talking.'
-                            : 'Wrong man, or wrong subject. The guard is looking at you harder now.' }) : null,
+          : tutorial ? 'Wrong subject. Describe his face to Benjamin — he has the file.'
+                     : 'Wrong man, or wrong subject. The guard is looking at you harder now.' }) : null,
         lines
       ]),
       foot([ el('p', { class: 'note', text: tutorial
-        ? 'Tutorial: every answer works. The conversation ends after one choice.'
+        ? 'First conversation: a wrong answer here costs nothing. Nothing is timed.'
         : max === 1
           ? 'The building is on alert. One mistake and the guard searches you. Nothing here is timed.'
           : 'A second mistake ends the job. Nothing here is timed — take as long as you need.' }) ])

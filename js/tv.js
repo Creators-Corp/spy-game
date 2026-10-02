@@ -202,7 +202,7 @@
   /* ------------------------------------------------------------ other views */
   var planArtShown = null;
   function renderPlan() {
-    var S = E.S, ol = $('#plan-beats');
+    var S = E.S;
     /* rebuilt on every job change, not just once — the venue, the briefing and
        the establishing shot all belong to the contract */
     if (planArtShown !== C.venueArt) {
@@ -210,8 +210,10 @@
       var bg = $('#plan-bg');
       U.clear(bg);
       bg.appendChild(U.artSlot(C.venueArt));
-      U.clear(ol);
-      C.BEATS.forEach(function (b) { ol.appendChild(U.el('li', { text: b })); });
+      /* tonight's contract, on the screen both players are reading */
+      $('#plan-contract-name').textContent = C.contract;
+      $('#plan-contract-venue').textContent = C.venue;
+      $('#plan-contract-blurb').textContent = C.blurb;
       $('#plan-target').textContent = C.target;
     }
     /* THE ROSTER NUMBER, on the briefing where both players can see it before
@@ -345,9 +347,9 @@
   function renderTchatche() {
     var S = E.S, t = S.tchatche;
     if (!t) return;
-    var tutorial = t.tag === 'first-beam-g1', exchanges = tutorial ? 1 : 3;
+    var tutorial = t.tag === 'first-beam-g1';
     var r = $('#tch-rounds'); U.clear(r);
-    for (var i = 0; i < exchanges; i++) {
+    for (var i = 0; i < 3; i++) {
       r.appendChild(U.el('i', { class: i < t.round ? 'is-won' : '' }));
     }
     /* The steps stay up for all three exchanges — this is the one module where
@@ -356,7 +358,9 @@
        it is played does not change just because they got one wrong. */
     var s = $('#tch-line');
     s.textContent = tutorial
-      ? 'This is the first conversation. Choose any response to learn how Tchatche works; the tutorial ends after one answer.'
+      ? 'Assane has been stopped. Only one answer gets him through each exchange.\n' +
+        'Assane describes the guard’s face. Benjamin finds him in FACES and reads out the gold line.' +
+        (t.hint ? '\nWrong subject — Assane, describe his face to Benjamin. Mistakes don’t count here.' : '')
       : 'Assane has been stopped. No running, no fighting. Blending in is the only way out.\n' +
         'Assane describes the guard’s face. Benjamin finds their file and gives personal ' +
         'information, one piece at a time.' +

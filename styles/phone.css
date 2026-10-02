@@ -468,22 +468,6 @@
 }
 .board__result.is-none{background:var(--stone);color:var(--ink-soft);}
 
-/* ============ THE CONTRACT PICKER (Le Plan, P2) ============ */
-.contracts{margin-bottom:14px;}
-.contract{
-  display:block;width:100%;text-align:left;margin-bottom:7px;
-  border:var(--stroke) solid var(--ink);border-radius:var(--r);
-  background:var(--paper);padding:9px 10px;
-}
-.contract:hover{background:var(--stone);}
-.contract.is-on{background:var(--gold);color:var(--on-gold);}
-.contract[disabled]{opacity:.45;pointer-events:none;}
-.contract b{display:block;font-size:10px;letter-spacing:.12em;margin-bottom:3px;line-height:1.35;}
-.contract span{display:block;font-size:9px;letter-spacing:.12em;color:var(--ink-soft);margin-bottom:5px;}
-.contract.is-on span{color:var(--on-gold);}
-.contract em{display:block;font-style:normal;font-size:11px;line-height:1.45;color:var(--ink-soft);}
-.contract.is-on em{color:var(--on-gold);}
-
 /* the safe door behind the dial */
 .dial__plate{position:absolute;inset:0;border:0;border-radius:var(--r);background:var(--night);}
 .dial__plate img{border-radius:var(--r);}
@@ -626,6 +610,8 @@
 /* a lever has just come online. Gold, tap to dismiss. */
 .warn--unlock{background:var(--gold);color:var(--on-gold);border-color:var(--ink);cursor:pointer;margin:0 0 12px;}
 .warn--unlock u{display:block;margin-top:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;}
+/* the first conversation: the heading on its own line, over the instruction */
+.warn.warn--talk b{display:block;}
 
 /* LA PORTE — an actual ring, because "count round" has to look round. */
 .ringdial{display:block;width:100%;aspect-ratio:1/1;margin:2px auto 0;max-width:290px;}

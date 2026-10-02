@@ -256,7 +256,6 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 .dpad button:hover, .keypad button:hover, .doorgrid button:hover{
   color:var(--on-gold);
 }
-.plan__beats li::before{color:var(--on-gold);}
 
 /* ============================================================
    Uppercase labels carry a lot of letter-spacing in this design, and at 400
@@ -267,7 +266,7 @@ body.hide-slots .artslot.is-empty::after{opacity:0;}
 .h,.tag,.chip,.tvbar,.phead__who,.phead__now,.role__job,.plan__eyebrow,
 .readylamp,.rankcard__title,.rankcard__stats dt,.tabs button,.file__name,
 .legend span,.feed,.signal,.nav__peekcap,.manual__seq figcaption,
-.btn,.dpad__wait,.runtoggle,.contract b,.board__keys button,
+.btn,.dpad__wait,.runtoggle,.plan__contract b,.board__keys button,
 .tvbar__phase,.modstate__name,.tch__name,.prop--badge span,.prop--wear span{
   font-weight:500;
 }

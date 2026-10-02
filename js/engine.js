@@ -1578,18 +1578,11 @@
   function tchatchePick(topic) {
     var t = S.tchatche;
     if (!t) return { win: false };
-    /* The first beam conversation is a tutorial: one selection ends it, and
-       every offered response is accepted so players can learn the exchange. */
-    if (t.tag === 'first-beam-g1') {
-      U.sfx.good();
-      t.last = 'good';
-      t.round = 1;
-      return finishTchatche(t);
-    }
     var correct = C.DIRT[t.badge][t.round].t;
     if (topic === correct) {
       U.sfx.good();
       t.last = 'good';   /* the only report either player gets on an exchange */
+      t.hint = false;
       t.round++;
       if (t.round >= 3) return finishTchatche(t);
       t.options = rollOptions(t.badge, t.round);
@@ -1597,6 +1590,10 @@
     }
     U.sfx.bad(); U.buzz('both');
     t.last = 'bad';
+    /* The first beam conversation is the tutorial: a full three exchanges
+       with real answers, but a wrong one costs nothing. It only points the
+       pair back at the face, which is the half they skipped. */
+    if (t.tag === 'first-beam-g1') { t.hint = true; return { win: false, tutorial: true }; }
     t.strikes++;
     raise(10);
     if (t.strikes >= maxStrikes()) { S.jailLine = maxStrikes() === 1 ? 'ON ALERT. ONE SLIP WAS ENOUGH.' : null; jail(); return { win: false, jail: true }; }
