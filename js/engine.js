@@ -169,8 +169,10 @@
         if (!(at >= 0 && at < path.length)) at = 0;
         var man = { id: g.id, badge: g.badge, depth: g.depth, path: path,
                     at: at, dir: g.dir, loop: !!g.loop, facing: 'E', alert: 0, fooled: false,
-                    linger: g.investigate || 0, probe: null };
-        man.facing = faceOf(man);
+                    linger: g.investigate || 0, probe: null,
+                    stand: !!g.stand, hears: g.hears || null, homeFacing: g.facing || null,
+                    summoned: false, stoodDown: false };
+        man.facing = g.facing || faceOf(man);
         return man;
       }),
       cameras: C.CAMERAS.map(function (c) { return { id: c.id, x: c.x, y: c.y, depth: c.depth, cycle: c.cycle, label: c.label }; }),
@@ -193,7 +195,7 @@
       grille: { tried: {} },
       /* Benjamin's levers: how many pulls each has left, and how many of
          Assane's moves the lights and the lasers stay down for */
-      levers: { uses: leverUses(), lights: 0, laser: 0, cams: {}, last: null },
+      levers: { uses: leverUses(), lights: 0, laser: 0, laserCd: 0, cams: {}, last: null, unlocked: null },
       lastActionAt: Date.now(),  /* the pressure clock */
       pressure: 0,             /* suspicion the clock has added and a walk can earn back */
       pressureAdded: 0,
@@ -207,6 +209,7 @@
       declined: {},            /* optional modules he has chosen to walk past */
       gate: null,              /* the refuse card of a module he is standing at too early */
       disguised: false,        /* out of uniform every cone reaches further */
+      beamWarned: false,       /* the first-beam card has been shown */
       loot: { manuscrit: false, tableau: false },
       outfit: { head: null, torso: null, legs: null },
       /* WHICH CANVAS IS THE REAL ONE, off the seed rather than off Math.random.
@@ -243,7 +246,7 @@
       toast: null,
       objective: 'Study the plan. Both players ready up.'
     };
-    S.guards.forEach(function (g) { g.facing = faceOf(g); });
+    S.guards.forEach(function (g) { if (!g.stand) g.facing = faceOf(g); });
     markSeen();
     return S;
   }
@@ -436,7 +439,7 @@
     return g.depth + S.alert + (S.disguised ? 0 : C.DEGUISEMENT.conePenalty);
   }
   function guardCone(g) {
-    if (g.fooled) return [];
+    if (g.fooled || g.stoodDown) return [];
     var p = guardAt(g);
     return cone(p.x, p.y, g.facing, coneDepth(g));
   }
@@ -633,6 +636,31 @@
 
   function advanceGuards() {
     S.guards.forEach(function (g) {
+      /* A MAN ON A POST does not walk a round or answer the building's bell.
+         He moves for one thing: a beam broken in the room he `hears`, and
+         then he walks to Assane until he is close enough to stop him — past
+         the end of the alarm, through doors, wherever. Talked round, he walks
+         back to his post and stays there. (A one-square path would also send
+         the beat below to path[-1].) */
+      if (g.stand) {
+        var from = guardAt(g);
+        if (g.summoned && !g.stoodDown) {
+          var go2 = stepToward(from, S.assane);
+          /* the doorstep, never the square: see the alarm chase below */
+          if (!go2 || (go2.x === S.assane.x && go2.y === S.assane.y)) { g.facing = dirToward(from, S.assane); return; }
+          g.facing = dirToward(from, go2);
+          g.away = go2;
+          return;
+        }
+        if (g.away) {
+          var home = g.path[g.at], back2 = stepToward(g.away, home);
+          if (!back2) { g.away = null; return; }
+          g.facing = dirToward(g.away, back2);
+          g.away = (back2.x === home.x && back2.y === home.y) ? null : back2;
+          if (!g.away && g.homeFacing) g.facing = g.homeFacing;
+        }
+        return;
+      }
       /* THE MAN WHO CHECKS THE BEAM. A guard authored with `investigate`
          does not chase the bell: he takes the shortest way to the beam that
          broke, ignores Assane on the way, stands on it looking round for
@@ -714,6 +742,16 @@
     beam = beam || S.assane;
     S.guards.forEach(function (g) {
       if (g.linger) g.probe = { x: beam.x, y: beam.y, hold: g.linger };
+    });
+    /* the man posted to this room comes to have a word */
+    var room = roomAt(beam.x, beam.y);
+    S.guards.forEach(function (g) {
+      if (g.stand && g.hears && !g.stoodDown && room && room.name === g.hears) {
+        g.summoned = true;
+        /* Benjamin gets the faces and the files while the man is still
+           walking over — the time to look him up is before he arrives */
+        unlock('visages'); unlock('personnel');
+      }
     });
     raise(A.cost);
     toast('ALARM · BEAM BROKEN', 'bad');
@@ -798,10 +836,24 @@
     if (id === 'camera') return 'Every camera is down with the power.';
     return null;
   }
+  /* A LEVER THAT HAS TO BE EARNED. `needs` names a module; until it is
+     solved the lever is on the panel but dead. Only on a floor that actually
+     has that module — a contract without LE BUREAU must not lock the beams
+     away for good. */
+  function leverLocked(id) {
+    var L = leverDef(id);
+    if (!L || !L.needs || S.solved[L.needs]) return null;
+    var m = (C.MODULES || []).filter(function (x) { return x.id === L.needs; })[0];
+    return m ? 'Locked. Crack ' + m.name + ' first.' : null;
+  }
+  /* moves until a lever on a cooldown can be pulled again */
+  function leverCooldown(id) {
+    return id === 'laser' ? (S.levers.laserCd || 0) : 0;
+  }
   function pullLever(id, roomName) {
     var L = leverDef(id);
     if (!L || S.phase !== 'play' || !(S.levers.uses[id] > 0)) return false;
-    if (leverInert(id)) return false;
+    if (leverInert(id) || leverLocked(id) || leverCooldown(id) > 0) return false;
     var note = L.name;
     if (id === 'lights') {
       S.levers.lights = L.turns;
@@ -824,7 +876,9 @@
       note = 'LOOPED · ' + cam.label;
       S.sense = 'Somewhere above you a servo stops turning. <em>A camera has gone quiet.</em>';
     }
-    S.levers.uses[id]--;
+    /* a lever on a cooldown is never spent, only rested */
+    if (!L.cooldown) S.levers.uses[id]--;
+    if (id === 'laser') S.levers.unlocked = null;
     S.levers.last = { id: id, note: note, at: Date.now() };
     toast(note, 'good');
     /* THE TWO THAT KILL A SYSTEM GET THE STINGER. Dropping the beams and
@@ -900,6 +954,15 @@
         U.sfx.block(); U.buzz('p1');
         return { ok: false, blocked: true };
       }
+      /* the first live beam of the night asks first: the card goes up on the
+         television and the step does not happen. No turn passes. The same
+         step again is a decision, and it crosses. */
+      if (C.BEAM_CARD && !S.beamWarned && charAt(n1.x, n1.y) === 'L' && !(S.levers.laser > 0)) {
+        S.beamWarned = true;
+        S.gate = C.BEAM_CARD;
+        U.sfx.block(); U.buzz('p1');
+        return { ok: false, warned: true };
+      }
       crossed.push(n1);
       S.facing = dy < 0 ? 'N' : dy > 0 ? 'S' : dx > 0 ? 'E' : 'W';
       if (opts.run) {
@@ -971,6 +1034,9 @@
     if (S.levers.laser > 0) {
       S.levers.laser--;
       if (S.levers.laser === 0) {
+        /* the cooldown starts when the beams are back, not when they drop */
+        var lz = leverDef('laser');
+        S.levers.laserCd = (lz && lz.cooldown) || 0;
         toast('LASERS BACK ON', 'bad');
         U.buzz('both');
         /* standing in a beam when it comes back is the same event as walking
@@ -978,6 +1044,8 @@
            the thing it is a special case of */
         if (charAt(S.assane.x, S.assane.y) === 'L') tripAlarm();
       }
+    } else if (S.levers.laserCd > 0) {
+      S.levers.laserCd--;
     }
     for (var cid in S.levers.cams) if (S.levers.cams[cid] > 0) S.levers.cams[cid]--;
 
@@ -1070,7 +1138,17 @@
       : 'P1 reads the desk. P2 digs the staff files.';
   }
   function closeModule(solvedIt) {
-    if (solvedIt) S.solved[S.moduleId] = true;
+    if (solvedIt) {
+      S.solved[S.moduleId] = true;
+      /* any lever this module was holding back comes online, and the van is
+         told — Benjamin is the one who has to know he can pull it */
+      (C.LEVIERS || []).forEach(function (l) {
+        if (l.needs === S.moduleId) {
+          S.levers.unlocked = { id: l.id, name: l.name, at: Date.now() };
+          U.buzz('p2');
+        }
+      });
+    }
     S.moduleId = null;
     S.phase = 'play';
     touch();
@@ -1377,8 +1455,15 @@
        somebody who actually works here. */
     if (!C.DIRT[badge]) badge = Object.keys(C.DIRT)[0];
 
-    S.spotted++;
-    raise(20);
+    /* A MAN ON A POST IS A SCRIPTED ENCOUNTER. Every run has to go
+       through him, so being stopped by him is the plan, not a mistake: no
+       suspicion, and it is not one of the three. Getting the talk wrong
+       still costs what it always costs. */
+    var scripted = !!(g && g.stand && !g.stoodDown);
+    if (!scripted) {
+      S.spotted++;
+      raise(20);
+    }
     /* Twice, a guard can be talked round. The third time the building knows
        his face, and there is nothing left to say. It is the one rule about
        being seen that both players can hold in their heads: three and out. */
@@ -1412,7 +1497,14 @@
         S.phase = 'play';
         // Only the guard who believed the story stands down. Other guards and
         // electronic traps remain dangerous, including on the very next move.
-        S.guards.forEach(function (g) { if (g.id === t.guardId) g.fooled = true; });
+        S.guards.forEach(function (g) {
+          if (g.id !== t.guardId) return;
+          g.fooled = true;
+          /* the man on the post has said his piece: he walks back to it
+             and stands down for good — an alert level rising later does
+             not put him back on duty */
+          if (g.stand) { g.stoodDown = true; g.summoned = false; }
+        });
         S.grace = 0;
         touch();
         S.tchatche = null;
@@ -1504,7 +1596,7 @@
     cone: cone, sightline: sightline, threat: threat, visibleSet: visibleSet, cameraDir: cameraDir,
     guardAt: guardAt, coneDepth: coneDepth, guardCone: guardCone,
     seesAssane: seesAssane, linkDown: linkDown, linkLive: linkLive, nearestCam: nearestCam,
-    leverInert: leverInert,
+    leverInert: leverInert, leverLocked: leverLocked, leverCooldown: leverCooldown,
     startBlackout: startBlackout, darken: darken, clavierSubmit: clavierSubmit,
     openModule: openModule, closeModule: closeModule, declineModule: declineModule,
     deguisementSubmit: deguisementSubmit, fauxChoose: fauxChoose, ecouteCut: ecouteCut,

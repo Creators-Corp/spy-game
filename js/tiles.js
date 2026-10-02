@@ -549,7 +549,7 @@
          outline below is measured off this and has to be the same set */
       var cells = {}, k;
       for (k in threat) cells[k] = 1;
-      S.guards.forEach(function (g) { if (g.fooled) return; var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
+      S.guards.forEach(function (g) { if (g.fooled || g.stoodDown) return; var p = E.guardAt(g); if (view === 'benjamin' || lit(p.x, p.y)) cells[p.x + ',' + p.y] = 1; });
 
       if (view === 'benjamin') {
         /* coneDepth() is already 0 with the lights cut or the power gone, so

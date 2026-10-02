@@ -48,7 +48,7 @@
   function lcm(a, b) { var x = a, y = b, t; while (y) { t = y; y = x % y; x = t; } return a / x * b; }
   function worldPeriod() {
     var p = 1;
-    E.S.guards.forEach(function (g) { p = lcm(p, g.loop ? g.path.length : 2 * (g.path.length - 1)); });
+    E.S.guards.forEach(function (g) { p = lcm(p, g.loop ? g.path.length : Math.max(1, 2 * (g.path.length - 1))); });
     C.CAMERAS.forEach(function (c) { p = lcm(p, c.cycle.length); });
     return p;
   }
@@ -73,6 +73,7 @@
         return { x: m.path[m.at].x, y: m.path[m.at].y, facing: m.facing, depth: m.depth };
       }));
       men.forEach(function (m) {
+        if (m.path.length < 2) return;   /* a man on a post does not walk */
         if (m.loop) m.at = (m.at + 1) % m.path.length;
         else {
           var nx = m.at + m.dir;
