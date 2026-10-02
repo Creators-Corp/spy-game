@@ -1182,6 +1182,7 @@
           U.buzz('p2');
         }
       });
+      if (S.moduleId === 'bureau' && C.BUREAU_CARD) S.gate = C.BUREAU_CARD;
     }
     S.moduleId = null;
     S.phase = 'play';

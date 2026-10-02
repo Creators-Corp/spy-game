@@ -450,7 +450,8 @@
     var cutting = !!S.blackoutAt && (Date.now() - S.blackoutAt) < 1800;
     $('#tv-cut').classList.toggle('is-on', cutting);
 
-    /* standing at a module that is not ready for him: STAFF ONLY, and why */
+    /* TV cards use the same room-gate visual: blocked modules, beam warning,
+       or the Bureau completion message. */
     var gate = S.phase === 'play' ? S.gate : null;
     $('#room-gate').classList.toggle('is-on', !!gate);
     if (gate) {

@@ -269,6 +269,9 @@
        this contract does not happen: the television says what a beam is, and
        the same step again commits. Once a run. */
     BEAM_CARD: { title: 'THE BEAMS', line: 'Cross one and the alarm goes — someone will come to see who did it. Step again to cross.' },
+    /* A separate TV card shown when the Bureau is completed. Keep its copy
+       independent from BEAM_CARD so the two messages can be edited separately. */
+    BUREAU_CARD: { title: 'Security credentials acquired!', line: 'The van has unrestricted access to the security systems!' },
     MAP_OBJECTIVES: [
       { until: 'porte', targets: ['deguisement', 'porte'] },
       { until: 'bureau', targets: ['bureau'], unlockTargets: ['bureau-door'] },
@@ -482,7 +485,7 @@
   var JOB_FIELDS = ['id', 'HATCH', 'venue', 'contract', 'target', 'blurb', 'venueArt', 'MAP', 'ROOMS', 'GUARDS',
     'CAMERAS', 'DOORS', 'MODULES', 'COFFRE', 'PERSONNEL', 'BUREAU', 'RACK', 'UNIFORMS',
     'DEGUISEMENT', 'ECOUTE', 'FAUX', 'FACES', 'DIRT', 'LINK', 'CLAVIER', 'PORTE',
-    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'BEAM_CARD', 'OBJ', 'MAP_OBJECTIVES'];
+    'PROCEDURES', 'BEATS', 'GRILLE', 'LEVIERS', 'PRIZE', 'BEAM_CARD', 'BUREAU_CARD', 'OBJ', 'MAP_OBJECTIVES'];
 
   function loadJob(i) {
     var job = JOBS[i] || JOBS[0];
