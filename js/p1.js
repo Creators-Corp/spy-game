@@ -827,8 +827,13 @@
     for (var i = 0; i < max; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
 
     var lines = el('div', { class: 'lines' });
+    if (tutorial) {
+      var tutorialQuestion = C.FIRST_BEAM_TUTORIAL[t.round];
+      lines.appendChild(el('p', { class: 'tch__question', text: tutorialQuestion.question }));
+    }
     t.options.forEach(function (topic) {
-      lines.appendChild(el('button', { class: 'btn', text: C.LINES[topic], onclick: function () {
+      var answer = tutorial ? C.FIRST_BEAM_TUTORIAL[t.round].answers[topic] : C.LINES[topic];
+      lines.appendChild(el('button', { class: 'btn', text: answer, onclick: function () {
         E.tchatchePick(topic); U.emit('render');
       } }));
     });
@@ -856,7 +861,7 @@
         ]),
         el('div', { class: 'tch__meter' }, [
           el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
-          tutorial ? el('span', { class: 'lbl', text: 'MISTAKES DON’T COUNT HERE' })
+          tutorial ? el('span', { class: 'lbl', text: 'You’re disguised for La Resèrve' })
                    : el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
         ]),
         t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:

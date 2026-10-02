@@ -953,6 +953,8 @@
     if (pickedFace) {
       var per = C.PERSONNEL.filter(function (p) { return p.badge === pickedFace; })[0];
       var round = t ? t.round : 0;
+      var tutorialClues = t && t.tag === 'first-beam-g1' && pickedFace === t.badge
+        ? C.FIRST_BEAM_TUTORIAL_CLUES : null;
       var dirt = el('div', { class: 'dirt' }, [
         el('p', { class: 'h', style: 'margin-bottom:2px', text: per ? per.name : pickedFace })
       ]);
@@ -961,16 +963,18 @@
          nothing said the gold one was the thing to read out loud — or that
          reading it out was the move at all. The locked ones just said
          "— sealed —", which explains nothing and looks like a bug. */
-      C.DIRT[pickedFace].forEach(function (d, i) {
+      var facts = tutorialClues ? tutorialClues.map(function (s) { return { s: s }; }) : C.DIRT[pickedFace];
+      facts.forEach(function (d, i) {
         var state = !t ? 'idle' : i < round ? 'used' : i === round ? 'key' : 'locked';
-        var tag = state === 'key'    ? 'TELL HIM THIS NOW'
+        var tag = tutorialClues ? 'TUTORIAL CLUE'
+                : state === 'key'    ? 'TELL HIM THIS NOW'
                 : state === 'used'   ? 'ALREADY USED'
                 : state === 'locked' ? 'NOT YET' : null;
         ul.appendChild(el('li', {
-          class: state === 'key' ? 'is-key' : state === 'locked' ? 'is-locked' : ''
+          class: tutorialClues ? '' : state === 'key' ? 'is-key' : state === 'locked' ? 'is-locked' : ''
         }, [
           tag ? el('em', { class: 'dirt__tag', text: tag }) : null,
-          document.createTextNode(state === 'locked' ? 'Opens after the next exchange.' : d.s)
+          document.createTextNode(!tutorialClues && state === 'locked' ? 'Opens after the next exchange.' : d.s)
         ]));
       });
       dirt.appendChild(ul);

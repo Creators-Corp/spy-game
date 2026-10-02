@@ -1011,7 +1011,7 @@
     opts = opts || {};
     if (S.phase !== 'play') return { ok: false };
     if (S.beamG1Pending && (dx || dy)) {
-      toast('HOLD STILL · G1 IS COMING', null);
+      toast('Be Cool · The Chief Guard is Coming', null);
       U.sfx.block(); U.buzz('p1');
       return { ok: false, blocked: true, encounter: 'first-beam-g1' };
     }
@@ -1557,7 +1557,9 @@
        being seen that both players can hold in their heads: three and out. */
     if (S.spotted >= 3) { S.jailLine = 'THIRD TIME. THEY KNOW HIS FACE.'; jail(); return; }
     S.phase = 'tchatche';
-    S.tchatche = { badge: badge, guardId: g ? g.id : null, tag: tag || null, round: 0, strikes: 0, pick: null, options: rollOptions(badge, 0) };
+    var tutorial = tag === 'first-beam-g1';
+    S.tchatche = { badge: badge, guardId: g ? g.id : null, tag: tag || null, round: 0, strikes: 0, pick: null,
+      options: tutorial ? rollTutorialOptions(0) : rollOptions(badge, 0) };
     S.objective = 'P1 describes the face. P2 finds the crack.';
     S.flash = Date.now();
     /* the stab first, then the sting under it: sfx.spot() is synthesised and
@@ -1575,17 +1577,23 @@
     return U.shuffle(picks.concat([correct]), S.turn + round * 3 + 5);
   }
 
+  function rollTutorialOptions(round) {
+    return U.shuffle([0, 1, 2], S.turn + round * 11 + 41);
+  }
+
   function tchatchePick(topic) {
     var t = S.tchatche;
     if (!t) return { win: false };
-    var correct = C.DIRT[t.badge][t.round].t;
-    if (topic === correct) {
+    var tutorial = t.tag === 'first-beam-g1';
+    var correct = tutorial ? topic + 1 === C.FIRST_BEAM_TUTORIAL[t.round].correct
+                           : topic === C.DIRT[t.badge][t.round].t;
+    if (correct) {
       U.sfx.good();
       t.last = 'good';   /* the only report either player gets on an exchange */
       t.hint = false;
       t.round++;
       if (t.round >= 3) return finishTchatche(t);
-      t.options = rollOptions(t.badge, t.round);
+      t.options = tutorial ? rollTutorialOptions(t.round) : rollOptions(t.badge, t.round);
       return { win: true };
     }
     U.sfx.bad(); U.buzz('both');

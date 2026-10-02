@@ -44,6 +44,17 @@
   };
   var TOPICS = Object.keys(LINES);
 
+  /* FIRST-BEAM G1 TUTORIAL ONLY. Replace the =... placeholders with its
+     three fixed clues, three questions, three answer choices per question,
+     and the correct answer's one-based number (1, 2, or 3). This data does
+     not use LINES, DIRT, or the regular conversation topics. */
+  var FIRST_BEAM_TUTORIAL_CLUES = ['Very thoughtful toward newcomers.', 'Likes having their work noticed', 'Doesn\'t like dawdling on the job.'];
+  var FIRST_BEAM_TUTORIAL = [
+    { question: 'The laser! Every single day I say it: check the manual, watch your step!', answers: ['I am in a hurry.', 'Sorry, sir! It is my first day.', 'Ever heard of pressure points?'], correct: 2 },
+    { question: 'Oh! The new guy! Yes yes, sorry about that. Read the manual and we\'ll get along just fine!', answers: ['Not really the reading type. I learn by doing.', 'You\'ve got beautiful eyes!', 'Of course, sir! I\'ve heard great things about your leadership. I\'ll read everyday!'], correct: 3 },
+    { question: 'Now that\'s what I like to hear! Alright, get moving!', answers: ['You see that new show that dropped on Netflix?', 'Where\'s the safe?', 'Yes sir! Excuse me.'], correct: 3 }
+  ];
+
   /* Thresholds are measured, not guessed. A solver was run over the live board
      — every guard phase, every camera phase, and the blackout leg under torch
      rules. On job 1 the lowest-suspicion clean route costs 11 and a
@@ -187,7 +198,7 @@
       '########################'
     ],
     ROOMS: [
-      { name: 'LE COFFRE',       x: 14, y: 1,  w: 7,  h: 3, tint: 'warm' },
+      { name: 'LE COFFRE',       x: 14, y: 1,  w: 6,  h: 3, tint: 'warm' },
       { name: 'LES CUISINES',    x: 1,  y: 3,  w: 4,  h: 9, tint: 'warm' },
       { name: 'LA RÉSERVE',      x: 7, y: 13, w: 10,  h: 3, tint: 'olive', labelX: 11, labelY: 14 },
       { name: 'BUREAU',          x: 18, y: 13, w: 3,  h: 3, tint: 'olive' },
@@ -749,7 +760,9 @@
   L.content = {
     JOBS: JOBS, loadJob: loadJob, rollRoster: rollRoster, jobIndex: 0,
     DOOR_MARKS: DOOR_MARKS, RING_COLOUR: RING_COLOUR, GARMENTS: GARMENTS,
-    LINES: LINES, TOPICS: TOPICS, RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE, ALARM: ALARM,
+    LINES: LINES, TOPICS: TOPICS, FIRST_BEAM_TUTORIAL: FIRST_BEAM_TUTORIAL,
+    FIRST_BEAM_TUTORIAL_CLUES: FIRST_BEAM_TUTORIAL_CLUES,
+    RANKS: RANKS, ALERT: ALERT, PRESSURE: PRESSURE, ALARM: ALARM,
     AMBIENT: AMBIENT, STATIC_LINES: STATIC_LINES
   };
   loadJob(0);
