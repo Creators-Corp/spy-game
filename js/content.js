@@ -1,5 +1,5 @@
 /* content.js — THE JOB LIBRARY.
-   Two contracts. Everything that makes a job a job — the building, the
+   One contract. Everything that makes a job a job — the building, the
    patrols, the safe, the roster, the uniforms, the canvases, the line codes —
    is data in here. The engine and the three views never learn a venue.
 
@@ -14,7 +14,7 @@
   'use strict';
 
   /* =======================================================================
-     SHARED — the vocabulary both jobs draw on.
+     SHARED — the vocabulary this job draws on.
      ======================================================================= */
 
   var DOOR_MARKS = ['star4', 'chevrons', 'dbar', 'trident'];
@@ -143,280 +143,6 @@
   var STATIC_LINES = ['signal lost', '— — — —', 'no service', 'battery low', '· · · · · ·'];
 
   /* =======================================================================
-     CONTRAT No.1 — LA CHAMBRE 302
-     Three guards, three modules, and a map built to teach rather than to
-     test. The shape is a RING around two blocks with one corridor cutting
-     through the middle — and that corridor is sealed. Every route is the
-     long way round, which is the whole reason Player 2 exists.
-
-     It is deliberately the simplest of the three contracts. One guard in the
-     south room demonstrates the rule that guards step when Assane steps. The
-     door is the first real lock. Only past it do two guards start looping in
-     opposite directions, and only there does the map stop being obvious.
-     ======================================================================= */
-  var JOB1 = {
-    id: 'chambre',
-    venue: 'RÉSIDENCE · TROISIÈME ÉTAGE',
-    contract: 'CONTRAT No.1 — LA CHAMBRE 302',
-    target: 'Chambre 302 · le dossier',
-    venueArt: 'venue-particulier',
-    blurb: 'One locked door, one sealed corridor, and two guards who never stop walking. Everything here is the long way round.',
-
-    /* THE FRAME. The plan carries a wall column down its left edge and a wall
-       row along its bottom that no route ever touches. They exist so the
-       outermost wall of the building has a cell of its own to be drawn in:
-       without them the hatch on the west face and the stair wall at the foot
-       of the map sit ON the boundary, with nothing outside them to hold the
-       band. Columns run A to X, and every square in this contract is one to
-       the right of where it used to be.
-
-       'L' is a laser. It reads as wall to everything that moves, but it is
-       drawn as its own thing, and Assane cannot know it is there until he is
-       standing next to it. The central corridor is the short way from the
-       south to the north and it is never open — the map is a ring, and the
-       shortcut through the middle is a promise it does not keep. */
-    MAP: [
-      '########################',
-      '##########.....#########',
-      '##########.....#########',
-      '##########.....#########',
-      '##.....................#',
-      '##.....................#',
-      '##..#######...#######..#',
-      '##..#######LLL#######..#',
-      '#X....####.....####....#',
-      '##..#######LLL#######..#',
-      '##..#######...#######..#',
-      '##.....................#',
-      '##.....................#',
-      '################+#######',
-      '####.................###',
-      '####.................###',
-      '############+###########',
-      '###########.E.##########',
-      '###########...##########',
-      '########################'
-    ],
-    ROOMS: [
-      { name: 'CHAMBRE 302',     x: 10,  y: 1,  w: 5,  h: 3, tint: 'cool' },
-      { name: 'GALERIE NORD',    x: 2,  y: 4,  w: 21, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 1,  y: 6,  w: 5,  h: 5, tint: 'neutral' },
-      { name: 'COULOIR CENTRAL', x: 10,  y: 6,  w: 5,  h: 5, tint: 'olive' },
-      { name: 'AILE EST',        x: 19, y: 6,  w: 4,  h: 5, tint: 'neutral' },
-      { name: 'GALERIE SUD',     x: 2,  y: 11, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LE VESTIAIRE',    x: 4,  y: 14, w: 17, h: 2, tint: 'warm' },
-      { name: 'ESCALIER',        x: 11, y: 16, w: 3,  h: 2, tint: 'warm' }
-    ],
-
-    /* One guard south of the door, two north of it. The first exists to be
-       beaten: he walks one row, in the open, and Assane can simply wait him
-       out. That is the tutorial. The pair past the door loop the ring in
-       opposite directions and never enter the middle, so they cannot be
-       waited out — only timed. */
-    GUARDS: [
-      /* The tutorial guard. One row of the vestiaire, thirteen tiles, so his
-         cycle is 24 and divides the ring's 48 — that keeps the combined patrol
-         period at 48 and the whole map small enough to prove safe. */
-      { id: 'g1', badge: '4412', from: { x: 5, y: 14 }, to: { x: 17, y: 14 }, at: 0, dir: 1, depth: 1 },
-      /* Both ring guards turn the same way — counter-clockwise: down the west
-         arm, east along the south, up the east arm, west along the north. Same
-         circuit, started half a lap apart, so they are always opposite each
-         other and Benjamin only ever has to track one of them. */
-      { id: 'g2', badge: '2071', at: 0,  dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 3, y: 5 }, { x: 3, y: 11 }, { x: 21, y: 11 }, { x: 21, y: 5 }] },
-      { id: 'g3', badge: '3308', at: 24, dir: 1, depth: 1, loop: true,
-        waypoints: [{ x: 3, y: 5 }, { x: 3, y: 11 }, { x: 21, y: 11 }, { x: 21, y: 5 }] }
-    ],
-    /* Two cameras, and one of them cannot be walked around. CAM 1 hangs over
-       the desk and never blinks: the prize is under it, so the prize does not
-       exist without Benjamin looping it. CAM 2 watches the keypad every other
-       beat — that one can be timed, if somebody in the van is counting. */
-    CAMERAS: [
-      { id: 'c1', x: 12, y: 0,  depth: 2, cycle: ['S'],                 label: 'CAM 1' }
-      /* on, off, on, off. Two-on/two-off left the square under it a trap on the
-         beat it woke (four dead states); every other beat leaves none, and is
-         the easiest rhythm there is to count out loud. */
-      /*{ id: 'c2', x: 16, y: 16, depth: 1, cycle: ['N', null, 'N', null], label: 'CAM 2' }*/
-    ],
-    LEVIERS: [LEVER.lights, LEVER.laser, LEVER.camera],
-    /* Taking the dossier kills the monitors. The television goes dark and the
-       two phones are all there is; the stairs are a floor away, and the hatch
-       in the west wall ('X' on the plan) is the only way out. */
-    /* THE VAN STUTTERS HERE TOO. Taking the dossier kills the monitors, and
-       from that moment Benjamin loses the whole floor — plan, patrols, gold
-       dot — for a move or two at a time, then holds it for four to six. Same
-       numbers as contract two's blackout, different reason: no power cut and
-       no keypad here, just the feeds he has been reading all night going out
-       from under him. Without this the walk to the hatch was the one leg in
-       the game where P2 had nothing at stake. */
-    LINK: { drop: [1, 2], delay: [4, 6] },
-
-    /* the way out is an alcove cut into the west wall, hand-built tile by
-       tile; contract four's is a plain window on a plain wall. */
-    HATCH: 'niche',
-    PRIZE: { dark: true, name: 'DOSSIER' },
-    MAP_OBJECTIVES: [
-      { until: 'grille', targets: ['deguisement', 'porte'] },
-      { until: 'porte', targets: ['grille'] },
-      { until: 'bureau', targets: ['porte'] },
-      { until: 'prize', targets: ['bureau'] },
-      { until: 'exit', targets: ['prize'] }
-    ],
-    DOORS: [
-      /* the service gate at the foot of the stairs. Its mark is a plain lock on
-         Benjamin's plan — what is stamped on the padlock is Assane's to see */
-      { x: 12, y: 16, locked: true, mark: 'lock', to: 'LE VESTIAIRE' },
-      { x: 16, y: 13, locked: true, mark: 'dbar', to: 'GALERIE SUD' }
-    ],
-    MODULES: [
-      /* on the square he starts on, so it opens the moment both players are
-         ready — the first thing anyone does in this game is talk */
-      { id: 'grille',      x: 12, y: 17, name: 'LA GRILLE',      icon: 'lock' },
-      { id: 'deguisement', x: 13, y: 17, name: 'LE DÉGUISEMENT', icon: 'coat', optional: true },
-      { id: 'porte',       x: 16, y: 14, name: 'LA PORTE',       icon: 'lock' },
-      /* The desk. For now it hands over the dossier and nothing more —
-         the full Bureau puzzle is the stretch goal, and a placeholder that
-         works beats a half-built module that does not. */
-      { id: 'prize',       x: 12, y: 2,  name: 'LE BUREAU',      icon: 'dossier' }
-    ],
-
-    /* LA GRILLE — the handshake.
-       Every "I don't understand" this prototype has produced came from the same
-       gap: the player did not yet know that the OTHER phone holds the missing
-       half. So the first thing that happens is the smallest possible proof of
-       it.
-
-       IT GOES BOTH WAYS, and that is the point of the shape. Assane has a
-       padlock with a symbol stamped on its tag and three keys on a ring.
-       Benjamin's card pairs each symbol with a key — but the keys are not
-       numbered on either phone, they are DRAWN. So Assane describes the
-       symbol, Benjamin finds the row and describes the key, and Assane picks
-       the one that matches what he was told. Two sentences, one each way.
-
-       It used to be one sentence: Benjamin read out "key 2" and Assane tapped
-       the button marked 2, which is a lookup with a courier, not a
-       conversation. Nothing is written on a key now, so the only way through
-       is for one of them to say what a thing looks like and the other to
-       recognise it — which is every later module in miniature.
-
-       No guard, no code, no ring, no counting: a wrong key rattles the gate
-       and costs a little suspicion, nothing worse. */
-    GRILLE: {
-      /* THIS MARK IS ALSO PAINTED INTO art/grille-padlock.png, and that
-         picture is the only place Assane sees it. Change it here and the
-         plate has to be redrawn with it, or his phone will be showing one
-         symbol while the gate answers to another. */
-      lock: 'trident',
-      /* `at` and `wide` are where each blade sits across grille-keys.png, as a
-         fraction of its width — the three fan out and overlap, so they are one
-         photograph with three plates over it rather than three sprites. Left
-         to right: the toothed one, the pierced one, the old warded one.
-         `shape` is the line drawing of the same key on Benjamin's card.
-         The plate art has this lock's mark engraved on it: change `lock` and
-         the chip on P1 follows, but the photograph will need redrawing. */
-      board: [{ sym: 'ladder',   key: 3, shape: 'keyTeeth',  at: 0.02, wide: 0.36 },
-              { sym: 'trident',  key: 2, shape: 'keyHoles',  at: 0.38, wide: 0.28 },
-              { sym: 'crescent', key: 1, shape: 'keyWard',   at: 0.66, wide: 0.32 }],
-      door: { x: 12, y: 16 },
-      rattle: 3
-    },
-
-    /* LA PORTE.
-       The keypad is numeric and Assane can see it. The code is in Benjamin's
-       dossier as four SYMBOLS, above a ring of ten in a fixed order — and the
-       dossier says plainly that it does not record which one is zero. Without
-       that, the ring is a cipher with ten possible rotations and Benjamin can
-       read out nothing at all.
-
-       Assane holds the missing rotation and does not know it: the sign beside
-       the door says CHAMBRE 302, and there is a small mark under the 0 that
-       looks like decoration. He has to describe it; Benjamin has to find it on
-       the ring; and only then does either of them have a number.
-
-       This is the cleanest lock in the build. Neither half is a hint. Half the
-       key is on each phone and the puzzle does not exist until they talk. */
-    PORTE: {
-      code: '2549',
-      door: { x: 16, y: 13 },
-      sign: 'CHAMBRE 302',
-      zero: 'hook',
-      ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
-             'trident', 'star4', 'chevrons', 'backz', 'bisect'],
-      fails: 3
-    },
-
-    /* THE RACK HAS TO NARROW IT. Nine pieces are hanging up and three officers
-       are on tonight, but the rack is deliberately missing VIDAL's dungarees,
-       so only two of the three uniforms can be assembled at all. Of those two,
-       MOREAU is posted to the cloakroom Assane is standing in — no use to a man
-       heading north. DELACROIX walks the north gallery, which is where he is
-       going. One buildable uniform, one correct post, one answer.
-
-       Built the other way round it does not work: with every piece present the
-       rack narrows nothing, and two officers sharing a post leaves two answers
-       that both look right. */
-    RACK: {
-      head:  ['casquette', 'nu', 'calot'],
-      torso: ['tablier', 'gilet', 'blouse'],
-      legs:  ['noir', 'raye', 'jean']
-    },
-    UNIFORMS: {
-      '4412': { head: 'casquette', torso: 'blouse',  legs: 'noir' },
-      '2071': { head: 'calot',     torso: 'gilet',   legs: 'jean' },
-      '3308': { head: 'nu',        torso: 'tablier', legs: 'salopette' }
-    },
-    DEGUISEMENT: { answerBadge: '2071', targetPost: 'GALERIE NORD', conePenalty: 1 },
-
-    PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',   post: 'LE VESTIAIRE', plate: '8028', kids: [] },
-      { badge: '2071', name: 'DELACROIX, Yann', post: 'GALERIE NORD', plate: '5530', kids: [] },
-      { badge: '3308', name: 'VIDAL, Nadia',    post: 'GALERIE SUD',  plate: '1147', kids: [] }
-    ],
-    FACES: {
-      '4412': { art: 'face-4412', head: 'square', hair: 'short', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
-      '2071': { art: 'face-2071', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
-      '3308': { art: 'face-3308', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone)' }
-    },
-    DIRT: {
-      '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },
-               { t: 'coffee', s: 'Fights with the machine on level three, daily.' },
-               { t: 'boss', s: 'Loathes the floor manager. Openly.' }],
-      '2071': [{ t: 'study', s: 'Night classes. Law. Second year.' },
-               { t: 'car', s: 'Parks in the loading bay. Gets ticketed.' },
-               { t: 'promotion', s: 'Applied for shift lead. Waiting to hear.' }],
-      '3308': [{ t: 'football', s: 'Saint-Étienne. Home and away.' },
-               { t: 'boss', s: 'Covers for the floor manager. Constantly.' },
-               { t: 'coffee', s: 'Brings her own flask. Refuses the machine.' }]
-    },
-
-    PROCEDURES: [
-      { k: 'DOOR CODES',   v: 'Held as symbols only. The ring is printed in order; the zero is not marked.' },
-      { k: 'LASER LINES',  v: 'Central corridors are protected between rounds. Do not cross. Go around.' },
-      { k: 'PATROLS',      v: 'Two officers, opposite directions, outer halls only.' },
-      { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
-      { k: 'CAMERAS',      v: 'CAM 1 covers the study desk continuously. CAM 2 sweeps the cloakroom keypad every other beat.' },
-      /* the chambre DOES draw its hatch on Benjamin's plan — it is the
-         teaching contract and the way out is meant to be visible. The line
-         used to end "Not on the public plans", which is contract four's rule
-         copied one job too far: the dossier was contradicting the map beside
-         it. Contract four keeps that clause, and keeps the hatch off the
-         plan to go with it. */
-      { k: 'EVACUATION',   v: 'Service hatch, west wall, row 9. Marked on the plan.' }
-    ],
-
-    /* THREE LINES, AND EACH FITS ONE. The panel is 46% of the television and
-       vertically centred, so a fourth beat does not overflow tidily — it
-       pushes the eyebrow up behind the top bar and the READY lamps down behind
-       the bottom one. Everything cut from here is said again by the game
-       itself within a minute of starting. */
-    BEATS: [
-      'One of you is inside. One of you has the plans.',
-      'Guards move only when Assane moves.',
-      'The middle is sealed. Everything is the long way round.'
-    ]
-  };
-
-  /* =======================================================================
      CONTRAT No.2 — LA VEILLE DE VENTE
      An auction house, the night before a sale. The shape of contract three
      with the volume turned up band by band: the kitchens are what they
@@ -425,10 +151,10 @@
      under a camera that never blinks, and a way out that is not on the plan.
      Built from modules that already exist: only the numbers are new.
      ======================================================================= */
-  var JOB2 = {
+  var JOB1 = {
     id: 'veille',
     venue: 'HÔTEL DES VENTES · LA VEILLE',
-    contract: 'CONTRAT No.2 — LA VEILLE DE VENTE',
+    contract: 'CONTRAT No.1 — LA VEILLE DE VENTE',
     target: 'Lot 12 · manuscrit enluminé',
     venueArt: 'venue-establishing',
     blurb: 'Three floors, each behind a door, each worse than the last. The vault is released from the desk beside it, and the way out is not drawn anywhere.',
@@ -514,7 +240,7 @@
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
       { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
-        stand: true, facing: 'W', hears: 'LES CUISINES' },
+        stand: true, facing: 'E', hears: 'LES CUISINES' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
@@ -734,7 +460,7 @@
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously. CAM 2 sweeps the office desk one beat in three.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
-      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone:' },
+      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, reversed:' },
       { k: 'EVACUATION',   v: 'Service hatch, east wall of the upper gallery, row 6. Not on the public plans.' }
     ],
 
@@ -745,11 +471,8 @@
     ]
   };
 
-  /* TWO CONTRACTS. The first pair were the ones that taught the shape and
-     they have been cut: everything they proved is proved better by the two
-     that replaced them, and a picker with four entries made the demo start
-     with a choice nobody had the information to make. */
-  var JOBS = [JOB1, JOB2];
+  /* ONE CONTRACT. The auction-house level is the only available job. */
+  var JOBS = [JOB1];
 
   /* Swap the data under the engine. Every other file reads L.content.<FIELD>
      and holds a reference to this same object, so assigning the fields here is
@@ -1004,9 +727,10 @@
         clav.worn = distinct(clav.code);
       }
       L.content.CLAVIER = clav;
-      /* the procedure now ends on the answer itself, rolled with the roster */
+      /* Procedures report the vehicle plate as written. The keypad code is
+         that plate reversed, so Benjamin must still reverse it to get the PIN. */
       if (job.PROCEDURES) L.content.PROCEDURES = job.PROCEDURES.map(function (r) {
-        return r.k === 'RELEASE CODE' ? { k: r.k, v: r.v + ' ' + clav.code } : r;
+        return r.k === 'RELEASE CODE' ? { k: r.k, v: r.v + ' ' + (posted ? posted.plate : '') } : r;
       });
     }
 
