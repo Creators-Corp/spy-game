@@ -214,7 +214,7 @@
       gate: null,              /* the refuse card of a module he is standing at too early */
       disguised: false,        /* out of uniform every cone reaches further */
       beamWarned: false,       /* the first-beam card has been shown */
-      beamG1Pending: false,    /* hold Assane for the first kitchen-guard encounter */
+      beamG1Pending: false,    /* hold Assane for the first reserve-guard encounter */
       beamG1Done: false,
       beamsOff: {},            /* beams that are dead for the rest of the run, by "x,y" */
       loot: { manuscrit: false, tableau: false },
@@ -771,14 +771,14 @@
         unlock('visages'); unlock('personnel');
       }
     });
-    /* A ROOM WITH ITS OWN MAN KEEPS ITS OWN BELL. The kitchen is where the
+    /* A ROOM WITH ITS OWN MAN KEEPS ITS OWN BELL. La Réserve is where the
        beams and the conversations are first taught, one man and one talk; a
        building-wide chase on top of it sent the beam-checker the length of
        the floor to meet Assane in the gallery a dozen moves later, as a real
        spot nobody had been warned about. So nobody else hears it: no chase,
        no one sent to look. The suspicion is still paid. */
     if (local) {
-      /* THE KITCHEN BEAMS GO DEAD ONCE TRIPPED. They have done their job —
+      /* THE RESERVE BEAMS GO DEAD ONCE TRIPPED. They have done their job —
          the lesson is the bell and the man it sends — and a second trip on
          the way back through would just be the same lesson as a fine. */
       for (var by = room.y; by < room.y + room.h; by++) {
@@ -791,7 +791,7 @@
       S.guards.forEach(function (g, i) { if (!g.stand) g.probe = before.probes[i]; });
       raise((C.ALARM || {}).cost || 12);
       toast('ALARM · BEAM BROKEN', 'bad');
-      S.alertNote = 'A bell in the kitchen, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
+      S.alertNote = 'A bell in La Réserve, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
       S.flash = Date.now();
       U.sfx.spot();
       U.buzz('both', true);
@@ -985,7 +985,7 @@
      with a cost, a turn) and if they come back they belong on the ordinary
      d-pad rather than on a mode. */
   /* Run the requested action normally, then spend ordinary HOLD turns for
-     Assane while the first kitchen-beam encounter is pending. This keeps all
+     Assane while the first reserve-beam encounter is pending. This keeps all
      guard and turn rules in one path, but asks for no repeated player input. */
   function act(dx, dy, opts) {
     var result = actTurn(dx, dy, opts);
@@ -1026,7 +1026,7 @@
         U.sfx.block(); U.buzz('p1');
         return { ok: false, blocked: true };
       }
-      /* Let the first kitchen beam teach the alarm and g1 encounter. The beam
+      /* Let the first reserve beam teach the alarm and g1 encounter. The beam
          warning card becomes available only after that tutorial has begun. */
       if (C.BEAM_CARD && S.beamG1Done && !S.beamWarned && beamLive(n1.x, n1.y)) {
         S.beamWarned = true;
@@ -1065,7 +1065,7 @@
       if (!caught && t[k.x + ',' + k.y]) caught = t[k.x + ',' + k.y][0];
     });
 
-    /* The first kitchen beam teaches this conversation on purpose. Keep the
+    /* The first reserve beam teaches this conversation on purpose. Keep the
        player on the tile where the alarm was raised while g1 walks over; when
        he reaches the doorstep, start a separately tagged Tchatche. */
     if (S.beamG1Pending) {

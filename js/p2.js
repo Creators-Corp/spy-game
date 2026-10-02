@@ -290,7 +290,9 @@
        them sayable, which is what a callout actually needs. */
     {
       C.ROOMS.forEach(function (r) {
-        s += '<text x="' + (r.x * TT + 3) + '" y="' + (r.y * TT + 9) + '" font-size="5.5" letter-spacing="0.6"' +
+        var labelX = r.labelX === undefined ? r.x : r.labelX;
+        var labelY = r.labelY === undefined ? r.y : r.labelY;
+        s += '<text x="' + (labelX * TT + 3) + '" y="' + (labelY * TT + 9) + '" font-size="5.5" letter-spacing="0.6"' +
              ' font-weight="500" fill="var(--map-edge)" opacity=".75" font-family="var(--font)">' + r.name + '</text>';
       });
     }

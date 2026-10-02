@@ -158,7 +158,7 @@
     contract: 'CONTRAT No.1 — LA VEILLE DE VENTE',
     target: 'Lot 12 · manuscrit enluminé',
     venueArt: 'venue-establishing',
-    blurb: 'Three floors, each behind a door, each worse than the last. The vault is released from the desk beside it, and the way out is not drawn anywhere.',
+    blurb: 'You need a paper inside The vault. Its room is released from the officer security desk. Find a way out.',
 
     /* THE FRAME. A wall column down the EAST edge and a wall row along the
        bottom that no route touches: the hatch sits in the east wall, so the
@@ -187,15 +187,13 @@
       '########################'
     ],
     ROOMS: [
-      { name: 'LA RÉSERVE',      x: 5,  y: 1,  w: 5,  h: 3, tint: 'cool' },
-      { name: 'BUREAU',          x: 18, y: 13,  w: 3,  h: 3, tint: 'olive' },
-      { name: 'GALERIE HAUTE',   x: 1,  y: 5,  w: 22, h: 2, tint: 'neutral' },
-      { name: 'AILE OUEST',      x: 1,  y: 7,  w: 2,  h: 3, tint: 'neutral' },
-      { name: 'COULOIR CENTRAL', x: 9,  y: 6,  w: 3,  h: 5, tint: 'olive' },
-      { name: 'AILE EST',        x: 20, y: 8,  w: 2,  h: 3, tint: 'neutral' },
-      { name: 'GALERIE BASSE',   x: 1,  y: 10, w: 21, h: 2, tint: 'neutral' },
-      { name: 'LES CUISINES',    x: 1,  y: 13, w: 21, h: 6, tint: 'warm' },
-      { name: 'ESCALIER',        x: 6,  y: 16, w: 3,  h: 2, tint: 'warm' }
+      { name: 'LE COFFRE',       x: 14, y: 1,  w: 7,  h: 3, tint: 'warm' },
+      { name: 'LES CUISINES',    x: 1,  y: 3,  w: 4,  h: 9, tint: 'warm' },
+      { name: 'LA RÉSERVE',      x: 7, y: 13, w: 10,  h: 3, tint: 'olive', labelX: 11, labelY: 14 },
+      { name: 'BUREAU',          x: 18, y: 13, w: 3,  h: 3, tint: 'olive' },
+      { name: 'LE VESTIAIRE',    x: 2,  y: 15, w: 5,  h: 3, tint: 'warm' },
+      { name: 'GALERIE HAUTE',   x: 5,  y: 5,  w: 17, h: 4, tint: 'neutral' },
+      { name: 'GALERIE BASSE',   x: 5,  y: 9, w: 17, h: 3, tint: 'neutral' }
     ],
 
     /* A GUARD IS THREE ROWS TALL AND THIS BUILDING'S GALLERIES ARE TWO.
@@ -231,17 +229,17 @@
       /* the beat stops two short of each wall: a guard who walks into the
          corner makes the corner a trap, and the scan found four dead states
          at each end when he did */
-      /* THE KITCHEN MAN, AND THE LESSON IN THE BEAMS. He does not walk a
-         round: he stands at the east end of the kitchen looking west, down
+      /* THE RESERVE MAN, AND THE LESSON IN THE BEAMS. He does not walk a
+         round: he stands at the east end of La Réserve looking west, down
          the room at the beam column every route through it has to cross.
-         Break a beam in LES CUISINES (`hears`) and he walks to Assane and
+         Break a beam in LA RÉSERVE (`hears`) and he walks to Assane and
          stops him, wherever he has got to — the first alarm and the first
          conversation, taught together and on purpose. It is a scripted
          encounter: it does not count as being spotted. Talk him round and he
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
       { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
-        stand: true, facing: 'W', hears: 'LES CUISINES' },
+        stand: true, facing: 'W', hears: 'LA RÉSERVE' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
@@ -279,17 +277,17 @@
       { targets: ['exit'] }
     ],
     OBJ: {
-      cloak: 'Staff only past the kitchen door. Get Assane into the right uniform first — the cloakroom is by the stairs.',
-      door:  'A padlocked gate at the back of the kitchens. P1 has the keys; P2 knows which is which.',
-      porte: 'A locked door out of the kitchens. P1 has the keypad; P2 has the code.',
-      after: 'Up through the ring. The desk releases the vault, and the vault holds the lot.',
+      cloak: 'The vestiaire is at the entrance. Get Assane into the right uniform before he crosses the staff gate.',
+      door:  'A padlocked gate between the vestiaire and the service passages. P1 has the keys; P2 knows which is which.',
+      porte: 'A locked door beyond La Réserve. P1 has the keypad; P2 has the code.',
+      after: 'The manuscript is sealed in a vault beneath a live camera. Crack the safe, take the prize, and disappear through the unmarked exit.',
       out:   'Assane has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
       dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
-      { x: 20,  y: 5,  locked: true,  mark: 'trident',  to: 'LA RÉSERVE' },
-      { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'BUREAU' },
-      { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'GALERIE BASSE' },
+      { x: 20,  y: 5,  locked: true,  mark: 'trident',  to: 'LE COFFRE' },
+      { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'GALERIE BASSE' },
+      { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'LE VESTIAIRE' },
     ],
     MODULES: [
       /* staff only: the padlock will not open for a man out of uniform, so
@@ -297,8 +295,8 @@
       { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
       { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
-        /* LA PORTE, back on the kitchen's north door: the keypad is on the
-         kitchen side, so it comes after the beam and the man by the stoves */
+        /* LA PORTE, at the north end of La Réserve: the keypad follows the
+           beam and the posted guard. */
       { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
       { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
       { id: 'coffre',      x: 17,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
@@ -349,16 +347,14 @@
     BUREAU: { badge: '1184', mode: 'eldest', answer: '2005', doorMark: 'trident', photo: 'a boy and a girl' },
 
     PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',     post: 'LES CUISINES',  plate: '8028', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
+      { badge: '4412', name: 'MOREAU, Serge',     post: 'LA RÉSERVE',    plate: '8028', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
       /* HIS POST IS THE EAST AISLE, and it has to be his alone. He walks it —
-         g2's beat is the aisle, not the gallery, and the file said gallery
-         because it was written before the patrol was rerouted. It also has to
+         g2's beat is the east side of Galerie Haute. It also has to
          be his alone for LE CLAVIER: the release code is the badge of the
-         officer posted to the keypad's zone, and while two men shared
-         GALERIE HAUTE that question had two answers. */
-      { badge: '2071', name: 'DELACROIX, Yann',   post: 'AILE EST',      plate: '5530', kids: [] },
+         officer posted to the keypad's zone. */
+      { badge: '2071', name: 'DELACROIX, Yann',   post: 'GALERIE HAUTE', plate: '5530', kids: [] },
       { badge: '1184', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
-      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'GALERIE HAUTE', plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
+      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'LES CUISINES',  plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
       { badge: '3308', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
@@ -436,7 +432,7 @@
        unlock it. Contract one has a LINK and no CLAVIER: its monitors die
        instead, and the van stutters exactly the same way. */
     LINK: {
-      drop:  [1, 2],   /* moves the van has nothing at all */
+      drop:  [1, 1],   /* moves the van has nothing at all */
       delay: [4, 6]    /* moves it is guaranteed before the next dropout */
     },
 
