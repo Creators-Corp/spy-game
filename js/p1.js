@@ -55,12 +55,18 @@
      playable with an empty art folder, and so a missing file degrades quietly
      instead of leaving a labelled placeholder box where a face should be. */
   var portraitCache = {};
+  /* Every guard currently wears the same placeholder portrait while the faces
+     are redrawn. Each guard's own art stays named in content.js (FACES[..].art);
+     set this back to null to show them again. */
+  var GUARD_PLACEHOLDER = 'guard-placeholder';
   function facePortrait(traits, cls) {
+    var art = GUARD_PLACEHOLDER || traits.art;
+    /* keyed by the guard, not the image: the faces grid shows them side by side */
     var key = (traits.art || 'x') + '|' + (cls || '');
     if (portraitCache[key]) return portraitCache[key];
     var box = el('div', { class: 'artslot ' + (cls || '') });
-    if (traits.art) {
-      var img = el('img', { src: U.assetURL('art/' + traits.art + '.png'), alt: '' });
+    if (art) {
+      var img = el('img', { src: U.assetURL('art/' + art + '.png'), alt: '' });
       img.addEventListener('error', function () { box.innerHTML = faceSVG(traits); });
       box.appendChild(img);
     } else {
@@ -101,7 +107,6 @@
       foot([
         el('button', {
           class: 'btn plan-ready' + (S.ready.p1 ? ' is-waiting' : ''),
-          disabled: S.ready.p1 ? '' : null,
           onclick: function () { E.ready('p1'); U.sfx.tap(); U.emit('ready'); }
         }, [
           el('img', { class: 'plan-ready__art plan-ready__art--light', src: U.assetURL('art/ui/van-action-light.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
