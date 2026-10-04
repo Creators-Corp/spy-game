@@ -411,10 +411,13 @@
 .rack button.is-on{background:var(--gold);}
 .rack button svg{display:block;width:100%;height:52px;}
 
-/* the uniform on Benjamin's roster — same renderer, other side of the table */
-.uniformwrap{display:flex;align-items:center;gap:10px;margin-top:10px;}
+/* the uniform on Benjamin's roster — same renderer, other side of the table.
+   It sits in its own column on the right of the file, label over the stack. */
+.file__bd--uniform{display:flex;align-items:flex-start;gap:12px;}
+.file__bd--uniform dl{flex:1;min-width:0;}
+.uniformwrap{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:9px;flex:none;}
 .uniform{
-  width:56px;flex:none;background:var(--paper);
+  flex:none;background:#D4D7DC;padding:4px;
   border:var(--stroke) solid var(--ink);border-radius:2px;
 }
 .uniform svg{display:block;width:100%;}
@@ -650,7 +653,8 @@
 .ustack .gtile.is-drawn svg{width:100%;height:100%;}
 .mirror{width:58px;flex:none;background:transparent;border:0;padding:0;}
 .mirror.is-bad{background:transparent;animation:nudge .22s;}
-.ustack--roster{width:64px;flex:none;}
+.ustack--roster{width:84px;flex:none;}
+.ustack--roster .gtile,.ustack--roster .gtile.is-drawn{height:58px;}
 
 /* The face on the staff file, so a roster row and LES VISAGES are obviously
    the same person seen from two directions. */

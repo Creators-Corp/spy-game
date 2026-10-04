@@ -913,9 +913,9 @@
         dl.appendChild(el('dd', { text: p.kids.length
           ? p.kids.map(function (k) { return k.n + ' (' + k.y + ')'; }).join(' · ')
           : '—' }));
-        var bd = el('div', { class: 'file__bd' }, [dl]);
-        /* the uniform, drawn. Benjamin can see whose is whose; only Assane can
-           see which of these are actually hanging in the cloakroom. */
+        var bd = el('div', { class: 'file__bd' + (C.UNIFORMS[p.badge] ? ' file__bd--uniform' : '') }, [dl]);
+        /* the uniform, drawn. Every one of them can be built from the rack, so
+           Benjamin picks the person and Assane matches the pieces. */
         if (C.UNIFORMS[p.badge]) {
           var uni = el('div', { class: 'uniform' });
           uni.appendChild(L.figures.uniformStack(C.UNIFORMS[p.badge], 'ustack--roster'));

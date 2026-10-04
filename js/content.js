@@ -23,11 +23,12 @@
     amber: 'var(--gold)', olive: 'var(--olive)', denim: 'var(--denim)', camel: 'var(--camel)'
   };
 
-  /* the whole wardrobe. Each job hangs a different subset on its rack. */
+  /* the whole wardrobe — the nine pieces in art/wardrobe. Every staff uniform
+     is built from these, and the rack hangs all of them. */
   var GARMENTS = {
-    head:  ['casquette', 'beret', 'nu', 'calot'],
-    torso: ['tablier', 'gilet', 'veste', 'blouse'],
-    legs:  ['noir', 'raye', 'salopette', 'jean']
+    head:  ['casquette', 'nu', 'calot'],
+    torso: ['tablier', 'gilet', 'blouse'],
+    legs:  ['noir', 'salopette', 'jean']
   };
 
   /* La Tchatche runs on topics, not on scripted scenes, so one line pool
@@ -369,19 +370,23 @@
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
       { badge: '3308', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
-    /* contract one's rack: two uniforms buildable, VIDAL (BUREAU) and KOFFI
-       (LA RÉSERVE). The post decides it. */
+    /* contract one's rack: the whole wardrobe, so every uniform is buildable.
+       The post narrows it to LA RÉSERVE, which has two staff — MOREAU and
+       KOFFI. MOREAU is the guard standing in that room (g1), and his badge is
+       on Benjamin's map, so Assane goes in as the one who is not there. No two
+       uniforms are the same; MOREAU's differs from KOFFI's by the torso only,
+       so Assane still has to describe the rack carefully. */
     RACK: {
       head:  ['casquette', 'nu', 'calot'],
       torso: ['tablier', 'gilet', 'blouse'],
       legs:  ['noir', 'salopette', 'jean']
     },
     UNIFORMS: {
-      '4412': { head: 'beret',     torso: 'veste',   legs: 'raye' },
-      '2071': { head: 'calot',     torso: 'veste',   legs: 'noir' },
+      '4412': { head: 'casquette', torso: 'blouse',  legs: 'noir' },
+      '2071': { head: 'calot',     torso: 'blouse',  legs: 'jean' },
       '1184': { head: 'nu',        torso: 'gilet',   legs: 'jean' },
-      '5195': { head: 'casquette', torso: 'blouse',  legs: 'raye' },
-      '6620': { head: 'beret',     torso: 'tablier', legs: 'noir' },
+      '5195': { head: 'casquette', torso: 'gilet',   legs: 'salopette' },
+      '6620': { head: 'nu',        torso: 'tablier', legs: 'salopette' },
       '3308': { head: 'casquette', torso: 'tablier', legs: 'noir' }
     },
     DEGUISEMENT: { answerBadge: '3308', targetPost: 'LA RÉSERVE', conePenalty: 1 },

@@ -282,7 +282,8 @@
   function deguisementSteps() {
     if (!C.DEGUISEMENT) return 'A rack. Nine pieces. Nothing is labelled.';
     return 'Assane’s destination is ' + C.DEGUISEMENT.targetPost + '.\n' +
-           'Benjamin must find who’s posted there, and tell Assane what they’re wearing.';
+           'Two staff are posted there, and one of them is standing in it tonight.\n' +
+           'Benjamin must find the one who isn’t, and tell Assane what they’re wearing.';
   }
 
   function renderModule() {

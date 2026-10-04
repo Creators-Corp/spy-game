@@ -342,6 +342,11 @@
      a labelled empty box — an empty box is not describable, and the puzzle
      would simply stop. With no art at all the rack looks exactly as it does
      today, down to the tile height. */
+  function disguiseName() {
+    var who = C.PERSONNEL.filter(function (p) { return p.badge === C.DEGUISEMENT.answerBadge; })[0];
+    return who ? who.name : 'badge ' + C.DEGUISEMENT.answerBadge;
+  }
+
   function viewDeguisement() {
     var S = E.S, F = L.figures;
 
@@ -376,12 +381,11 @@
       body([
         el('div', { class: 'mirrorwrap' }, [
           mirror,
-          /* the room, not the instruction. Who is posted where Assane is going
-             is Benjamin's half and it is announced on the television; all this
-             line does is say what he is standing in. It stays because the
-             mirror is 64px wide and the panel it sits in is not. */
+          /* who Assane is going in as. The name is read off the roster slot
+             rather than written here, because names are dealt into badge slots
+             per seed — it always matches the file Benjamin has to find. */
           el('p', { class: 'note', style: 'margin:0', text:
-            'The staff cloakroom. Nine pieces on the rack, and not one of them is labelled.' })
+            'The staff cloakroom. You’re going in as ' + disguiseName() + '.' })
         ]),
         racks
       ]),
