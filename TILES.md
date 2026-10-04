@@ -134,8 +134,16 @@ combined.
    rows as the face. This is the artist's rule — where a wall is concave, it
    goes inside the floor tile.
 
-4. **A face that ends against wall** is capped with the blank-corner pieces.
-   *(Contract one sets these by hand in the sheet rather than by rule; see §6.)*
+4. **A face that ends against wall** first checks the adjoining wall's emitted
+   pieces on that side. If its side band is already in the adjoining wall cell,
+   keep the face's normal top and panel: adding another band would double the
+   wall's thickness. Otherwise use `wall-blank-corner-top-left` or `-right` for
+   its upper tile. Its lower tile keeps the existing panel, with
+   `wall-edge-right` overlaid under a left cap or `wall-edge-left` under a
+   right cap (the edge names are reversed; see the naming trap above). A door
+   splits panel pairs without creating an end cap. A one-column face bounded
+   on both sides uses the right cap. This rule supplies Q0, D14, E2, O0, T4
+   and F14, with matching bands below, without overrides.
 
 5. **A side wall run** takes a plain band in the wall cell, capped at the bottom
    with a bottom corner. At the top it climbs one cell into the wall above it,
@@ -160,6 +168,15 @@ combined.
 
 8. **No pillars.** A band belongs in a wall cell, or — where the wall is
    concave — in the floor tile beside it. Never hanging in the middle of a room.
+
+9. **Keep small masses and narrow passages readable.** An isolated 1 × 1 wall
+   mass (floor on all four sides) keeps its face and solid fill, but has no side
+   walls. Side assemblies laid over floor are also omitted where the passage
+   is only one tile wide between walls. Check the continuous wall/floor boundary
+   and omit the whole assembly, including both inner-corner rows and any cap
+   above the passage, rather than leaving detached corner pieces. Side bands
+   drawn within wall cells remain. This clears F6–F10, H7–H10, J7–J10 and
+   L7–L10 on `veille` without per-cell overrides.
 
 ---
 

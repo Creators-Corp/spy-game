@@ -182,9 +182,42 @@
 
   var PROBING = false;
 
+  /* Ask which side the adjoining wall actually draws in its own column.
+     A band on the opposite side of a two-sided wall does not close this join. */
+  function sideBandInWallColumn(x, y, side) {
+    if (PROBING || !wallLike(x, y)) return false;
+    PROBING = true;
+    var pieces;
+    try { pieces = wallPieces(x, y); } finally { PROBING = false; }
+    var want = side === 'E' ? /^wall-(edge-left|corner-bottom-right)/
+                            : /^wall-(edge-right|corner-bottom-left)/;
+    return pieces.some(function (p) {
+      return !Math.round(p.dx || 0) && !Math.round(p.dy || 0) && want.test(p.name || '');
+    });
+  }
+
+  /* Keep the full side assembly clear of a one-cell-wide passage, including
+     caps that climb above it. Follow the wall/floor boundary so the two rows
+     of an inner corner are either both present or both absent. */
+  function narrowSideRun(x, y, nx) {
+    function boundary(q) {
+      return q >= 0 && q < C.MAP.length && wallLike(x, q) && floorLike(nx, q);
+    }
+    var first = y, last = y;
+    while (boundary(first - 1)) first--;
+    while (boundary(last + 1)) last++;
+    for (var q = first; q <= last; q++) {
+      if (!boundary(q)) continue;
+      if ((wallLike(nx - 1, q) && wallLike(nx + 1, q)) ||
+          (wallLike(nx, q - 1) && wallLike(nx, q + 1))) return true;
+    }
+    return false;
+  }
+
   function wallPieces(x, y) {
 
     var n = floorLike(x, y - 1), e = floorLike(x + 1, y), s = floorLike(x, y + 1), w = floorLike(x - 1, y);
+    var singleMass = n && e && s && w;
     var out = [];
 
     /* WHICH COLUMN DOES THE BAND BELOW RUN IN? Either answer is legitimate:
@@ -196,16 +229,7 @@
        and the two disagreed — ask the cell below what it actually emits. The
        probe flag keeps that one level deep. */
     function bandInWallColumn(side) {
-      if (PROBING || !wallLike(x, y + 1)) return false;
-      PROBING = true;
-      var below;
-      try { below = wallPieces(x, y + 1); } finally { PROBING = false; }
-      var want = side === 'E' ? /^wall-(edge-left|corner-bottom-right)/
-                              : /^wall-(edge-right|corner-bottom-left)/;
-      for (var i = 0; i < below.length; i++) {
-        if (!Math.round(below[i].dx || 0) && want.test(below[i].name || '')) return true;
-      }
-      return false;
+      return sideBandInWallColumn(x, y + 1, side);
     }
 
     /* floor below wins: this side of the wall is a face whatever backs onto
@@ -230,6 +254,17 @@
         else             { top = 'wall-molded-top-right'; bot = 'wall-molded-bottom-right'; }
       }
 
+      /* A face needs a turning cap only when the adjoining side wall does
+         not already close the join in its own column. Otherwise a cap and
+         edge overlay here would make the wall two bands thick. A doorway
+         splits panel pairs but is not a corner. */
+      if (!isDoor(x, y) && !singleMass) {
+        if (x === runStart && wallLike(x - 1, y + 1) && !isDoor(x - 1, y) &&
+            !sideBandInWallColumn(x - 1, y + 1, 'E')) top = 'wall-blank-corner-top-left';
+        if (x === runEnd && wallLike(x + 1, y + 1) && !isDoor(x + 1, y) &&
+            !sideBandInWallColumn(x + 1, y + 1, 'W')) top = 'wall-blank-corner-top-right';
+      }
+
       /* WHERE A FACE RUN ENDS AGAINST FLOOR.
          The face itself is never capped: the moulded pair runs right to the
          last column. The corner belongs to the ROOM beside it, and the set
@@ -238,11 +273,16 @@
          the artist's rule ("when a wall is concave it goes inside the floor
          tile") and the reason the panels are no longer cut through. */
       var pieces = [];
-      if (e) {
+      /* edge-* names are reversed: the left cap needs edge-right's left
+         band, and the right cap needs edge-left's right band. Overlay the
+         band on the existing panel instead of replacing that panel. */
+      if (top === 'wall-blank-corner-top-left') pieces.push({ name: 'wall-edge-right', dx: 0, dy: 0, w: 1, h: 1 });
+      if (top === 'wall-blank-corner-top-right') pieces.push({ name: 'wall-edge-left', dx: 0, dy: 0, w: 1, h: 1 });
+      if (e && !singleMass && !narrowSideRun(x, y, x + 1)) {
         pieces.push({ name: 'wall-inner-corner-top-left',    dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
         pieces.push({ name: 'wall-inner-corner-bottom-left', dx: 1, dy: 0,  w: 1, h: 1, pillar: 1 });
       }
-      if (w) {
+      if (w && !singleMass && !narrowSideRun(x, y, x - 1)) {
         pieces.push({ name: 'wall-inner-corner-top-right',    dx: -1, dy: -1, w: 1, h: 1, pillar: 1 });
         pieces.push({ name: 'wall-inner-corner-bottom-right', dx: -1, dy: 0,  w: 1, h: 1, pillar: 1 });
       }
@@ -281,12 +321,14 @@
          wrong one and the wall jogs sideways by its own thickness where the
          two meet. Which column that is depends on the side wall underneath,
          and that is decided further down, so only note the intent here. */
-      if (e && !PROBING) out.push(bandInWallColumn('E')
-        ? { name: 'wall-corner-top-right', dx: 0, dy: -1, w: 1, h: 1, pillar: 1 }
-        : { name: 'wall-corner-top-left',  dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
-      if (w && !PROBING) out.push(bandInWallColumn('W')
-        ? { name: 'wall-corner-top-left',  dx: 0,  dy: -1, w: 1, h: 1, pillar: 1 }
-        : { name: 'wall-corner-top-right', dx: -1, dy: -1, w: 1, h: 1, pillar: 1 });
+      if (e && !PROBING) {
+        if (bandInWallColumn('E')) out.push({ name: 'wall-corner-top-right', dx: 0, dy: -1, w: 1, h: 1, pillar: 1 });
+        else if (!narrowSideRun(x, y, x + 1)) out.push({ name: 'wall-corner-top-left', dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
+      }
+      if (w && !PROBING) {
+        if (bandInWallColumn('W')) out.push({ name: 'wall-corner-top-left', dx: 0, dy: -1, w: 1, h: 1, pillar: 1 });
+        else if (!narrowSideRun(x, y, x - 1)) out.push({ name: 'wall-corner-top-right', dx: -1, dy: -1, w: 1, h: 1, pillar: 1 });
+      }
       /* a partition: the block's lower edge meets floor, and the concept
          outlines it — a dark line along the bottom */
       if (s) out.push({ rect: 1, dx: 0, dy: 1 - LINE_H, w: 1, h: LINE_H, fill: LINE, pillar: 1 });
@@ -338,7 +380,10 @@
       handled = true;
       var mode = runEndsAtFaceCorner(sd[0]);
       if (mode === 'covered') return;          /* the corner tile fills this row */
-      if (mode) { out.push({ name: sd[3], dx: sd[2], dy: 0, w: 1, h: 1, pillar: 1 }); return; }
+      if (mode) {
+        if (!narrowSideRun(x, y, x + sd[2])) out.push({ name: sd[3], dx: sd[2], dy: 0, w: 1, h: 1, pillar: 1 });
+        return;
+      }
 
       /* AN OUTER WALL RUN, AND ITS TWO CAPS.
          The band sits in the wall cell, outside the floor. Where the run ENDS
