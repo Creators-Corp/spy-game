@@ -1,0 +1,313 @@
+/* ===================== PAINTED SKIN =====================
+   The phones wear the painted pass from Figma ("Draft 2" → painted):
+   a slate canvas, a purple header band with an orange brush stroke for the
+   title, cream marble panels and orange marble buttons. The surfaces are cut
+   straight from those paintings (art/ui/painted/) and laid on as 9-slice
+   border-images, so every panel and button keeps its bevel at any size.
+
+   Loaded after phone.css and only restyles surfaces — no layout or gameplay
+   swatches change. The image-based button art the screens still emit
+   (dpad__art, action-art, …) is hidden here instead of edited out of the JS.
+
+   Type on cream and orange flips to dark ink; type that sits straight on the
+   slate canvas stays cream. Semantic colours are untouched: red is threat,
+   orange-on-cream is "selected / yours".
+   ========================================================== */
+
+.phone__screen{
+  --pt-ink:#2B2238;        /* type on cream and orange */
+  --pt-ink-soft:#5A4E66;
+  --pt-accent:#A33E0A;     /* headings and "selected" type on cream — the arrow brown */
+  --pt-cream:#FFEFCC;      /* type on the slate canvas */
+  --pt-panel:url(../art/ui/painted/panel.png) 26 fill / 14px / 0 stretch;
+  --pt-frame:url(../art/ui/painted/panel.png) 26 fill / 8px / 0 stretch;
+  --pt-btn:url(../art/ui/painted/btn.png) 20 22 fill / 12px 14px / 0 stretch;
+  --pt-btn-on:url(../art/ui/painted/btn-on.png) 20 22 fill / 12px 14px / 0 stretch;
+  --pt-btn-off:url(../art/ui/painted/btn-off.png) 20 22 fill / 12px 14px / 0 stretch;
+  --pt-key:url(../art/ui/painted/key.png) 16 fill / 10px / 0 stretch;
+  --pt-key-on:url(../art/ui/painted/key-on.png) 16 fill / 10px / 0 stretch;
+  --pt-key-off:url(../art/ui/painted/key-off.png) 16 fill / 10px / 0 stretch;
+  background:#4A5168 url(../art/ui/painted/bg.jpg) 0 0 / 370px auto repeat;
+}
+
+/* ---- the canvas: every screen variant drops its flat fill ---- */
+.phone__screen .pscreen,
+.phone__screen .pscreen--infiltration,
+.phone__screen .pscreen--dossier{background:transparent;}
+.phone__screen .pfoot,
+.phone__screen :is(.pscreen--plan,.pscreen--disguise,.pscreen--tchatche,.ui-polish) .pfoot{
+  background:transparent;border-top:0;
+}
+.phone__screen .pfoot::before{display:none;}
+.phone__screen .pbody::-webkit-scrollbar-thumb{background:rgba(255,239,204,.35);}
+
+/* ---- header: purple band, orange stroke, the title painted on it ---- */
+.phone__screen .phone-heading{
+  height:calc(124 * var(--heading-unit));
+  margin:0 0 calc(16 * var(--heading-unit));
+  background:url(../art/ui/painted/header.png) center bottom / 100% auto no-repeat;
+}
+.phone__screen .phone-heading img{display:none;}
+.phone__screen .phone-heading h1{
+  right:calc(18 * var(--heading-unit));bottom:calc(22 * var(--heading-unit));
+  color:var(--pt-ink);
+}
+
+/* ================= CREAM PANELS ================= */
+.phone__screen :is(
+  .pscreen--infiltration .nav__sense,
+  .pscreen--dossier .levers,
+  .pscreen--plan .contracts,
+  .pscreen--disguise .disguise__category,
+  .pscreen--disguise .mirrorwrap,
+  .pscreen--dossier .file,
+  .pscreen--tchatche .tchp1__desc,
+  .pscreen--tchatche .lines,
+  .dossier__faces .faces,
+  .dossier__faces .dirt,
+  .ui-polish .safe__plate,.ui-polish .plate,.ui-polish .readout,.ui-polish .manual__seq,
+  .ui-polish .board__result,.ui-polish .warn,.ui-polish .proc,
+  .pscreen--dossier .keyboard,
+  .ui-polish .waiting
+){
+  border:2px solid transparent;border-radius:0;
+  border-image:var(--pt-panel);
+  background:transparent;box-shadow:none;color:var(--pt-ink);
+  /* everything inside that reads the theme ink now reads dark ink */
+  --ink:var(--pt-ink);--ink-soft:var(--pt-ink-soft);
+}
+.phone__screen :is(
+  .pscreen--infiltration .nav__sense,.pscreen--plan .contracts,
+  .pscreen--disguise .disguise__category,.pscreen--disguise .mirrorwrap,.pscreen--dossier .file,
+  .pscreen--tchatche .tchp1__desc,.dossier__faces .dirt,
+  .ui-polish .safe__plate,.ui-polish .plate,.ui-polish .readout,.ui-polish .manual__seq,
+  .ui-polish .warn,.ui-polish .proc,.pscreen--dossier .keyboard,.ui-polish .waiting
+) :is(.note,.notes,.lbl,.plate__word,p,dd,dt,li){color:var(--pt-ink);}
+/* the bevel is ~10px deep, so text needs a little more room than the old 2px rule gave it */
+.phone__screen :is(
+  .pscreen--infiltration .nav__sense,
+  .pscreen--dossier .levers,
+  .pscreen--plan .contracts,
+  .pscreen--disguise .disguise__category,
+  .pscreen--tchatche .tchp1__desc,
+  .pscreen--tchatche .lines,
+  .dossier__faces .faces,
+  .dossier__faces .dirt,
+  .pscreen--dossier .keyboard,
+  .ui-polish .proc
+){padding:14px 16px;}
+
+/* Picture frames: a thinner cream bevel around artwork and the floor plan. */
+.phone__screen :is(
+  .pscreen--dossier .plan2,
+  .pscreen--plan .role .artslot,
+  .pscreen--tchatche .tchp1__face,
+  .dossier__faces .faces__portrait,
+  .ui-polish .desk,.ui-polish .padlock,.ui-polish .canvas__art,.ui-polish .keyring,
+  .pscreen--dossier .deadscreen
+){
+  border:6px solid transparent;border-radius:0;
+  border-image:var(--pt-frame);
+  box-shadow:0 3px 0 rgba(20,14,30,.35);
+}
+.phone__screen :is(.pscreen--dossier .plan2,.pscreen--plan .role .artslot){padding:0;background:#141A22;}
+.phone__screen :is(.ui-polish .desk,.ui-polish .padlock,.ui-polish .canvas__art,.ui-polish .keyring,.pscreen--dossier .deadscreen)::after{display:none;}
+
+/* Small read-only cells (entered symbols, step chips, pulses): mini panels. */
+.phone__screen :is(.pscreen--dossier .keyrow i:not(.keyrow__key),.ui-polish .entry i,.ui-polish .board__slots i,.ui-polish .pulse,.ui-polish .manual__seq .steps i,.ui-polish .symrow__cell){
+  border:2px solid transparent;border-radius:0;
+  border-image:url(../art/ui/painted/panel.png) 26 fill / 7px / 0 stretch;
+  background:transparent;box-shadow:none;color:var(--pt-ink);
+  --ink:var(--pt-ink);--ink-soft:var(--pt-ink-soft);
+}
+.phone__screen .ui-polish .symrow__cell b{color:var(--pt-ink);}
+.phone__screen .ui-polish .symrow__cell.is-read{border-image:var(--pt-key-on);background:transparent;color:var(--pt-ink);}
+.phone__screen .ui-polish .symrow__cell.is-read b{color:var(--pt-ink);}
+.phone__screen .ui-polish .symrow__cell.is-next{box-shadow:0 0 0 2px #FD6A1A;}
+.phone__screen .ui-polish .pulse.is-on{border-image:var(--pt-key-on);background:transparent;}
+.phone__screen .ui-polish .pulse.is-on b{color:var(--pt-ink);}
+.phone__screen .ui-polish .entry i.is-bad,
+.phone__screen .ui-polish .readout.is-bad{border-image:none;border-color:var(--red);background:var(--red);color:var(--pt-cream);}
+.phone__screen .ui-polish .symrow--code.is-bad .symrow__cell{border-image:none;border-color:var(--red);}
+.phone__screen .ui-polish .board__result:not(.is-none){border-image:var(--pt-btn-on);background:transparent;color:var(--pt-ink);}
+.phone__screen .pscreen--dossier .signal.is-good{background:transparent;border-image:var(--pt-btn-on);color:var(--pt-ink);}
+
+/* Type that now sits on cream. */
+.phone__screen :is(
+  .pscreen--infiltration .nav__sense .h,
+  .pscreen--infiltration .nav__senseline,
+  .pscreen--dossier .levers__heading,
+  .pscreen--disguise .disguise__category .h,
+  .pscreen--tchatche .tchp1__desc,
+  .pscreen--dossier .keyboard .note,
+  .ui-polish .proc dd,
+  .ui-polish .plate__word,
+  .ui-polish :is(.safe__plate,.plate,.readout,.manual__seq,.warn,.proc,.waiting) .lbl,
+  .ui-polish :is(.safe__plate,.plate,.readout,.manual__seq,.warn,.proc,.waiting) .note
+){color:var(--pt-ink);}
+.phone__screen :is(
+  .pscreen--tchatche .tchp1__desc b,
+  .dossier__faces .dirt > .h,
+  .pscreen--dossier .keyboard .h,
+  .ui-polish :is(.safe__plate,.plate,.manual__seq,.warn,.proc,.waiting,.keyboard) .h,
+  .ui-polish .warn b
+){color:var(--pt-accent);}
+.phone__screen .dossier__faces .dirt li{color:var(--pt-ink);}
+.phone__screen .dossier__faces .dirt li.is-key{background:transparent;border-image:var(--pt-btn-on);color:var(--pt-ink);}
+.phone__screen .dossier__faces .dirt li.is-key .dirt__tag{color:var(--pt-accent);}
+
+/* The grille's key silhouettes are white: they keep a dark inset inside a cream bevel. */
+.phone__screen .pscreen--dossier .keyrow .keyrow__key{
+  border:4px solid transparent;border-radius:0;
+  border-image:url(../art/ui/painted/panel.png) 26 / 6px / 0 stretch;
+  background:var(--pt-ink) padding-box;
+}
+
+/* Painted flourishes replace the steel ones wherever a panel heading carries them. */
+.phone__screen :is(.nav__sense .h,.levers__heading) img{content:url(../art/ui/painted/flourish-left.png);height:22px;}
+.phone__screen :is(.nav__sense .h,.levers__heading) img:last-child{content:url(../art/ui/painted/flourish-right.png);}
+
+/* ---- the pressure / patience bar: purple trough, orange paint ---- */
+.phone__screen .pscreen--infiltration .pressure{
+  border:2px solid transparent;border-radius:0;box-shadow:none;
+  border-image:url(../art/ui/painted/bar-track.png) 8 fill / 6px / 0 stretch;
+  background:transparent;padding:5px;
+}
+.phone__screen .pscreen--infiltration .pressure i{
+  top:5px;bottom:5px;left:5px;max-width:calc(100% - 10px);
+  background:#E2650F url(../art/ui/painted/bar-fill.png) 0 0 / 100% 100%;
+}
+.phone__screen .pscreen--infiltration .pressure span{color:var(--pt-cream);text-shadow:0 1px 2px rgba(20,14,30,.8);}
+
+/* ================= ORANGE BUTTONS ================= */
+/* Art buttons: drop their dark plates, wear the orange bevel instead. */
+.phone__screen :is(.dpad__art,.dossier__art,.plan-ready__art,.action-art,.tchatche__button-art,.disguise__button-art){display:none !important;}
+
+.phone__screen :is(
+  .plan-ready,
+  .pscreen--disguise .disguise__confirm,
+  .pscreen--tchatche .lines .btn,
+  .ui-polish .art-action,
+  .pscreen--dossier .layers button,
+  .pscreen--dossier .tabs button,
+  .pscreen--dossier .lever,
+  .pscreen--plan .contract,
+  .pscreen--dossier .file__hd,
+  .dossier__faces .faces button,
+  .ui-polish .manual__row,
+  .ui-polish .undo
+){
+  border:2px solid transparent;border-radius:0;
+  border-image:var(--pt-btn);
+  background:transparent;box-shadow:none;color:var(--pt-ink);
+  font-weight:700;
+  --ink:var(--pt-ink);--ink-soft:var(--pt-ink-soft);
+}
+.phone__screen :is(.plan-ready,.pscreen--disguise .disguise__confirm,.pscreen--tchatche .lines .btn,.ui-polish .art-action){
+  padding-left:18px;padding-right:18px;
+}
+/* Hover lightens; press, selection and "live" swap to the saturated plate. */
+.phone__screen :is(
+  .plan-ready,.pscreen--disguise .disguise__confirm,.pscreen--tchatche .lines .btn,.ui-polish .art-action,
+  .pscreen--dossier .layers button,.pscreen--dossier .tabs button,.pscreen--dossier .lever,
+  .pscreen--plan .contract,.pscreen--dossier .file__hd,.dossier__faces .faces button,
+  .ui-polish .manual__row,.ui-polish .undo
+):hover{background:transparent;color:var(--pt-ink);filter:brightness(1.06);}
+.phone__screen :is(
+  .plan-ready:is(:active,.is-waiting),
+  .pscreen--disguise .disguise__confirm:active:not(:disabled),
+  .pscreen--tchatche .lines .btn:active,
+  .ui-polish .art-action:active,
+  .pscreen--dossier .layers button:is(.is-on,:active),
+  .pscreen--dossier .tabs button:is(.is-on,:active,.is-flash),
+  .pscreen--dossier .lever:is(.is-live,:active),
+  .pscreen--plan .contract:is(.is-on,:active),
+  .pscreen--dossier .file__hd:active,
+  .pscreen--dossier .file.is-on .file__hd,
+  .dossier__faces .faces button:is(.is-on,:active),
+  .ui-polish .manual__row:is(.is-on,:active),
+  .ui-polish .undo:active
+){border-image:var(--pt-btn-on);background:transparent;color:var(--pt-ink);}
+.phone__screen :is(.plan-ready[disabled],.pscreen--disguise .disguise__confirm:disabled,.ui-polish .undo[disabled],.pscreen--dossier .lever[disabled]){
+  border-image:var(--pt-btn-off);color:var(--pt-ink-soft);
+}
+.phone__screen .ui-polish .art-action.is-wrong{border-image:none;border-color:var(--red);background:var(--red);color:var(--pt-cream);}
+
+/* Lever copy sits on orange now. Cost stays red: it is a threat. */
+.phone__screen .pscreen--dossier .lever{margin:0;}
+.phone__screen .pscreen--dossier :is(.lever__txt b,.lever:hover .lever__txt b,.lever.is-live .lever__txt b){color:var(--pt-ink);}
+.phone__screen .pscreen--dossier :is(.lever__txt em,.lever:hover .lever__txt em,.lever.is-live .lever__txt em){color:var(--pt-ink-soft);}
+.phone__screen .pscreen--dossier .lever.is-fresh .lever__txt b{text-shadow:none;}
+/* locked levers: grey plate says "not yet"; keep the copy legible enough to plan around */
+.phone__screen .pscreen--dossier .lever[disabled]{opacity:.75;}
+.phone__screen .pscreen--dossier .lever__cost{color:#9E1F17;}
+.phone__screen .pscreen--plan .contract :is(span,em){color:inherit;}
+.phone__screen .ui-polish .manual__row.is-on .manual__ringname{color:var(--pt-accent);}
+.phone__screen .pscreen--dossier .file.is-on .file__hd{border-color:transparent;}
+.phone__screen .pscreen--dossier .file{padding:4px;}
+
+/* Selected cards get the orange ring the painted faces screen shows. */
+.phone__screen .dossier__faces .faces button.is-on{box-shadow:0 0 0 3px #FD6A1A;}
+
+/* ---- keys: keypads, door grids, racks, the d-pad ---- */
+.phone__screen :is(
+  .ui-polish .keypad button,
+  .ui-polish .doorgrid button,
+  .ui-polish .keys button,
+  .ui-polish .board__keys button,
+  .ui-polish .symring__cell,
+  .pscreen--disguise .rack button,
+  .pscreen--infiltration .dpad button
+){
+  border:2px solid transparent;border-radius:0;
+  border-image:var(--pt-key);
+  background:transparent !important;box-shadow:none;color:var(--pt-ink);
+  font-weight:700;
+  --ink:var(--pt-ink);--ink-soft:var(--pt-ink-soft);
+}
+.phone__screen :is(
+  .ui-polish .keypad button,.ui-polish .doorgrid button,.ui-polish .keys button,
+  .ui-polish .board__keys button,.pscreen--disguise .rack button
+):hover{color:var(--pt-ink);filter:brightness(1.06);}
+.phone__screen :is(
+  .ui-polish .keypad button:active,
+  .ui-polish .doorgrid button:active,
+  .ui-polish .keys button:active,
+  .ui-polish .board__keys button:active,
+  .pscreen--disguise .rack button:is(.is-on,:active),
+  .pscreen--infiltration .dpad button:is(:active,.is-pressed):not(:disabled)
+){border-image:var(--pt-key-on);color:var(--pt-ink);}
+.phone__screen .pscreen--disguise .rack button.is-on{box-shadow:0 0 0 3px #FD6A1A;}
+/* worn keys are the clue on the night keypad — keep them unmistakable */
+.phone__screen .ui-polish .keypad--night button.is-worn{border-image:var(--pt-key-on);box-shadow:0 0 0 3px #FD6A1A;color:var(--pt-ink);}
+.phone__screen .ui-polish .keys button.is-bad{border-image:none;border-color:var(--red);background:var(--red) !important;color:var(--pt-cream);}
+
+/* Ring dials and the safe dial are SVG; paint them in the same two materials. */
+.phone__screen .ui-polish .ringdial__cell rect,
+.phone__screen .ui-polish .dial__disc{fill:#F2B47A;stroke:#B45A1C;}
+.phone__screen .ui-polish .ringdial__cell:is(:hover,.is-zero) rect,
+.phone__screen .ui-polish .dial__cell:is(:hover,.is-used) .dial__disc{fill:#F07A1C;stroke:#8A3A0C;}
+.phone__screen .ui-polish :is(.ringdial__cell use,.dial__cell use){color:var(--pt-ink);}
+.phone__screen .ui-polish .ringdial__cell.is-zero use,
+.phone__screen .ui-polish .dial__cell:is(:hover,.is-used) use{color:var(--pt-ink);}
+
+/* ---- the d-pad sits on a round cream plate, arrows in the painted brown ---- */
+.phone__screen .pscreen--infiltration .nav__controls{
+  position:relative;isolation:isolate;border:0;background:transparent;box-shadow:none;
+}
+.phone__screen .pscreen--infiltration .nav__controls::before{
+  content:"";position:absolute;left:50%;top:50%;z-index:-1;
+  width:min(72%,250px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:url(../art/ui/painted/panel.png) center / cover;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.55),inset 0 -6px 0 rgba(60,50,70,.25),0 4px 0 rgba(20,14,30,.35);
+}
+.phone__screen .pscreen--infiltration .dpad button{color:#8A3A0C;}
+/* p1.js tints the arrow glyphs cream inline for the old dark plates */
+.phone__screen .pscreen--infiltration .dpad button svg{color:#8A3A0C !important;}
+.phone__screen .pscreen--infiltration .dpad button:disabled svg{color:#4A4450 !important;}
+.phone__screen .pscreen--infiltration .dpad button:disabled{border-image:var(--pt-key-off);color:#4A4450;}
+.phone__screen .pscreen--infiltration .dpad button:focus-visible{outline-color:var(--pt-ink);}
+.phone__screen .pscreen--infiltration .dpad .dpad__wait{color:var(--pt-ink);}
+
+/* Focus rings read on cream and orange as well as on the slate. */
+.phone__screen button:focus-visible{outline:2px solid var(--pt-ink);outline-offset:3px;box-shadow:0 0 0 5px var(--pt-cream);}
