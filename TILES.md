@@ -140,9 +140,15 @@ combined.
    wall's thickness. Otherwise use `wall-blank-corner-top-left` or `-right` for
    its upper tile. Its lower tile keeps the existing panel, with
    `wall-edge-right` overlaid under a left cap or `wall-edge-left` under a
-   right cap (the edge names are reversed; see the naming trap above). A door
-   splits panel pairs without creating an end cap. A one-column face bounded
-   on both sides uses the right cap. This rule supplies Q0, D14, E2, O0, T4
+   right cap (the edge names are reversed; see the naming trap above).
+   If a neighboring face already emits the matching inner-corner top into the
+   lower cell, omit the straight edge overlay and keep the inner turn instead
+   (for example, T5 keeps `wall-blank-bottom` and `wall-inner-corner-top-right`).
+   If the narrow-passage rule suppresses the adjoining inner wall below, omit
+   both the face's cap and edge overlay as well: O0 and O1 keep their plain
+   face tiles while O2 stays clear. A door splits panel pairs without creating
+   an end cap. A one-column face bounded on both sides uses the right cap.
+   This rule supplies Q0, D14, E2, T4
    and F14, with matching bands below, without overrides.
 
 5. **A side wall run** takes a plain band in the wall cell, capped at the bottom
@@ -150,6 +156,11 @@ combined.
    and if a face stands beside that, a top corner turns above it. A run whose
    bottom meets a face corner is drawn **inside the floor column** instead, so
    the band and the corner below it line up.
+
+   If that floor-column band continues below a mass's top row, the mass row
+   also emits the band beside itself, between its cap above and the side wall
+   below. For example, D7 carries `wall-edge-left` between D6's cap and D8's
+   band. This is a shared rule, including its mirrored case, not an override.
 
    **The band is 80px wide, so it matters which of the two columns it is in.**
    Both answers above are legitimate and they occur on the same board. Where a
@@ -230,6 +241,11 @@ cell:
 A cell listed there is drawn **exactly** as listed and the rules are ignored for
 it. Order in the list is drawing order; `[]` blanks a cell; tile names are files
 in `art/tiles/` without the `.png`.
+
+On `veille`, Q4 uses `wall-corner-bottom-left` underneath
+`wall-molded-top-right`, in that order, to finish this particular join.
+P0 uses `wall-corner-top-left` and P1 uses `wall-edge-right` to keep this
+side assembly in the wall column beside the narrow passage at O2.
 
 **Keep it small.** It is for decisions, not for a copy of the board. Pin every
 cell and a rule fix will never reach the board again. Contract one uses it for

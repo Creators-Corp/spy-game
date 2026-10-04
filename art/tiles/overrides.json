@@ -211,5 +211,34 @@
   ]
  },
  "veille": {
+  "P0": [
+   "wall-corner-top-left"
+  ],
+  "P1": [
+   "wall-edge-right",
+   "wall-blank-top"
+  ],
+  "Q4": [
+   "wall-corner-bottom-left",
+   "wall-molded-top-right"
+  ],
+  "R14": [
+    "block-tile",
+    "wall-edge-left",
+    "wall-edge-right"
+  ],
+  "R15": [
+    "block-tile",
+    "wall-edge-left",
+    "wall-edge-right"
+  ],
+  "R16": [
+    "block-tile",
+    "wall-corner-bottom-left",
+    "wall-corner-bottom-right"
+  ],
+  "R17": [
+    "block-tile"
+  ]
  }
 }

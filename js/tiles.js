@@ -196,6 +196,16 @@
     });
   }
 
+  function innerTopAtFace(x, y, side) {
+    var dx = side === 'E' ? 1 : -1;
+    if (PROBING || !wallLike(x + dx, y + 1)) return false;
+    PROBING = true;
+    var pieces;
+    try { pieces = wallPieces(x + dx, y + 1); } finally { PROBING = false; }
+    var name = side === 'E' ? 'wall-inner-corner-top-right' : 'wall-inner-corner-top-left';
+    return pieces.some(function (p) { return p.name === name && p.dx === -dx && p.dy === -1; });
+  }
+
   /* Keep the full side assembly clear of a one-cell-wide passage, including
      caps that climb above it. Follow the wall/floor boundary so the two rows
      of an inner corner are either both present or both absent. */
@@ -232,6 +242,16 @@
       return sideBandInWallColumn(x, y + 1, side);
     }
 
+    function floorBandBelow(side) {
+      if (PROBING || !wallLike(x, y + 1)) return false;
+      PROBING = true;
+      var below;
+      try { below = wallPieces(x, y + 1); } finally { PROBING = false; }
+      var dx = side === 'E' ? 1 : -1;
+      var name = side === 'E' ? 'wall-edge-right' : 'wall-edge-left';
+      return below.some(function (p) { return p.name === name && p.dx === dx && p.dy === 0; });
+    }
+
     /* floor below wins: this side of the wall is a face whatever backs onto
        it, and its top tile simply lands on the floor of the room behind */
     if (s) {
@@ -260,8 +280,10 @@
          splits panel pairs but is not a corner. */
       if (!isDoor(x, y) && !singleMass) {
         if (x === runStart && wallLike(x - 1, y + 1) && !isDoor(x - 1, y) &&
+            !narrowSideRun(x - 1, y + 1, x) &&
             !sideBandInWallColumn(x - 1, y + 1, 'E')) top = 'wall-blank-corner-top-left';
         if (x === runEnd && wallLike(x + 1, y + 1) && !isDoor(x + 1, y) &&
+            !narrowSideRun(x + 1, y + 1, x) &&
             !sideBandInWallColumn(x + 1, y + 1, 'W')) top = 'wall-blank-corner-top-right';
       }
 
@@ -276,8 +298,10 @@
       /* edge-* names are reversed: the left cap needs edge-right's left
          band, and the right cap needs edge-left's right band. Overlay the
          band on the existing panel instead of replacing that panel. */
-      if (top === 'wall-blank-corner-top-left') pieces.push({ name: 'wall-edge-right', dx: 0, dy: 0, w: 1, h: 1 });
-      if (top === 'wall-blank-corner-top-right') pieces.push({ name: 'wall-edge-left', dx: 0, dy: 0, w: 1, h: 1 });
+      /* A neighboring face may already place its inner-corner top here.
+         Keep that turn rather than doubling it with a straight edge. */
+      if (top === 'wall-blank-corner-top-left' && !innerTopAtFace(x, y, 'W')) pieces.push({ name: 'wall-edge-right', dx: 0, dy: 0, w: 1, h: 1 });
+      if (top === 'wall-blank-corner-top-right' && !innerTopAtFace(x, y, 'E')) pieces.push({ name: 'wall-edge-left', dx: 0, dy: 0, w: 1, h: 1 });
       if (e && !singleMass && !narrowSideRun(x, y, x + 1)) {
         pieces.push({ name: 'wall-inner-corner-top-left',    dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
         pieces.push({ name: 'wall-inner-corner-bottom-left', dx: 1, dy: 0,  w: 1, h: 1, pillar: 1 });
@@ -323,11 +347,17 @@
          and that is decided further down, so only note the intent here. */
       if (e && !PROBING) {
         if (bandInWallColumn('E')) out.push({ name: 'wall-corner-top-right', dx: 0, dy: -1, w: 1, h: 1, pillar: 1 });
-        else if (!narrowSideRun(x, y, x + 1)) out.push({ name: 'wall-corner-top-left', dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
+        else if (!narrowSideRun(x, y, x + 1)) {
+          out.push({ name: 'wall-corner-top-left', dx: 1, dy: -1, w: 1, h: 1, pillar: 1 });
+          if (floorBandBelow('E')) out.push({ name: 'wall-edge-right', dx: 1, dy: 0, w: 1, h: 1, pillar: 1 });
+        }
       }
       if (w && !PROBING) {
         if (bandInWallColumn('W')) out.push({ name: 'wall-corner-top-left', dx: 0, dy: -1, w: 1, h: 1, pillar: 1 });
-        else if (!narrowSideRun(x, y, x - 1)) out.push({ name: 'wall-corner-top-right', dx: -1, dy: -1, w: 1, h: 1, pillar: 1 });
+        else if (!narrowSideRun(x, y, x - 1)) {
+          out.push({ name: 'wall-corner-top-right', dx: -1, dy: -1, w: 1, h: 1, pillar: 1 });
+          if (floorBandBelow('W')) out.push({ name: 'wall-edge-left', dx: -1, dy: 0, w: 1, h: 1, pillar: 1 });
+        }
       }
       /* a partition: the block's lower edge meets floor, and the concept
          outlines it — a dark line along the bottom */
@@ -344,6 +374,8 @@
          band down an opening's side belongs in the FLOOR column — that is
          where the inner-corner pieces put it, and where the sheet puts it.
          Drawn here it was a pale bar floating in the middle of the stone. */
+      /* Where the run below emits its band in floor, continue it beside this
+         mass row too: the cap above alone would leave a one-cell gap. */
       return out;
     }
 

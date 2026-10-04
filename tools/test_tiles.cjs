@@ -35,6 +35,32 @@ function pieces() {
 }
 
 const level = dc.content.MAP;
+function assertMassSideContinuation(mirrored) {
+  const x = mirrored ? level[0].length - 1 - 3 : 3;
+  const name = mirrored ? 'wall-edge-right' : 'wall-edge-left';
+  const all = pieces();
+  for (const y of [6, 7]) {
+    assert.equal(all.filter(p => p.x === x && p.y === y && p.name === name).length,
+      1, `${dc.tiles.cellName(x, y)} continues the floor-column side band`);
+  }
+}
+assertMassSideContinuation(false);
+function assertInnerJoin(mirrored) {
+  const x = mirrored ? level[0].length - 1 - 19 : 19;
+  const names = pieces().filter(p => p.x === x && p.y === 4).map(p => p.name);
+  assert.deepEqual(names, [mirrored ? 'wall-molded-bottom-left' : 'wall-blank-bottom', `wall-inner-corner-top-${mirrored ? 'left' : 'right'}`],
+    'T5 keeps its panel and inner turn without a straight edge');
+}
+assertInnerJoin(false);
+function assertNarrowFaceJoin(mirrored) {
+  const x = mirrored ? level[0].length - 1 - 14 : 14;
+  const all = pieces();
+  for (const [y, expected] of [[-1, ['wall-blank-top']], [0, ['wall-blank-bottom']], [1, []]]) {
+    assert.deepEqual(all.filter(p => p.x === x && p.y === y).map(p => p.name), expected,
+      `O${y + 1} has no detached side assembly above the narrow passage`);
+  }
+}
+assertNarrowFaceJoin(false);
 // An outer wall already carries the side band beside these face endpoints.
 // Keep their original top and panel, without a second band in the face cell.
 const outerJoins = {
@@ -64,7 +90,7 @@ assertOuterJoins(false);
 // Face endpoints against wall use the turning top pieces, including row 0.
 const cornerCells = {
   Q0: 'wall-blank-corner-top-left', D14: 'wall-blank-corner-top-left',
-  E2: 'wall-blank-corner-top-right', O0: 'wall-blank-corner-top-right',
+  E2: 'wall-blank-corner-top-right',
   T4: 'wall-blank-corner-top-right', F14: 'wall-blank-corner-top-right'
 };
 for (const [cell, expected] of Object.entries(cornerCells)) {
@@ -96,6 +122,9 @@ function assertClearSpans(mirrored) {
 }
 assertClearSpans(false);
 dc.content.MAP = level.map(row => [...row].reverse().join(''));
+assertMassSideContinuation(true);
+assertInnerJoin(true);
+assertNarrowFaceJoin(true);
 assertOuterJoins(true);
 assertClearSpans(true);
 // Multi-column face endpoints and their bands mirror together.
@@ -107,7 +136,8 @@ for (const cell of ['Q0', 'D14', 'E2', 'T4', 'F14']) {
   assert.ok(all.some(p => p.x === x && p.y === y &&
     p.name === `wall-blank-corner-top-${left ? 'right' : 'left'}`), `${cell} mirrors its cap`);
   assert.ok(all.some(p => p.x === x && p.y === y + 1 &&
-    p.name === `wall-edge-${left ? 'left' : 'right'}`), `${cell} mirrors its band`);
+    (p.name === `wall-edge-${left ? 'left' : 'right'}` ||
+     p.name === `wall-inner-corner-top-${left ? 'right' : 'left'}`)), `${cell} mirrors its band or inner turn`);
 }
 
 // A door splitting a face run does not create a corner or an overlay band.
