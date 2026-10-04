@@ -211,17 +211,5 @@
   ]
  },
  "veille": {
-  "C8": [
-   "wall-edge-left"
-  ],
-  "N8": [
-   "wall-edge-left"
-  ],
-  "J8": [
-   "wall-edge-right"
-  ],
-  "U8": [
-   "wall-edge-right"
-  ]
  }
 }
