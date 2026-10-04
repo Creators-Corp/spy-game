@@ -40,11 +40,17 @@
     if (solve) solve();
   }
 
-  /* La Tchatche: give the right line until the guard stands down */
+  /* La Tchatche: give the right line until the guard stands down. The first
+     beam conversation is the tutorial, answered by button index, and a wrong
+     answer there costs nothing, so a mismatch would never end the talk: the
+     cap stops that from hanging the page. */
   function skipTalk() {
     var S = E.S;
-    while (S.phase === 'tchatche' && S.tchatche) {
-      E.tchatchePick(C.DIRT[S.tchatche.badge][S.tchatche.round].t);
+    for (var i = 0; i < 10 && S.phase === 'tchatche' && S.tchatche; i++) {
+      var t = S.tchatche;
+      E.tchatchePick(t.tag === 'first-beam-g1'
+        ? C.FIRST_BEAM_TUTORIAL[t.round].correct - 1
+        : C.DIRT[t.badge][t.round].t);
     }
   }
 

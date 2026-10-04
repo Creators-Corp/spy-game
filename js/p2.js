@@ -46,7 +46,6 @@
       foot([
         el('button', {
           class: 'btn plan-ready' + (S.ready.p2 ? ' is-waiting' : ''),
-          disabled: S.ready.p2 ? '' : null,
           onclick: function () { E.ready('p2'); U.sfx.tap(); U.emit('ready'); }
         }, [
           el('img', { class: 'plan-ready__art plan-ready__art--light', src: U.assetURL('art/ui/van-action-light.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
