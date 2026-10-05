@@ -89,12 +89,13 @@
 }
 .plan__contract{
   margin:18px 0 20px;padding:12px 14px;
-  border:var(--stroke) solid #FD6A1A;border-radius:var(--r);
+  border:0;border-radius:0;
+  background:url(../art/ui-new/panel-big.png) center / 100% 100% no-repeat;
+  color:#2B2238;
 }
-.plan__contract__h{margin:0 0 7px;font-size:9px;letter-spacing:.24em;color:#778495;}
-.plan__contract b{display:block;font-size:11px;letter-spacing:.12em;line-height:1.35;margin-bottom:3px;color:var(--on-color);}
-.plan__contract span{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--zinc-lt);margin-bottom:8px;}
-.plan__contract em{display:block;font-style:normal;font-size:12.5px;line-height:1.55;color:var(--on-color);opacity:.88;}
+.plan__contract b{display:block;font-size:11px;letter-spacing:.12em;line-height:1.35;margin-bottom:3px;color:#A33E0A;}
+.plan__contract span{display:block;font-size:9.5px;letter-spacing:.14em;color:inherit;margin-bottom:8px;}
+.plan__contract em{display:block;font-style:normal;font-size:12.5px;line-height:1.55;color:inherit;opacity:.88;}
 .plan__ready{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
 .readylamp{
   display:flex;align-items:center;gap:7px;

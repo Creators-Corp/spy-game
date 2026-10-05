@@ -171,7 +171,7 @@
     contract: 'CONTRACT No.1 — NIGHT BEFORE AUCTION',
     target: 'Lot 12 · illuminated manuscript',
     venueArt: 'venue-establishing',
-    blurb: 'You need a paper inside The vault. Its room is released from the officer security desk. Find a way out.',
+    blurb: 'You need a paper inside the vault. Its room is released from the officer security desk. Find a way out.',
 
     /* THE FRAME. A wall column down the EAST edge and a wall row along the
        bottom that no route touches: the hatch sits in the east wall, so the
