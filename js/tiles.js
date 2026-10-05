@@ -215,6 +215,9 @@
     ]
   };
   var walkSerial = 0, walkFrame = 0, idleTimer = null, walkCycleIndex = {};
+  /* how far Assane's sprite still sits from his tile mid-step, in art pixels —
+     the TV camera follows this rather than the tile, so it rides the walk */
+  var walkOffset = { x: 0, y: 0 };
   var guardAnimations = {}, guardCycleIndex = {};
 
   function href(name) { return U.assetURL(ART + name + '.png'); }
@@ -335,16 +338,19 @@
     var dx = (fromX - toX) * W, dy = (fromY - toY) * H;
     var start = null;
     actor.setAttribute('transform', 'translate(' + dx + ' ' + dy + ')');
+    walkOffset = { x: dx, y: dy };
     function draw(now) {
       if (serial !== walkSerial) return;
       if (start === null) start = now;
       var progress = Math.min(1, (now - start) / WALK_WINDOW_MS);
       var index = Math.min(frames.length - 1, Math.floor(progress * frames.length));
       sprite.setAttribute('href', U.assetURL(frames[index]));
-      actor.setAttribute('transform', 'translate(' + (dx * (1 - progress)) + ' ' + (dy * (1 - progress)) + ')');
+      walkOffset = { x: dx * (1 - progress), y: dy * (1 - progress) };
+      actor.setAttribute('transform', 'translate(' + walkOffset.x + ' ' + walkOffset.y + ')');
       if (progress < 1) walkFrame = window.requestAnimationFrame(draw);
       else {
         actor.removeAttribute('transform');
+        walkOffset = { x: 0, y: 0 };
         walkFrame = 0;
         startIdle(direction);
       }
@@ -355,6 +361,7 @@
 
   function stopWalk() {
     walkSerial++;
+    walkOffset = { x: 0, y: 0 };
     if (walkFrame) window.cancelAnimationFrame(walkFrame);
     if (idleTimer !== null) window.clearTimeout(idleTimer);
     walkFrame = 0;
@@ -1381,5 +1388,6 @@
   L.tiles = { render: render, ready: ready, W: W, H: H, wallPieces: wallPieces, dump: dump, cellName: cellName,
     animateWalk: animateWalk, startIdle: startIdle, stopWalk: stopWalk,
     animateGuardWalk: animateGuardWalk, startGuardIdle: startGuardIdle, stopGuardAnimations: stopGuardAnimations,
-    walkWindowMs: function () { return WALK_WINDOW_MS; } };
+    walkWindowMs: function () { return WALK_WINDOW_MS; },
+    assaneOffset: function () { return walkOffset; } };
 })(window.DC);

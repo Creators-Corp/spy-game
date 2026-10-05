@@ -333,9 +333,15 @@
 }
 
 /* The wardrobe is one illustration, with selectable garments over its rails. */
-#p1 .pscreen--disguise .pbody{padding:0 0 24px;}
+/* One screen, no scroll: the badge card and the mirror panel keep their size,
+   and the rack illustration takes whatever height is left, at its own aspect. */
+#p1 .pscreen--disguise .pbody{display:flex;flex-direction:column;padding:0 0 12px;}
+#p1 .pscreen--disguise .disguise__stage{
+  flex:1 1 0;min-height:0;container-type:size;display:flex;justify-content:center;
+}
 #p1 .pscreen--disguise .disguise__racks{
-  position:relative;display:block;width:100%;aspect-ratio:1002 / 1109;margin:0;
+  position:relative;display:block;flex:none;margin:0;
+  width:min(100cqw, calc(100cqh * 1002 / 1109));aspect-ratio:1002 / 1109;
   background:url('../art/ui-new/Illustration_Wardrobe.png') center / 100% 100% no-repeat;
 }
 #p1 .pscreen--disguise .wardrobe__row{position:absolute;left:3%;right:3%;}
@@ -349,13 +355,33 @@
   background:transparent !important;box-shadow:none;border-radius:6px;overflow:visible;
   transform:scale(1);transform-origin:center top;
 }
-#p1 .pscreen--disguise .rack button.is-on{outline:5px solid #FF8232;outline-offset:-5px;}
+/* Short landscape phones scroll the whole screen instead, so there is no
+   leftover height to fill: fall back to the rack at full width. */
+@media (max-height:500px){
+  body.is-guest #p1 .pscreen--disguise .disguise__stage{flex:none;container-type:normal;}
+  body.is-guest #p1 .pscreen--disguise .disguise__racks{width:100%;}
+}
+/* The outline hugs the garment, not the button: torso buttons are tall and
+   overlap the rows either side, so an outline on the button sits off the art. */
+#p1 .pscreen--disguise .rack .wardrobe__garment{display:flex;align-items:center;justify-content:center;}
+#p1 .pscreen--disguise .rack .wardrobe__garment img{
+  width:auto;height:auto;max-width:100%;max-height:100%;aspect-ratio:1;border-radius:6px;
+}
+#p1 .pscreen--disguise .rack button.is-on :is(img,svg){outline:4px solid #FF8232;outline-offset:-4px;}
 #p1 .pscreen--disguise .wardrobe__row--head button{width:64%;justify-self:center;}
 #p1 .pscreen--disguise .wardrobe__garment{width:100%;height:100%;pointer-events:none;}
 #p1 .pscreen--disguise .wardrobe__garment svg{display:block;width:100%;height:100%;}
+#p1 .pscreen--disguise .disguise__orders{
+  display:flex;flex:none;align-items:center;justify-content:center;gap:12px;
+  width:min(calc(100% - 18px), 78cqw, 412px);aspect-ratio:412 / 82;
+  margin:8px auto 0;padding:2px 16px 12px;
+  background:url('../art/ui-new/panel-h2.png') center / contain no-repeat;
+  color:#39291D;font-size:clamp(12px,4cqw,18px);font-weight:700;
+}
+#p1 .pscreen--disguise .disguise__badge{font-variant-numeric:tabular-nums;color:var(--pt-accent);}
 #p1 .pscreen--disguise .wardrobe__panel{
-  position:relative;width:calc(100% - 18px);max-width:412px;aspect-ratio:412 / 252;
-  margin:14px auto 0;
+  position:relative;flex:none;width:min(calc(100% - 18px), 78cqw, 412px);aspect-ratio:412 / 252;
+  margin:6px auto 0;
   background:url('../art/ui-new/panel-medium.png') center / contain no-repeat;
 }
 #p1 .pscreen--disguise .wardrobe__preview{

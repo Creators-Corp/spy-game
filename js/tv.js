@@ -139,35 +139,127 @@
      television's shape. Small enough to read faces at couch distance, large
      enough that a corridor's far end is on screen when he steps into it. */
   var CAM_ROWS = 8;
-  function frame() {
-    var cam = $('#room-cam'), world = $('#room-world');
+  /* How long the camera takes to settle on him, in ms. It follows his sprite
+     as it walks, not the tile he is walking to, so this is only the softness
+     on top of the walk — 0 is welded to him. Tune it live with the DEV slider
+     or `DC.tv.cam.smooth = 200` in the console. */
+  var CAM_SMOOTH = 250;
+
+  /* THE PAN. Driven here, frame by frame, rather than by a CSS transition: a
+     transition restarts its curve on every step, so walking a corridor was a
+     run of little lurches, and its ease-out raced ahead of a walk that moves
+     at an even pace. A critically damped spring chasing the sprite keeps its
+     speed from one step into the next and never overshoots. */
+  var camPos = null, camVel = { x: 0, y: 0 }, camLoop = 0, camLast = 0, camSize = '';
+  var shakeAmp = 0, shakeStart = 0, shakeMs = 0;
+
+  function camTarget() {
+    var cam = $('#room-cam');
     var bw = cam.clientWidth, bh = cam.clientHeight;
-    if (!bw || !bh) return;
+    if (!bw || !bh || !E.S) return null;
     var cols = C.MAP[0].length, rows = C.MAP.length;
     /* the tile renderer pads the board with one cell all round, so the world
        is two cells bigger than the map in each direction and Assane sits one
        cell in from where his coordinate says */
     var th = bh / CAM_ROWS, tw = th * (TW / TH);
     var ww = (cols + 2) * tw, wh = (rows + 2) * th;
-    world.style.transitionDuration = L.tiles.walkWindowMs() + 'ms';
-    /* A CUT, NOT A PAN, on the first placement and whenever the board changes
-       size: the world starts at the origin, and letting it slide from there is
-       a swoop across the building every time the room opens or a contract is
-       loaded. Only a step should slide. */
-    var jump = world.style.transform === '' || world.style.width !== ww + 'px';
-    world.style.width = ww + 'px';
-    world.style.height = wh + 'px';
-    if (jump) world.style.transition = 'none';
+    /* mid-step, his sprite is still short of his tile: aim at the sprite */
+    var off = L.tiles.assaneOffset();
+    var ax = E.S.assane.x + off.x / TW, ay = E.S.assane.y + off.y / TH;
     function place(centre, world_, box) {
       if (world_ <= box) return (box - world_) / 2;        /* it all fits: centre it */
       return Math.max(box - world_, Math.min(0, box / 2 - centre));
     }
-    world.style.transform =
-      'translate(' + place((E.S.assane.x + 1.5) * tw, ww, bw).toFixed(1) + 'px,' +
-                     place((E.S.assane.y + 1.5) * th, wh, bh).toFixed(1) + 'px)';
-    if (jump) { void world.offsetWidth; world.style.transition = ''; }
+    return { x: place((ax + 1.5) * tw, ww, bw), y: place((ay + 1.5) * th, wh, bh),
+             ww: ww, wh: wh, th: th, walking: off.x !== 0 || off.y !== 0 };
+  }
+
+  /* one axis of a critically damped spring (Game Programming Gems 4, 1.10) */
+  function damp(cur, target, axis, dt) {
+    var t = Math.max(1, CAM_SMOOTH) / 1000, w = 2 / t, x = w * dt;
+    var k = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+    var change = cur - target, temp = (camVel[axis] + w * change) * dt;
+    camVel[axis] = (camVel[axis] - w * temp) * k;
+    return target + (change + temp) * k;
+  }
+
+  function camPaint(th) {
+    var sx = 0, sy = 0;
+    if (shakeAmp) {
+      var age = window.performance.now() - shakeStart;
+      if (age >= shakeMs) shakeAmp = 0;
+      else {
+        /* two detuned sines rather than noise: a shudder, not a jitter */
+        var fall = 1 - age / shakeMs, a = shakeAmp * th * fall * fall;
+        sx = a * Math.sin(age * 0.071) * Math.cos(age * 0.023);
+        sy = a * Math.sin(age * 0.057 + 1.3) * Math.cos(age * 0.031);
+      }
+    }
+    $('#room-world').style.transform =
+      'translate(' + (camPos.x + sx).toFixed(1) + 'px,' + (camPos.y + sy).toFixed(1) + 'px)';
+  }
+
+  function camTick(now) {
+    camLoop = 0;
+    var t = camTarget();
+    if (!t || !camPos) return;
+    var dt = Math.min(0.05, (now - camLast) / 1000);        /* a dropped tab is not a lurch */
+    camLast = now;
+    if (CAM_SMOOTH <= 0) { camPos = { x: t.x, y: t.y }; camVel = { x: 0, y: 0 }; }
+    else camPos = { x: damp(camPos.x, t.x, 'x', dt), y: damp(camPos.y, t.y, 'y', dt) };
+    var settled = !t.walking && !shakeAmp &&
+      Math.abs(camPos.x - t.x) < 0.25 && Math.abs(camPos.y - t.y) < 0.25 &&
+      Math.abs(camVel.x) < 1 && Math.abs(camVel.y) < 1;
+    if (settled) { camPos = { x: t.x, y: t.y }; camVel = { x: 0, y: 0 }; }
+    camPaint(t.th);
+    if (!settled) camLoop = window.requestAnimationFrame(camTick);
+  }
+
+  function camWake() {
+    if (camLoop) return;
+    camLast = window.performance.now();
+    camLoop = window.requestAnimationFrame(camTick);
+  }
+
+  function frame(cut) {
+    var t = camTarget();
+    if (!t) return;
+    var world = $('#room-world');
+    /* A CUT, NOT A PAN, on the first placement and whenever the board changes
+       size: letting it slide from wherever it last was is a swoop across the
+       building every time the room opens or a contract is loaded. Only a step
+       should slide. */
+    var size = t.ww.toFixed(1) + 'x' + t.wh.toFixed(1);
+    if (cut || !camPos || size !== camSize) {
+      camPos = { x: t.x, y: t.y };
+      camVel = { x: 0, y: 0 };
+    }
+    camSize = size;
+    world.style.width = t.ww + 'px';
+    world.style.height = t.wh + 'px';
+    camPaint(t.th);
+    camWake();
   }
   window.addEventListener('resize', function () { if (E.S) frame(); });
+
+  /* A SHUDDER through the room, on top of the follow. `strength` is in tiles
+     (0.08 is a nudge), and it dies away over `ms`. */
+  function shake(strength, ms) {
+    shakeAmp = Math.max(shakeAmp, strength);
+    shakeStart = window.performance.now();
+    shakeMs = ms || 380;
+    if (camPos) camWake();
+  }
+
+  /* what shakes it: the alarm going up, and Assane being spotted. Counted
+     per run, so loading a contract mid-alarm does not shudder on arrival. */
+  var shakeSeen = null;
+  function shakeOn(S, run) {
+    var was = shakeSeen && shakeSeen.run === run ? shakeSeen : null;
+    if (was && S.alarm > 0 && !(was.alarm > 0)) shake(0.12, 520);
+    else if (was && S.spotted > was.spotted) shake(0.07, 340);
+    shakeSeen = { run: run, alarm: S.alarm, spotted: S.spotted };
+  }
 
   function renderRoom() {
     var S = E.S, night = !!S.blackout;
@@ -233,7 +325,8 @@
     var svg = floor.querySelector('svg');
     if (svg) hud.setAttribute('viewBox', svg.getAttribute('viewBox'));
     hud.innerHTML = hudMarkup();
-    frame();
+    frame(roomOpened);
+    shakeOn(S, run);
 
     roomToast();
   }
@@ -320,9 +413,9 @@
      reached anyway. */
   function deguisementSteps() {
     if (!C.DEGUISEMENT) return 'A rack. Nine pieces. Nothing is labelled.';
-    return 'Assane’s destination is ' + C.DEGUISEMENT.targetPost + '.\n' +
-           'Two staff are posted there, and one of them is standing in it tonight.\n' +
-           'Benjamin must find the one who isn’t, and tell Assane what they’re wearing.';
+    return 'Assane has the name and badge of the uniform he needs.\n' +
+           'Benjamin has the staff files.\n' +
+           'Find the uniform, then talk Assane through the rack.';
   }
 
   function renderModule() {
@@ -531,5 +624,12 @@
     U.codeFeedback(scr, S);
   }
 
-  L.tv = { render: render };
+  /* the camera's dials, for the DEV row and the console */
+  var cam = { shake: shake };
+  Object.defineProperty(cam, 'smooth', {
+    get: function () { return CAM_SMOOTH; },
+    set: function (v) { CAM_SMOOTH = Math.max(0, +v || 0); }
+  });
+
+  L.tv = { render: render, cam: cam };
 })(window.DC);

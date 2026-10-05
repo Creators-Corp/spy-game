@@ -389,9 +389,15 @@
           text: C.MODULES.some(function (m) { return m.id === 'deguisement' && m.optional; }) ? 'GO AS YOU ARE' : 'NOT YET',
           onclick: function () { E.declineModule(); U.emit('render'); } })
       ]);
+    /* Assane knows whose uniform he is after; Benjamin knows what it looks like. */
+    var orders = el('div', { class: 'disguise__orders' }, [
+      el('span', { class: 'disguise__name', text: disguiseName() }),
+      el('span', { class: 'disguise__badge', text: 'BADGE ' + C.DEGUISEMENT.answerBadge })
+    ]);
     var view = screen([
       head('LE DÉGUISEMENT'),
-      body([racks, el('div', { class: 'wardrobe__panel' }, [mirror, actions])])
+      body([el('div', { class: 'disguise__stage' }, [racks]), orders,
+            el('div', { class: 'wardrobe__panel' }, [mirror, actions])])
     ]);
     view.classList.add('pscreen--disguise');
     return view;
@@ -835,7 +841,9 @@
           el('div', { class: 'tchp1__aside' }, [
             el('div', { class: 'tchp1__desc', text: 'Describe the guard to Benjamin. He’ll help you get their guard down.' }),
             el('div', { class: 'tch__meter' }, [
-              tutorial ? el('span', { class: 'lbl', text: 'You’re disguised for La Resèrve' }) : mistakes
+              tutorial ? el('span', { class: 'lbl', text: C.DEGUISEMENT
+                ? 'You’re disguised as ' + disguiseName() + ' · ' + C.DEGUISEMENT.answerBadge
+                : 'You’re disguised for La Resèrve' }) : mistakes
             ])
           ])
         ]),

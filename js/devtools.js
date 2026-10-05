@@ -177,6 +177,32 @@
     });
     box.appendChild(go);
     box.appendChild(menu);
+
+    /* CAM: the room camera's settle time, to tune by walking, and a test shake */
+    var cam = L.tv && L.tv.cam;
+    if (cam) {
+      var lab = document.createElement('label');
+      lab.className = 'devtools__cam';
+      lab.title = 'Camera settle time (ms) — 0 is welded to Assane';
+      var slider = document.createElement('input');
+      slider.type = 'range'; slider.min = 0; slider.max = 600; slider.step = 10;
+      slider.value = cam.smooth;
+      var read = document.createElement('i');
+      read.textContent = 'CAM ' + cam.smooth;
+      slider.addEventListener('input', function () {
+        cam.smooth = slider.value;
+        read.textContent = 'CAM ' + cam.smooth;
+      });
+      lab.appendChild(read);
+      lab.appendChild(slider);
+      box.appendChild(lab);
+      var jolt = document.createElement('button');
+      jolt.type = 'button';
+      jolt.textContent = 'SHAKE';
+      jolt.title = 'Shake the room camera (the alarm strength)';
+      jolt.addEventListener('click', function () { cam.shake(0.12, 520); });
+      box.appendChild(jolt);
+    }
     row.appendChild(box);
 
     function paint() {

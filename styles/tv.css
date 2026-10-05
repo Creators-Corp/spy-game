@@ -115,13 +115,11 @@
    letterbox identically and a coordinate lands on the same pixel in each. */
 /* THE CAMERA. A window on the floor, with the whole board sitting inside it
    and moved under it. The board is drawn once at its full size and panned by a
-   transform rather than re-cut with a new viewBox each step, because a
-   transform is the one thing that can be transitioned — so the room slides to
-   follow Assane instead of jumping to him. */
+   transform rather than re-cut with a new viewBox each step, so it can slide.
+   The slide itself is driven frame by frame from js/tv.js, not a transition. */
 .room__cam{position:absolute;inset:0;overflow:hidden;}
 .room__world{
   position:absolute;left:0;top:0;
-  transition:transform .34s cubic-bezier(.22,.61,.36,1);
   will-change:transform;
 }
 .room__floor, .room__hud{position:absolute;inset:0;}
@@ -469,3 +467,6 @@
 }
 .devtools__menu[hidden]{display:none;}
 .devtools__menu button{text-align:left;border-radius:8px;}
+.devtools__cam{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.14em;}
+.devtools__cam i{font-style:normal;min-width:5.5em;font-variant-numeric:tabular-nums;}
+.devtools__cam input{width:90px;accent-color:var(--gold);}
