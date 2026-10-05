@@ -383,11 +383,7 @@
             if (!ok) { mirror.classList.add('is-bad'); setTimeout(function () { U.emit('render'); }, 500); }
             else U.emit('render');
           }
-        }),
-        /* where the disguise is required, walking away is only "later" */
-        el('button', { class: 'btn disguise__confirm',
-          text: C.MODULES.some(function (m) { return m.id === 'deguisement' && m.optional; }) ? 'GO AS YOU ARE' : 'GO UNDISGUISED',
-          onclick: function () { E.declineModule(); U.emit('render'); } })
+        })
       ]);
     /* Assane knows whose uniform he is after; Benjamin knows what it looks like. */
     var orders = el('div', { class: 'disguise__orders' }, [
