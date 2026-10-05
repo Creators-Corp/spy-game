@@ -40,6 +40,14 @@ The disguise objective uses `DressingRoomDoor.png` at **300 × 580 px**, with
 the same door alignment. Its E16 interaction draws the sprite across E14–E15.
 The sprite stays the same after the disguise is completed.
 
+Security hardware uses one-tile sprites in the props layer, independently of
+beam and camera threat overlays and power state. Vertical laser runs get one
+`laser-down` above their first floor cell. Horizontal runs use `laser-left`
+and `laser-right` at their wall-adjacent ends, within the floor tiles so the
+art hugs the walls. Camera housings use `security-camera` two rows above the
+first floor cell covered by their authored cycle; CAM 1 therefore sits at R0.
+Assane sees hardware once its associated floor cell is explored.
+
 Cells are named the way the grid names them: **column letter + 1-based row**.
 `A1` is the top-left cell. **Row 0** is the padding row above the map, where a
 two-tile face puts its top half.

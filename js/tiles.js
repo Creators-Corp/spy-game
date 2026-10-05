@@ -120,6 +120,50 @@
       '<g color="' + (done ? VOID : GOLD) + '" transform="translate(' + (px + W / 2 - W * 0.14) + ',' + (py + H / 2 - W * 0.14) + ') scale(' + (W * 0.28 / 100) + ')">' + G.iconMarkup(icon) + '</g>';
   }
 
+  /* Hardware is authored geometry, independent of live threat/power state. */
+  function securityHardware() {
+    var pieces = [], rows = C.MAP.length, cols = C.MAP[0].length;
+    function put(name, x, y, floorX, floorY) {
+      pieces.push({ name: name, x: x, y: y, floorX: floorX, floorY: floorY });
+    }
+    function horizontal(x, y) {
+      return ch(x - 1, y) === 'L' || ch(x + 1, y) === 'L' ||
+        (ch(x, y - 1) !== 'L' && ch(x, y + 1) !== 'L' &&
+         floorLike(x, y - 1) && floorLike(x, y + 1) &&
+         (wallLike(x - 1, y) || wallLike(x + 1, y)));
+    }
+    for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+      if (ch(x, y) !== 'L') continue;
+      if (horizontal(x, y)) {
+        if (ch(x - 1, y) === 'L') continue;
+        var end = x;
+        while (ch(end + 1, y) === 'L') end++;
+        /* These sprites carry the module at the named edge of their tile. */
+        if (wallLike(x - 1, y)) put('laser-left', x, y, x, y);
+        if (wallLike(end + 1, y)) put('laser-right', end, y, end, y);
+      } else if (ch(x, y - 1) !== 'L') {
+        put('laser-down', x, y - 1, x, y);
+      }
+    }
+    var dirs = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] };
+    (C.CAMERAS || []).forEach(function (camera) {
+      /* Use the authored cycle, so looping or disabling a camera never
+         removes or relocates its housing. */
+      var floor = null;
+      for (var i = 0; i < camera.cycle.length && !floor; i++) {
+        var dir = dirs[camera.cycle[i]];
+        if (!dir) continue;
+        for (var d = 1; d <= camera.depth + 1; d++) {
+          var cx = camera.x + dir[0] * d, cy = camera.y + dir[1] * d;
+          if (floorLike(cx, cy)) { floor = { x: cx, y: cy }; break; }
+          if (wallLike(cx, cy)) break;
+        }
+      }
+      if (floor) put('security-camera', floor.x, floor.y - 2, floor.x, floor.y);
+    });
+    return pieces;
+  }
+
   /* ------------------------------------------------------------ the walls */
   /* Which piece goes in a wall cell is decided by where the floor is around
      it. A rules table, not a hand-placed map: any contract, including ones
@@ -791,6 +835,10 @@
     /* ---- 5. PROPS: the objectives, the hatch, the way in ---- */
     if (on('props')) {
       s += '<g class="tl-props">';
+      securityHardware().forEach(function (p) {
+        if (!known(p.floorX, p.floorY)) return;
+        s += img(p.name, p.x * W, p.y * H, W, H, { keep: true });
+      });
       C.MODULES.forEach(function (m) {
         if (!known(m.x, m.y)) return;
         px = m.x * W; py = m.y * H;
