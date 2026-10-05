@@ -47,7 +47,7 @@
      something on it has moved. The clock ticks once a second and wants only
      the ring, which lives in the HUD above it. */
   var TW = 300, TH = 290;          /* the tile, in the art's own pixels */
-  var floorSig = null, tilesIn = false;
+  var floorSig = null, tilesIn = false, lastRoomActor = null, lastRoomRun = null, roomActive = false;
   L.tiles.ready(function () { tilesIn = true; });
 
   function signature() {
@@ -149,6 +149,7 @@
        cell in from where his coordinate says */
     var th = bh / CAM_ROWS, tw = th * (TW / TH);
     var ww = (cols + 2) * tw, wh = (rows + 2) * th;
+    world.style.transitionDuration = L.tiles.walkWindowMs() + 'ms';
     /* A CUT, NOT A PAN, on the first placement and whenever the board changes
        size: the world starts at the origin, and letting it slide from there is
        a swoop across the building every time the room opens or a contract is
@@ -179,16 +180,34 @@
     /* nothing is painted before the wall sheet lands, or the floor draws once
        from the bare rules and visibly corrects itself a moment later */
     if (S.dark || !tilesIn) {
+      L.tiles.stopWalk();
+      roomActive = false; lastRoomActor = null; lastRoomRun = null;
       floor.innerHTML = ''; hud.innerHTML = ''; floorSig = null;
       roomToast();
       return;
     }
 
+    var run = C.id + '|' + S.seed;
+    var previous = lastRoomRun === run && lastRoomActor && S.turn > lastRoomActor.turn
+      ? lastRoomActor : null;
+    var moved = previous && (previous.x !== S.assane.x || previous.y !== S.assane.y);
+    var roomOpened = !roomActive;
+    roomActive = true;
+    lastRoomRun = run;
+    lastRoomActor = { x: S.assane.x, y: S.assane.y, turn: S.turn };
+
     var sig = signature();
+    var rebuilt = false;
     if (sig !== floorSig) {
       floorSig = sig;
       L.tiles.render(floor, { view: 'assane', layers: { vision: false, ui: false, grid: false } });
+      rebuilt = true;
     }
+    if (moved) {
+      var dx = S.assane.x - previous.x, dy = S.assane.y - previous.y;
+      var direction = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      L.tiles.animateWalk(direction, previous.x, previous.y, S.assane.x, S.assane.y);
+    } else if (rebuilt || roomOpened) L.tiles.startIdle({ N: 'up', S: 'down', E: 'right', W: 'left' }[S.facing] || 'down');
     /* one viewBox for both, read off the floor rather than recomputed, so the
        HUD cannot drift out of register with the tiles if a map changes size */
     var svg = floor.querySelector('svg');
@@ -478,6 +497,10 @@
       $('#room-gate span').textContent = gate.line;
     }
 
+    if (S.phase !== 'play') {
+      L.tiles.stopWalk();
+      roomActive = false; lastRoomActor = null; lastRoomRun = null;
+    }
     if (S.phase === 'plan') { show('plan'); renderPlan(); }
     else if (S.phase === 'play') { show('room'); renderRoom(); }
     else if (S.phase === 'module') { show('module'); renderModule(); }
