@@ -27,7 +27,7 @@
   function viewRole() {
     var S = E.S;
     var view = screen([
-      head('LE PLAN'),
+      head('PLAN'),
       body([
         el('div', { class: 'role' }, [
           el('div', { class: 'role__identity' }, [
@@ -990,16 +990,16 @@
   function viewEnd() {
     var S = E.S, done = S.phase === 'rank';
     return screen([
-      head(done ? 'LA SORTIE' : 'PRIS'),
+      head(done ? 'ESCAPE' : 'CAUGHT'),
       body([
         el('div', { class: 'waiting' }, [
           el('span', { class: 'waiting__dot' }),
           el('p', { class: 'note', text: done
-            ? 'Assane is out. Close the dossier.'
+            ? 'Assane is out. Close the files.'
             : 'They have Assane. Get the van moving.' })
         ])
       ]),
-      foot([ el('button', { class: 'btn btn--brand', text: 'RECOMMENCER',
+      foot([ el('button', { class: 'btn btn--brand', text: 'RESTART',
         onclick: function () { U.emit('restart'); } }) ])
     ]);
   }
@@ -1030,7 +1030,7 @@
       ? askBoard(S.moduleId) : null;
 
     var view = screen([
-      head({ plan: 'DOSSIER', porte: 'LA PORTE', manuel: 'MANUEL', personnel: 'PERSONNEL', visages: 'VISAGES' }[tab]),
+      head({ plan: 'FILES', porte: 'DOOR', manuel: 'MANUAL', personnel: 'STAFF', visages: 'FACES' }[tab]),
       tabBar(),
       body([unlockNotice(), asking, inner].filter(Boolean))
     ]);
@@ -1047,7 +1047,7 @@
     return el('p', { class: 'warn warn--unlock', onclick: function () {
       unlockSeen = u.at; U.sfx.tap(); U.emit('render');
     }, html: '<b>NEW FROM THE VAN · ' + u.name + '</b>' +
-      'LE BUREAU is cracked and the beam circuit is yours. Drop the lasers for eight moves; ' +
+      'OFFICE is cracked and the beam circuit is yours. Drop the lasers for eight moves; ' +
       'once they are back on it needs four moves to recharge. <u>Got it</u>' });
   }
 

@@ -64,11 +64,11 @@
      or keypad entry (+10) alone puts S out of reach.
      Re-measure if you retune a map, the patrols or the cone depths. */
   var RANKS = [
-    { g: 'S', t: 'FANTÔME',   test: function (s) { return s.spotted === 0 && s.suspicion <= 12; } },
-    { g: 'A', t: 'OMBRE',     test: function (s) { return s.spotted === 0 && s.suspicion <= 40; } },
-    { g: 'B', t: 'DISCRET',   test: function (s) { return s.spotted <= 1 && s.suspicion <= 65; } },
-    { g: 'C', t: 'REMARQUÉ',  test: function (s) { return s.spotted <= 2 && s.suspicion < 85; } },
-    { g: 'D', t: 'BRUYANT',   test: function () { return true; } }
+    { g: 'S', t: 'GHOST',   test: function (s) { return s.spotted === 0 && s.suspicion <= 12; } },
+    { g: 'A', t: 'SHADOW',     test: function (s) { return s.spotted === 0 && s.suspicion <= 40; } },
+    { g: 'B', t: 'DISCREET',   test: function (s) { return s.spotted <= 1 && s.suspicion <= 65; } },
+    { g: 'C', t: 'NOTICED',  test: function (s) { return s.spotted <= 2 && s.suspicion < 85; } },
+    { g: 'D', t: 'NOISY',   test: function () { return true; } }
   ];
 
   /* THE BUILDING'S ALERT LEVEL.
@@ -167,9 +167,9 @@
   var JOB1 = {
     id: 'veille',
     HATCH: 'door',
-    venue: 'HÔTEL DES VENTES · LA VEILLE',
-    contract: 'CONTRAT No.1 — LA VEILLE DE VENTE',
-    target: 'Lot 12 · manuscrit enluminé',
+    venue: 'HÔTEL DES VENTES · NIGHT BEFORE',
+    contract: 'CONTRACT No.1 — NIGHT BEFORE AUCTION',
+    target: 'Lot 12 · illuminated manuscript',
     venueArt: 'venue-establishing',
     blurb: 'You need a paper inside The vault. Its room is released from the officer security desk. Find a way out.',
 
@@ -200,13 +200,13 @@
       '########################'
     ],
     ROOMS: [
-      { name: 'LE COFFRE',       x: 14, y: 1,  w: 6,  h: 3, tint: 'warm' },
-      { name: 'LES CUISINES',    x: 1,  y: 3,  w: 4,  h: 9, tint: 'warm' },
-      { name: 'LA RÉSERVE',      x: 7, y: 13, w: 10,  h: 3, tint: 'olive', labelX: 11, labelY: 14 },
-      { name: 'BUREAU',          x: 18, y: 13, w: 3,  h: 3, tint: 'olive' },
-      { name: 'LE VESTIAIRE',    x: 2,  y: 15, w: 5,  h: 3, tint: 'warm' },
-      { name: 'GALERIE HAUTE',   x: 5,  y: 5,  w: 17, h: 4, tint: 'neutral' },
-      { name: 'GALERIE BASSE',   x: 5,  y: 9, w: 17, h: 3, tint: 'neutral' }
+      { name: 'VAULT',       x: 14, y: 1,  w: 6,  h: 3, tint: 'warm' },
+      { name: 'KITCHENS',    x: 1,  y: 3,  w: 4,  h: 9, tint: 'warm' },
+      { name: 'STORAGE',      x: 7, y: 13, w: 10,  h: 3, tint: 'olive', labelX: 11, labelY: 14 },
+      { name: 'OFFICE',          x: 18, y: 13, w: 3,  h: 3, tint: 'olive' },
+      { name: 'CLOAKROOM',    x: 2,  y: 15, w: 5,  h: 3, tint: 'warm' },
+      { name: 'UPPER GALLERY',   x: 5,  y: 5,  w: 17, h: 4, tint: 'neutral' },
+      { name: 'LOWER GALLERY',   x: 5,  y: 9, w: 17, h: 3, tint: 'neutral' }
     ],
 
     /* A GUARD IS THREE ROWS TALL AND THIS BUILDING'S GALLERIES ARE TWO.
@@ -252,7 +252,7 @@
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
       { id: 'g1', badge: '4412', from: { x: 14, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1,
-        stand: true, facing: 'W', hears: 'LA RÉSERVE' },
+        stand: true, facing: 'W', hears: 'STORAGE' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
       /* was: y:5, the door row */
@@ -290,29 +290,29 @@
       { targets: ['exit'] }
     ],
     OBJ: {
-      cloak: 'The vestiaire is at the entrance. Get Assane into the right uniform before he crosses the staff gate.',
-      door:  'A padlocked gate between the vestiaire and the service passages. P1 has the keys; P2 knows which is which.',
-      porte: 'A locked door beyond La Réserve. P1 has the keypad; P2 has the code.',
+      cloak: 'The cloakroom is at the entrance. Get Assane into the right uniform before he crosses the staff gate.',
+      door:  'A padlocked gate between the cloakroom and the service passages. P1 has the keys; P2 knows which is which.',
+      porte: 'A locked door beyond Storage. P1 has the keypad; P2 has the code.',
       after: 'The manuscript is sealed in a vault beneath a live camera. Crack the safe, take the prize, and disappear through the unmarked exit.',
       out:   'Assane has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
       dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
-      { x: 20,  y: 4,  locked: true,  mark: 'trident',  to: 'LE COFFRE' },
-      { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'GALERIE BASSE' },
-      { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'LE VESTIAIRE' },
+      { x: 20,  y: 4,  locked: true,  mark: 'trident',  to: 'VAULT' },
+      { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'LOWER GALLERY' },
+      { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'CLOAKROOM' },
     ],
     MODULES: [
       /* staff only: the padlock will not open for a man out of uniform, so
          the cloakroom is not optional on this contract */
-      { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
+      { id: 'grille',      x: 8,  y: 17, name: 'GATE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
-      { id: 'deguisement', x: 4, y: 15, name: 'LE DÉGUISEMENT', icon: 'coat' },
+      { id: 'deguisement', x: 4, y: 15, name: 'DISGUISE', icon: 'coat' },
         /* LA PORTE, at the north end of La Réserve: the keypad follows the
            beam and the posted guard. */
-      { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
-      { id: 'bureau',      x: 19, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
-      { id: 'coffre',      x: 17,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
+      { id: 'porte',       x: 11, y: 13, name: 'DOOR',       icon: 'lock' },
+      { id: 'bureau',      x: 19, y: 14,  name: 'OFFICE',      icon: 'desk' },
+      { id: 'coffre',      x: 17,  y: 2,  name: 'VAULT',      icon: 'safe' }
     ],
 
     /* LA GRILLE, contract one's handshake on the kitchen gate. Same padlock
@@ -332,7 +332,7 @@
     PORTE: {
       code: '2549',
       door: { x: 11, y: 12 },
-      sign: 'CHAMBRE 302',
+      sign: 'ROOM 302',
       zero: 'hook',
       ring: ['spiral', 'crescent', 'ladder', 'hook', 'drop',
              'trident', 'star4', 'chevrons', 'backz', 'bisect'],
@@ -361,16 +361,16 @@
     BUREAU: { badge: '1184', mode: 'eldest', answer: '2005', doorMark: 'trident', photo: 'a boy and a girl' },
 
     PERSONNEL: [
-      { badge: '4412', name: 'MOREAU, Serge',     post: 'LA RÉSERVE',    plate: '8028', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
+      { badge: '4412', name: 'MOREAU, Serge',     post: 'STORAGE',    plate: '8028', kids: [{ n: 'Camille', y: 2009 }, { n: 'Léa', y: 2014 }] },
       /* HIS POST IS THE EAST AISLE, and it has to be his alone. He walks it —
          g2's beat is the east side of Galerie Haute. It also has to
          be his alone for LE CLAVIER: the release code is the badge of the
          officer posted to the keypad's zone. */
-      { badge: '2071', name: 'DELACROIX, Yann',   post: 'GALERIE HAUTE', plate: '5530', kids: [] },
-      { badge: '1184', name: 'VIDAL, Nadia',      post: 'BUREAU',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
-      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'LES CUISINES',  plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
-      { badge: '6620', name: 'PARMENTIER, Odile', post: 'LE VESTIAIRE',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
-      { badge: '3308', name: 'KOFFI, Émile',      post: 'LA RÉSERVE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
+      { badge: '2071', name: 'DELACROIX, Yann',   post: 'UPPER GALLERY', plate: '5530', kids: [] },
+      { badge: '1184', name: 'VIDAL, Nadia',      post: 'OFFICE',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
+      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'KITCHENS',  plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
+      { badge: '6620', name: 'PARMENTIER, Odile', post: 'CLOAKROOM',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
+      { badge: '3308', name: 'KOFFI, Émile',      post: 'STORAGE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
     /* contract one's rack: the whole wardrobe, so every uniform is buildable.
        The post narrows it to LA RÉSERVE, which has two staff — MOREAU and
@@ -391,7 +391,7 @@
       '6620': { head: 'nu',        torso: 'tablier', legs: 'salopette' },
       '3308': { head: 'casquette', torso: 'tablier', legs: 'noir' }
     },
-    DEGUISEMENT: { answerBadge: '3308', targetPost: 'LA RÉSERVE', conePenalty: 1 },
+    DEGUISEMENT: { answerBadge: '3308', targetPost: 'STORAGE', conePenalty: 1 },
     FACES: {
       // One distinct image per badge, shared by P1's encounter and P2's files.
       '4412': { art: 'ui-new/guard-3', head: 'square', hair: 'swept', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
@@ -469,7 +469,7 @@
        exactly one officer holds, or the question has two answers. Every plate
        carries exactly three distinct digits so the worn keys stay a real
        check — see rollPlate(). */
-    CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'GALERIE HAUTE' },
+    CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'UPPER GALLERY' },
 
     PROCEDURES: [
       { k: 'KITCHEN GATE', v: 'Padlocked. Staff in uniform only. The key card pairs each tag with its key.' },

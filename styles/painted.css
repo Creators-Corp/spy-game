@@ -334,14 +334,14 @@
 
 /* The wardrobe is one illustration, with selectable garments over its rails. */
 /* One screen, no scroll: the badge card and the mirror panel keep their size,
-   and the rack illustration takes whatever height is left, at its own aspect. */
+   and the rack illustration fills the remaining height and the full width. */
 #p1 .pscreen--disguise .pbody{display:flex;flex-direction:column;padding:0 0 12px;}
 #p1 .pscreen--disguise .disguise__stage{
   flex:1 1 0;min-height:0;container-type:size;display:flex;justify-content:center;
 }
 #p1 .pscreen--disguise .disguise__racks{
   position:relative;display:block;flex:none;margin:0;
-  width:min(100cqw, calc(100cqh * 1002 / 1109));aspect-ratio:1002 / 1109;
+  width:100%;height:100%;
   background:url('../art/ui-new/Illustration_Wardrobe.png') center / 100% 100% no-repeat;
 }
 #p1 .pscreen--disguise .wardrobe__row{position:absolute;left:3%;right:3%;}
@@ -359,7 +359,7 @@
    leftover height to fill: fall back to the rack at full width. */
 @media (max-height:500px){
   body.is-guest #p1 .pscreen--disguise .disguise__stage{flex:none;container-type:normal;}
-  body.is-guest #p1 .pscreen--disguise .disguise__racks{width:100%;}
+  body.is-guest #p1 .pscreen--disguise .disguise__racks{height:auto;aspect-ratio:1002 / 1109;}
 }
 /* The outline hugs the garment, not the button: torso buttons are tall and
    overlap the rows either side, so an outline on the button sits off the art. */
@@ -373,9 +373,9 @@
 #p1 .pscreen--disguise .wardrobe__garment svg{display:block;width:100%;height:100%;}
 #p1 .pscreen--disguise .disguise__orders{
   display:flex;flex:none;align-items:center;justify-content:center;gap:12px;
-  width:min(calc(100% - 18px), 78cqw, 412px);aspect-ratio:412 / 82;
-  margin:8px auto 0;padding:2px 16px 12px;
-  background:url('../art/ui-new/panel-h2.png') center / contain no-repeat;
+  width:min(calc(100% - 18px), 78cqw, 412px);aspect-ratio:331 / 93;
+  margin:8px auto 0;padding:8px 16px;
+  background:url('../art/ui-new/panel-keycode-short.png') center / contain no-repeat;
   color:#39291D;font-size:clamp(12px,4cqw,18px);font-weight:700;
 }
 #p1 .pscreen--disguise .disguise__badge{font-variant-numeric:tabular-nums;color:var(--pt-accent);}

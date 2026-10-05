@@ -71,7 +71,7 @@
       out.push(m);
     }
     C.MODULES.forEach(add);
-    if (C.CLAVIER) out.push({ id: 'clavier', name: 'LE CLAVIER' });
+    if (C.CLAVIER) out.push({ id: 'clavier', name: 'KEYPAD' });
     return out;
   }
 

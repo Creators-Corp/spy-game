@@ -59,6 +59,16 @@
     timers.forEach(clearTimeout); timers = [];
     beamHoldTimer = null;
     S = next;
+    // Saved runs can contain older room labels. Refresh authored references
+    // so guard hearing and door labels still match the current floor plan.
+    (S.guards || []).forEach(function (g) {
+      var authored = C.GUARDS.filter(function (a) { return a.id === g.id; })[0];
+      if (authored) g.hears = authored.hears || null;
+    });
+    (S.doors || []).forEach(function (d) {
+      var authored = C.DOORS.filter(function (a) { return a.x === d.x && a.y === d.y; })[0];
+      if (authored) d.to = authored.to;
+    });
     var delta = Math.max(0, Date.now() - savedAt);
     ['lastActionAt', 'flash', 'blackoutAt'].forEach(function (key) { if (S[key]) S[key] += delta; });
     if (S.toast) S.toast.at += delta;
@@ -791,7 +801,7 @@
       S.guards.forEach(function (g, i) { if (!g.stand) g.probe = before.probes[i]; });
       raise((C.ALARM || {}).cost || 12);
       toast('ALARM · BEAM BROKEN', 'bad');
-      S.alertNote = 'A bell in La Réserve, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
+      S.alertNote = 'A bell in Storage, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
       S.flash = Date.now();
       U.sfx.spot();
       U.buzz('both', true);
@@ -1644,13 +1654,13 @@
     else if (S.hasManuscript) S.objective = O.out ? O.out
                                          : hatchTile() ? 'Assane has it and the monitors are dead. The hatch in the west wall — ' + coordOf(hatchTile().x, hatchTile().y) + ' — is the only way out.'
                                          : C.PORTE ? 'Assane has it. Back round the ring and down the stairs.'
-                                                     : 'La Sortie. Assane has the manuscript. Get him out through the vestibule.';
+                                                     : 'Escape. Assane has the manuscript. Get him out through the vestibule.';
     else if (hasCloak && !S.disguised && !S.solved.deguisement) S.objective = O.cloak || 'The cloakroom first — or go in as you are, and be seen from further away.';
     else if (C.GRILLE && !S.solved.grille) S.objective = O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
     else if (C.PORTE && !S.solved.porte) S.objective = O.porte || O.door || 'A locked door at the top of the cloakroom. P1 has the keypad; P2 has the code.';
     else if (C.PORTE || C.GRILLE) S.objective = O.after || 'Through the door and round the ring. The desk is in the room at the top.';
-    else if (S.solved.bureau) S.objective = 'La Réserve is open. The safe is waiting.';
-    else S.objective = 'Find the security desk. Open La Réserve.';
+    else if (S.solved.bureau) S.objective = 'Storage is open. The safe is waiting.';
+    else S.objective = 'Find the security desk. Open Storage.';
   }
   function finish() { S.phase = 'rank'; S.running = false; U.sfx.victory(); }
 

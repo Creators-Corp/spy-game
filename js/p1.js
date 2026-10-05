@@ -85,7 +85,7 @@
   function viewPlan() {
     var S = E.S;
     var view = screen([
-      head('LE PLAN'),
+      head('PLAN'),
       body([
         el('div', { class: 'role' }, [
           el('div', { class: 'role__identity' }, [
@@ -166,7 +166,7 @@
     ]);
 
     return screen([
-      head('LE CLAVIER'),
+      head('KEYPAD'),
       body([
         door,
         readout,
@@ -218,7 +218,7 @@
     ring.appendChild(hits);
 
     var view = screen([
-      head('LA GRILLE'),
+      head('GATE'),
       body([
         el('p', { class: 'grille__instruction', text: 'TAP THE KEY HE DESCRIBES' }),
         padlock,
@@ -290,7 +290,7 @@
 
     var left = (K.fails || 3) - S.porteFails;
     var view = screen([
-      head('LA PORTE'),
+      head('DOOR'),
       body([
         plate,
         readout,
@@ -311,7 +311,7 @@
     var S = E.S;
     var prize = C.MODULES.filter(function (m) { return m.id === 'prize'; })[0];
     return screen([
-      head('LE BUREAU'),
+      head('OFFICE'),
       body([
         /* the thing itself and the one button that takes it. Where it is and
            where to go with it is on the television. */
@@ -395,7 +395,7 @@
       el('span', { class: 'disguise__badge', text: 'BADGE ' + C.DEGUISEMENT.answerBadge })
     ]);
     var view = screen([
-      head('LE DÉGUISEMENT'),
+      head('DISGUISE'),
       body([el('div', { class: 'disguise__stage' }, [racks]), orders,
             el('div', { class: 'wardrobe__panel' }, [mirror, actions])])
     ]);
@@ -421,7 +421,7 @@
 
     var left = S.fauxLeftIsGenuine;
     return screen([
-      head('LE FAUX'),
+      head('FORGERY'),
       body([
         el('p', { class: 'note', style: 'margin:0 0 10px', text:
           'Two canvases, one crate. Describe them both to Benjamin — everything, not just what you think matters. He has the authentication notes.' }),
@@ -483,7 +483,7 @@
     });
 
     return screen([
-      head('L’ÉCOUTE'),
+      head('WIRETAP'),
       body([
         el('p', { class: 'note', style: 'margin:0 0 10px', text:
           'Hold it to your ear. The line repeats the same five pulses. Read them to Benjamin — short and long, in order.' }),
@@ -579,7 +579,7 @@
     ]);
 
     var view = screen([
-      head(S.hasManuscript ? 'LA SORTIE' : 'INFILTRATION'),
+      head(S.hasManuscript ? 'ESCAPE' : 'INFILTRATION'),
       body([
         el('div', { class: 'nav__sense' }, [
           el('h2', { class: 'h' }, [
@@ -707,7 +707,7 @@
     });
 
     return screen([
-      head('LE COFFRE'),
+      head('VAULT'),
       body([
         el('div', { class: 'safe__plate' }, [
           el('span', {}, [
@@ -753,7 +753,7 @@
         grid.appendChild(b);
       });
       return screen([
-        head('LE BUREAU'),
+        head('OFFICE'),
         body([
           el('div', { class: 'mod__head' }, [ el('span', { class: 'tag tag--gold', text: 'ACCESS OPEN' }) ]),
           grid
@@ -793,7 +793,7 @@
     ]);
 
     var view = screen([
-      head('LE BUREAU'),
+      head('OFFICE'),
       body([ desk, readout, pad ]),
       null
     ]);
@@ -833,7 +833,7 @@
 
     /* The portrait is the clue; Benjamin's files supply the conversation. */
     var view = screen([
-      head('LA TCHATCHE'),
+      head('SMOOTH TALK'),
       body([
         el('h2', { class: 'tchp1__spotted', text: "YOU'VE BEEN SPOTTED" }),
         el('div', { class: 'tchp1__top' }, [
@@ -843,7 +843,7 @@
             el('div', { class: 'tch__meter' }, [
               tutorial ? el('span', { class: 'lbl', text: C.DEGUISEMENT
                 ? 'You’re disguised as ' + disguiseName() + ' · ' + C.DEGUISEMENT.answerBadge
-                : 'You’re disguised for La Resèrve' }) : mistakes
+                : 'You’re disguised for Storage' }) : mistakes
             ])
           ])
         ]),
@@ -879,7 +879,7 @@
   function viewEnd() {
     var S = E.S, done = S.phase === 'rank';
     return screen([
-      head(done ? 'LA SORTIE' : 'PRIS'),
+      head(done ? 'ESCAPE' : 'CAUGHT'),
       body([
         el('div', { class: 'waiting' }, [
           (function () { var i = G.icon(done ? 'manu' : 'lock'); i.style.width = '54px'; i.style.color = 'var(--ink)'; return i; })(),

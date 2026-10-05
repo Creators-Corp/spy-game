@@ -366,7 +366,7 @@
     });
   }
 
-  var CLAVIER_TILE = { id: 'clavier', name: 'LE CLAVIER', icon: 'lock' };
+  var CLAVIER_TILE = { id: 'clavier', name: 'KEYPAD', icon: 'lock' };
 
   /* ------------------------------------------------------- HOW IT IS PLAYED
      These used to be numbered steps on each phone, which meant the pair read
@@ -526,8 +526,8 @@
   }
 
   /* ------------------------------------------------------------ frame */
-  var PHASE_LABEL = { plan: 'LE PLAN', play: 'L’INFILTRATION', module: 'LES MODULES',
-                      tchatche: 'LA TCHATCHE', rank: 'LA SORTIE', jail: 'CAUGHT' };
+  var PHASE_LABEL = { plan: 'PLAN', play: 'INFILTRATION', module: 'PUZZLES',
+                      tchatche: 'SMOOTH TALK', rank: 'ESCAPE', jail: 'CAUGHT' };
 
   function render() {
     var S = E.S;
@@ -535,9 +535,9 @@
     /* A BROKEN BEAM OWNS THE SCREEN while it lasts. It is the one event where
        the building is actively coming to him, and it has to read from the
        sofa without anybody looking at the suspicion bar. */
-    $('#tv-phase').textContent = S.alarm > 0 && S.phase === 'play' ? 'ALARME · ' + S.alarm
-      : inDark ? 'LE BLACKOUT'
-      : S.hasManuscript && S.phase === 'play' ? 'LA SORTIE'
+    $('#tv-phase').textContent = S.alarm > 0 && S.phase === 'play' ? 'ALARM · ' + S.alarm
+      : inDark ? 'BLACKOUT'
+      : S.hasManuscript && S.phase === 'play' ? 'ESCAPE'
       : PHASE_LABEL[S.phase];
     $('#tv-phase').classList.toggle('is-night', inDark);
     $('#tv-venue').textContent = C.job.venue;

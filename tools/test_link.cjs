@@ -711,6 +711,25 @@ test('laser trips still raise suspicion and trigger an alarm after a guard is fo
   assert.equal(guard.fooled, true); // A sub-threshold alarm does not reset trust.
 });
 
+test('refresh updates saved room labels without changing guard or door progress', () => {
+  const p = recoveredGame(), E = p.L.engine, C = p.L.content;
+  const guard = E.S.guards.find(g => g.hears);
+  guard.hears = 'LA RÉSERVE';
+  guard.fooled = true;
+  E.S.doors[0].to = 'LE COFFRE';
+  E.S.doors[0].locked = false;
+  const saved = JSON.parse(JSON.stringify(E.S));
+  E.restore(saved, Date.now());
+  assert.equal(E.S.guards.find(g => g.id === guard.id).hears, C.GUARDS.find(g => g.id === guard.id).hears);
+  assert.equal(E.S.guards.find(g => g.id === guard.id).fooled, true);
+  assert.equal(E.S.doors[0].to, C.DOORS[0].to);
+  assert.equal(E.S.doors[0].locked, false);
+  const rooms = C.ROOMS.map(r => r.name);
+  for (const person of C.PERSONNEL) assert.ok(rooms.includes(person.post));
+  assert.ok(rooms.includes(C.CLAVIER.zone));
+  assert.ok(rooms.includes(C.DEGUISEMENT.targetPost));
+});
+
 test('fooled guard state survives refresh recovery and resets for a new game', () => {
   const p = guardEncounter();
   winConversation(p.E, p.C); p.L.recovery.save();
