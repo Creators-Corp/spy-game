@@ -40,6 +40,8 @@
   var IDLE_CYCLE_MS = 1200;
   var UP_WALK_SCALE = 1.1;
   var UP_IDLE_SCALE = 0.95;
+  var GUARD_UP_WALK_SCALE = 1.2;
+  var GUARD_DOWN_WALK_SCALE = 1.15;
   var IDLE_FRAMES = {
     up: [
       'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0000.png',
@@ -217,8 +219,7 @@
 
   function href(name) { return U.assetURL(ART + name + '.png'); }
 
-  function setAssaneScale(scale) {
-    var sprite = document.getElementById('tl-assane-sprite');
+  function setSpriteScale(sprite, scale) {
     if (!sprite) return;
     var x = Number(sprite.getAttribute('data-base-x'));
     var y = Number(sprite.getAttribute('data-base-y'));
@@ -229,6 +230,14 @@
     sprite.setAttribute('y', y + height - height * scale);
     sprite.setAttribute('width', width * scale);
     sprite.setAttribute('height', height * scale);
+  }
+
+  function setAssaneScale(scale) {
+    setSpriteScale(document.getElementById('tl-assane-sprite'), scale);
+  }
+
+  function setGuardSpriteScale(index, scale) {
+    setSpriteScale(document.getElementById(guardSpriteId(index)), scale);
   }
 
   /* THE OVERRIDE SHEET.
@@ -395,6 +404,7 @@
     var sprite = document.getElementById(guardSpriteId(index));
     if (actor) actor.removeAttribute('transform');
     if (sprite) sprite.setAttribute('href', sprite.getAttribute('data-rest-href'));
+    setGuardSpriteScale(index, 1);
   }
 
   function stopGuardAnimations() {
@@ -406,6 +416,7 @@
     var frames = GUARD_IDLE_FRAMES[direction];
     var sprite = document.getElementById(guardSpriteId(index));
     if (!sprite || !frames || !frames.length) return false;
+    setGuardSpriteScale(index, 1);
     var state = guardState(index), serial = state.serial, frameIndex = 0;
     function advance() {
       if (state.serial !== serial) return;
@@ -429,6 +440,9 @@
     guardCycleIndex[index] = (cycle + 1) % variations.length;
     if (!frames || !frames.length) return false;
     var state = guardState(index), serial = state.serial;
+    var guardWalkScale = direction === 'up' ? GUARD_UP_WALK_SCALE
+      : direction === 'down' ? GUARD_DOWN_WALK_SCALE : 1;
+    setGuardSpriteScale(index, guardWalkScale);
     var dx = (fromX - toX) * W, dy = (fromY - toY) * H;
     var start = null;
     actor.setAttribute('transform', 'translate(' + dx + ' ' + dy + ')');
@@ -1142,6 +1156,7 @@
           spriteExtra.id = guardSpriteId(a2.index);
           spriteExtra.src = guardFrames && guardFrames.length ? guardFrames[0] : 'art/tiles/guard-' + dir + '.png';
           spriteExtra.restHref = U.assetURL(spriteExtra.src);
+          spriteExtra.spriteBase = { x: baseX, y: baseY, width: baseW, height: baseH, restScale: 1 };
         }
         s += img(a2.who + '-' + dir, spriteX, spriteY, spriteW, spriteH, spriteExtra);
         s += '</g>';

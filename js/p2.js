@@ -525,7 +525,8 @@
          without ever looking at the thing — and then Assane pressed the
          button marked 2 without looking either. */
       var ic = G.icon(b.sym); ic.style.color = 'var(--ink)';
-      var kc = el('img', { src: U.assetURL('art/ui/key' + b.key + '.png'), alt: 'Key', draggable: 'false' });
+      var artKey = b.key === 1 ? 3 : b.key === 3 ? 1 : b.key;
+      var kc = el('img', { src: U.assetURL('art/ui-new/key' + artKey + '.png'), alt: 'Key', draggable: 'false' });
       rows.appendChild(el('div', { class: 'keyrow' }, [
         el('i', {}, [ic]),
         el('span', { class: 'keyrow__arrow', text: '→' }),
