@@ -63,7 +63,6 @@
   .pscreen--dossier .file,
   .pscreen--tchatche .tchp1__desc,
   .pscreen--tchatche .lines,
-  .dossier__faces .faces,
   .dossier__faces .dirt,
   .ui-polish .safe__plate,.ui-polish .plate,.ui-polish .readout,.ui-polish .manual__seq,
   .ui-polish .board__result,.ui-polish .warn,.ui-polish .proc,
@@ -102,8 +101,7 @@
   .pscreen--dossier .plan2,
   .pscreen--plan .role .artslot,
   .pscreen--tchatche .tchp1__face,
-  .dossier__faces .faces__portrait,
-  .ui-polish .desk,.ui-polish .padlock,.ui-polish .canvas__art,.ui-polish .keyring,
+  .ui-polish .desk,.ui-polish .padlock,.ui-polish .canvas__art,.ui-polish .keyring:not(.grille__keys),
   .pscreen--dossier .deadscreen
 ){
   border:6px solid transparent;border-radius:0;
@@ -279,7 +277,7 @@
 ){border-image:var(--pt-key-on);color:var(--pt-ink);}
 .phone__screen .pscreen--disguise .rack button.is-on{box-shadow:0 0 0 3px #FD6A1A;}
 /* worn keys are the clue on the night keypad — keep them unmistakable */
-.phone__screen .ui-polish .keypad--night button.is-worn{border-image:var(--pt-key-on);box-shadow:0 0 0 3px #FD6A1A;color:var(--pt-ink);}
+.phone__screen .ui-polish .keypad--night button.is-worn{border-image:var(--pt-key-on);box-shadow:0 0 0 3px #A33E0A;color:var(--pt-ink);}
 .phone__screen .ui-polish .keys button.is-bad{border-image:none;border-color:var(--red);background:var(--red) !important;color:var(--pt-cream);}
 
 /* Ring dials and the safe dial are SVG; paint them in the same two materials. */
@@ -311,3 +309,213 @@
 
 /* Focus rings read on cream and orange as well as on the slate. */
 .phone__screen button:focus-visible{outline:2px solid var(--pt-ink);outline-offset:3px;box-shadow:0 0 0 5px var(--pt-cream);}
+
+/* Grille: preserve the artwork proportions and layer the sign and key ring. */
+.phone__screen .pscreen--grille .pbody{padding:0 0 24px;}
+.phone__screen .pscreen--grille .grille__instruction{
+  position:relative;z-index:2;display:flex;align-items:center;justify-content:center;
+  width:68%;aspect-ratio:331 / 93;margin:0 auto;
+  padding:8px 12px;text-align:center;
+  background:url('../art/ui-new/panel-keycode-short.png') center / contain no-repeat;
+  color:#2E3843;font-size:clamp(10px,3.6cqw,16px);font-weight:700;letter-spacing:0;
+}
+.phone__screen .pscreen--grille{container-type:inline-size;}
+.phone__screen .pscreen--grille .grille__gate{position:relative;margin-top:-4%;}
+.phone__screen .pscreen--grille .grille__gate img{display:block;width:100%;height:auto;}
+.phone__screen .pscreen--grille .grille__keys{
+  width:84%;margin:-18% auto 0;z-index:1;
+  border:0;border-image:none;background:transparent;box-shadow:none;
+}
+.phone__screen .pscreen--grille .grille__key-art{display:block;width:100%;height:auto;}
+.phone__screen .pscreen--grille .keyring__hits{height:72%;}
+.phone__screen .pscreen--grille .keyring__hit:hover{
+  background:transparent;box-shadow:inset 0 0 0 3px #FF8A38;
+}
+
+/* The wardrobe is one illustration, with selectable garments over its rails. */
+#p1 .pscreen--disguise .pbody{padding:0 0 24px;}
+#p1 .pscreen--disguise .disguise__racks{
+  position:relative;display:block;width:100%;aspect-ratio:1002 / 1109;margin:0;
+  background:url('../art/ui-new/Illustration_Wardrobe.png') center / 100% 100% no-repeat;
+}
+#p1 .pscreen--disguise .wardrobe__row{position:absolute;left:3%;right:3%;}
+#p1 .pscreen--disguise .wardrobe__row--head{top:6%;height:18%;z-index:3;}
+#p1 .pscreen--disguise .wardrobe__row--torso{top:21%;height:39%;z-index:2;}
+#p1 .pscreen--disguise .wardrobe__row--legs{top:54%;height:45%;z-index:1;}
+#p1 .pscreen--disguise .rack{height:100%;gap:2%;}
+#p1 .pscreen--disguise .rack button,
+#p1 .pscreen--disguise .rack button:is(:hover,:active,.is-on){
+  height:100%;min-width:0;padding:0;border:0;border-image:none;
+  background:transparent !important;box-shadow:none;border-radius:6px;overflow:visible;
+  transform:scale(.6);transform-origin:center top;
+}
+#p1 .pscreen--disguise .rack button.is-on{outline:5px solid #FF8232;outline-offset:-5px;}
+#p1 .pscreen--disguise .wardrobe__row--head button{width:64%;justify-self:center;}
+#p1 .pscreen--disguise .wardrobe__garment{width:100%;height:100%;pointer-events:none;}
+#p1 .pscreen--disguise .wardrobe__garment svg{display:block;width:100%;height:100%;}
+#p1 .pscreen--disguise .wardrobe__panel{
+  position:relative;width:calc(100% - 18px);max-width:412px;aspect-ratio:412 / 252;
+  margin:14px auto 0;
+  background:url('../art/ui-new/panel-medium.png') center / contain no-repeat;
+}
+#p1 .pscreen--disguise .wardrobe__preview{
+  position:absolute;left:4%;top:8.5%;width:33%;height:83%;
+  background:url('../art/ui-new/panel-tiny-vertical.png') center / contain no-repeat;
+}
+#p1 .pscreen--disguise .wardrobe__preview .wardrobe__garment{position:absolute;}
+#p1 .pscreen--disguise .wardrobe__preview .wardrobe__garment--head{left:8%;top:4%;width:34%;height:27%;}
+#p1 .pscreen--disguise .wardrobe__preview .wardrobe__garment--legs{left:7%;top:32%;width:44%;height:61%;}
+#p1 .pscreen--disguise .wardrobe__preview .wardrobe__garment--torso{left:35%;top:18%;width:58%;height:58%;}
+#p1 .pscreen--disguise .wardrobe__preview.is-bad{animation:nudge .22s;outline:3px solid var(--red);}
+#p1 .pscreen--disguise .wardrobe__actions{
+  position:absolute;left:39%;top:14%;width:55.1%;height:72%;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+#p1 .pscreen--disguise .disguise__confirm{
+  width:100%;height:auto;min-height:0;aspect-ratio:227 / 81;padding:8px;
+  border:0;border-image:none;border-radius:0;box-shadow:none;
+  background:url('../art/ui-new/bttn-medium.png') center / contain no-repeat;
+  color:#39291D;font-size:clamp(10px,3.4cqw,18px);font-weight:700;letter-spacing:0;
+}
+#p1 .pscreen--disguise{container-type:inline-size;}
+#p1 .pscreen--disguise .disguise__confirm:hover{filter:brightness(1.06);color:#39291D;}
+#p1 .pscreen--disguise .disguise__confirm:active:not(:disabled){
+  background-image:url('../art/ui-new/bttn-medium-pressed.png');color:#39291D;
+}
+#p1 .pscreen--disguise .disguise__confirm:disabled{
+  background-image:url('../art/ui-new/bttn-medium-disabled.png');color:#5A4E44;
+}
+
+/* Visages: portraits sit directly on their buttons, without cream backing. */
+#p2 .dossier__faces .faces{
+  border:0;border-image:none;background:transparent;box-shadow:none;padding:0;
+}
+#p2 .dossier__faces .faces__portrait{
+  border:0;border-image:none;background:transparent;box-shadow:none;
+}
+#p2 .dossier__faces > .dirt{margin:0 0 14px;}
+
+/* Tchatche: a sign, an unframed portrait, and the small instruction panel. */
+#p1 .pscreen--tchatche{container-type:inline-size;}
+#p1 .pscreen--tchatche .tchp1__spotted{
+  display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:412 / 82;
+  margin:0 0 12px;padding:2px 8px 14px;text-align:center;
+  background:url('../art/ui-new/panel-h2.png') center / contain no-repeat;
+  color:#39291D;font-size:clamp(13px,4.4cqw,20px);font-weight:700;
+}
+#p1 .pscreen--tchatche .tchp1__top{gap:10px;align-items:center;}
+#p1 .pscreen--tchatche .tchp1__face{
+  flex:1;min-width:0;width:auto;margin:0;padding:0;
+  border:0;border-image:none;background:transparent;box-shadow:none;
+}
+#p1 .pscreen--tchatche .tchp1__face::after{content:none;}
+#p1 .pscreen--tchatche .tchp1__aside{flex:none;width:min(207px,50%);}
+#p1 .pscreen--tchatche .tchp1__desc{
+  flex:none;width:100%;aspect-ratio:207 / 132;
+  display:flex;align-items:center;padding:12px;margin:0;
+  border:0;border-image:none;box-shadow:none;border-radius:0;
+  background:url('../art/ui-new/panel-small.png') center / contain no-repeat;
+  color:#39291D;font-size:clamp(10px,3.1cqw,14px);line-height:1.35;
+}
+#p1 .pscreen--tchatche .tch__meter{justify-content:center;margin:4px 0 0;}
+#p1 .pscreen--tchatche .tch__mistakes{
+  position:relative;width:75%;max-width:150px;aspect-ratio:209 / 58;
+  background:url('../art/ui-new/fillbar-small-bg.png') center / contain no-repeat;
+}
+#p1 .pscreen--tchatche .tch__mistakes-fill{
+  position:absolute;left:2.4%;top:15.5%;width:95.2%;height:69%;
+  background:url('../art/ui-new/fillbar-small-fill-orange.png') center / 100% 100% no-repeat;
+}
+#p1 .pscreen--tchatche .tch__mistakes b{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#39291D;font-size:11px;font-weight:700;letter-spacing:0;
+}
+
+/* Both start phones share the same separate identity, portrait and copy panels. */
+.phone__screen .pscreen--plan{container-type:inline-size;}
+.phone__screen .pscreen--plan .role__identity{
+  width:100%;aspect-ratio:412 / 124;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;padding:12px;margin-bottom:14px;
+  background:url('../art/ui-new/panel-senses.png') center / contain no-repeat;color:#111;
+}
+.phone__screen .pscreen--plan .role__identity .role__job{
+  position:static;display:block;width:auto;height:auto;min-height:0;margin:0;padding:0;
+  background:transparent;color:#111;font-size:clamp(10px,3.5cqw,16px);letter-spacing:0;
+}
+.phone__screen .pscreen--plan .role__name{
+  color:#111;font-size:clamp(18px,6.5cqw,30px);font-weight:700;letter-spacing:0;
+}
+.phone__screen .pscreen--plan .role__portrait{
+  width:62%;aspect-ratio:186 / 205;margin:0 auto 12px;padding:7% 6%;
+  background:url('../art/ui-new/panel-portrait-bg.png') center / 100% 100% no-repeat;
+}
+.phone__screen .pscreen--plan .role .role__portrait .artslot{
+  width:100%;height:100%;aspect-ratio:auto;margin:0;padding:0;
+  border:0;border-image:none;border-radius:0;box-shadow:none;background:transparent;
+}
+.phone__screen .pscreen--plan .role__portrait .artslot::after{content:none;}
+.phone__screen .pscreen--plan .role__portrait img{object-fit:cover;}
+.phone__screen .pscreen--plan .role__list{
+  width:100%;min-height:0;aspect-ratio:412 / 252;padding:16px 14px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:url('../art/ui-new/panel-medium.png') center / 100% 100% no-repeat;
+  color:#39291D;
+}
+.phone__screen .pscreen--plan .role__list li{
+  padding:0;margin:0;font-size:clamp(11px,3.6cqw,16px);line-height:1.4;color:#39291D;
+}
+.phone__screen .pscreen--plan .role__list li::before{content:none;}
+.phone__screen .pscreen--plan .pfoot{padding-top:8px;}
+.phone__screen .pscreen--plan .plan-ready{
+  width:227px;max-width:100%;height:auto;min-height:0;aspect-ratio:227 / 64.8;margin:0 auto;
+  padding:12px;border:0;border-image:none;border-radius:0;box-shadow:none;
+  background:url('../art/ui-new/bttn-medium.png') center / 100% 100% no-repeat;
+  color:#39291D;font-size:16px;font-weight:700;letter-spacing:0;
+}
+.phone__screen .pscreen--plan .plan-ready:is(:active,.is-waiting){
+  background-image:url('../art/ui-new/bttn-medium-pressed.png');color:#39291D;
+}
+.phone__screen .pscreen--plan .plan-ready:hover{color:#39291D;filter:brightness(1.06);}
+
+/* La Porte's plaque is engraved over the full-width door illustration. */
+#p1 .pscreen--porte{container-type:inline-size;}
+#p1 .pscreen--porte .pbody{padding:0 0 14px;}
+#p1 .pscreen--porte .porte__illustration{position:relative;width:100%;margin-bottom:14px;}
+#p1 .pscreen--porte .porte__illustration > img{display:block;width:100%;height:auto;}
+#p1 .pscreen--porte .porte__plaque{
+  position:absolute;left:5%;top:5%;width:42.3%;height:46%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  color:#39291D;--ink:#39291D;
+}
+#p1 .pscreen--porte .plate__word{color:#39291D;font-size:clamp(10px,3.6cqw,16px);letter-spacing:.12em;}
+#p1 .pscreen--porte .plate__digits{gap:8px;}
+#p1 .pscreen--porte .plate__d b{color:#39291D;font-size:clamp(24px,8cqw,36px);}
+#p1 .pscreen--porte .plate__mark{width:30px;height:30px;opacity:1;}
+#p1 .pscreen--porte :is(.symrow,.keypad){margin-left:14px;margin-right:14px;}
+
+/* Benjamin's daytime map and legend share the renewed palette. */
+#p2 .dossier__plan:not(.is-night){
+  --map-void:#3C3D62;
+  --map-edge:#565781;
+  --map-ruler:#FFEFCC;
+  --floor-neutral:rgba(255,239,204,.94);
+  --floor-cool:rgba(207,213,243,.94);
+  --floor-olive:rgba(228,221,240,.94);
+  --floor-warm:rgba(247,209,165,.94);
+  --gold:#FF8A38;
+  --on-gold:#39291D;
+  --red:#C9433C;
+}
+#p2 .pscreen--dossier .plan2:not(.plan2--night){
+  background:#4A5168 url('../art/ui-new/background.png') center / cover no-repeat;
+}
+
+/* Le Bureau's illustration fills the phone width without a panel frame. */
+#p1 .pscreen--bureau .pbody{padding:0 0 14px;}
+#p1 .pscreen--bureau .desk{
+  width:100%;border:0;border-image:none;border-radius:0;
+  background:transparent;box-shadow:none;margin-bottom:14px;
+}
+#p1 .pscreen--bureau .desk::after{content:none;}
+#p1 .pscreen--bureau .desk__illustration{display:block;width:100%;height:auto;}
+#p1 .pscreen--bureau :is(.readout,.keypad){margin-left:14px;margin-right:14px;}

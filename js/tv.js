@@ -435,20 +435,32 @@
     if (S.running) U.warmup();
     $('#tv-clock').textContent = U.mmss(S.elapsed);
     $('#tv-objective').textContent = S.objective;
-    $('#suspicion-fill').style.width = S.suspicion + '%';
+    /* Reveal the full-sized texture through an alpha mask. Its moving edge
+       leans by 60 art pixels over the 82px height, matching the painted bar. */
+    var progress = U.clamp(S.suspicion, 0, 100) / 100;
+    var cut = -60 + 883 * progress;
+    var mask = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 823 82"><polygon fill="white" points="0,0 ' +
+      (cut + 60) + ',0 ' + cut + ',82 0,82"/></svg>';
+    var maskURL = 'url("data:image/svg+xml,' + encodeURIComponent(mask) + '")';
+    $('#suspicion-fill').style.maskImage = maskURL;
+    $('#suspicion-fill').style.webkitMaskImage = maskURL;
     $('#suspicion-num').textContent = S.suspicion;
     /* the bar carries the two lines the building changes its behaviour at, and
        the label says which side of them it is on */
     var track = $('.suspicion__track');
     if (!track.querySelector('.suspicion__tick')) {
       C.ALERT.forEach(function (a) {
-        track.appendChild(U.el('u', { class: 'suspicion__tick', style: 'left:' + a.at + '%' }));
+        var markerPosition = (12.72 - 30 + 883 * a.at / 100) / 848 * 100;
+        track.appendChild(U.el('u', { class: 'suspicion__tick', style: 'left:' + markerPosition + '%' }));
       });
     }
     var st = $('#suspicion-state');
     var still = S.running && S.phase === 'play' && (Date.now() - S.lastActionAt) / 1000 >= C.PRESSURE.grace;
-    st.textContent = still ? 'STANDING STILL · +1 / ' + C.PRESSURE.every + 'S'
-                   : S.alert ? C.ALERT[S.alert - 1].name : 'SUSPICION';
+    var suspicionStatus = still ? 'STANDING STILL · +1 / ' + C.PRESSURE.every + 'S'
+                          : S.alert ? C.ALERT[S.alert - 1].name : 'SUSPICION';
+    st.textContent = 'SUSPICION';
+    st.title = suspicionStatus;
+    st.setAttribute('aria-label', suspicionStatus);
     st.classList.toggle('is-alert', S.alert > 0 || still);
     $('#jail-line').textContent = S.jailLine || 'ASSANE IS CAUGHT.';
 

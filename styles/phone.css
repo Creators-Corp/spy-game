@@ -98,6 +98,12 @@
   touch-action:pan-y;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
+  /* Soften the scroll viewport edges across every phone view. */
+  --scroll-feather:12px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-feather),#000 calc(100% - var(--scroll-feather)),transparent);
+  mask-image:linear-gradient(to bottom,transparent,#000 var(--scroll-feather),#000 calc(100% - var(--scroll-feather)),transparent);
+  -webkit-mask-size:100% 100%;mask-size:100% 100%;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
 }
 .pbody::-webkit-scrollbar{width:6px;}
 .pbody::-webkit-scrollbar-thumb{background:var(--stone-dk);border-radius:99px;}

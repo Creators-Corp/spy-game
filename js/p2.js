@@ -30,12 +30,11 @@
       head('LE PLAN'),
       body([
         el('div', { class: 'role' }, [
-          U.artSlot('p2-role-benjamin'),
-          el('h2', { class: 'role__name', text: 'BENJAMIN' }),
-          el('div', { class: 'role__job' }, [
-            el('img', { src: U.assetURL('art/ui/callout-frame.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
-            el('span', { text: 'THE BRAIN' })
+          el('div', { class: 'role__identity' }, [
+            el('div', { class: 'role__job', text: 'THE BRAIN' }),
+            el('h2', { class: 'role__name', text: 'BENJAMIN' })
           ]),
+          el('div', { class: 'role__portrait' }, [U.artSlot('p2-role-benjamin')]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are in the van. You see the whole floor — guards, cameras, cones, doors.' }),
             el('li', { text: 'You touch nothing. Assane is your hands, and he cannot see what you can.' }),
@@ -162,7 +161,8 @@
     /* A gutter outside the map, for the ruler. */
     var GUT = 13;
     s += '<svg viewBox="' + (-GUT) + ' ' + (-GUT) + ' ' + (W + GUT) + ' ' + (H + GUT) + '" width="100%">';
-    s += '<rect width="' + W + '" height="' + H + '" fill="var(--map-void)"/>';
+    /* Leave the daytime walls transparent so the painted background shows. */
+    if (night) s += '<rect width="' + W + '" height="' + H + '" fill="var(--map-void)"/>';
 
     var floors = '', edges = '', cones = '';
     for (var y = 0; y < C.MAP.length; y++) {
@@ -314,12 +314,12 @@
        in words rather than by eye. */
     for (var cx = 0; cx < C.MAP[0].length; cx++) {
       s += '<text x="' + (cx * TT + TT / 2) + '" y="-4.5" text-anchor="middle" font-size="6"' +
-           ' letter-spacing="0.4" font-family="var(--font)" fill="var(--map-edge)" opacity=".6">' +
+           ' letter-spacing="0.4" font-family="var(--font)" fill="var(--map-ruler,var(--map-edge))" opacity=".9">' +
            String.fromCharCode(65 + cx) + '</text>';
     }
     for (var ry = 0; ry < C.MAP.length; ry++) {
       s += '<text x="-6.5" y="' + (ry * TT + TT / 2 + 2.2) + '" text-anchor="middle" font-size="6"' +
-           ' font-family="var(--font)" fill="var(--map-edge)" opacity=".6">' + (ry + 1) + '</text>';
+           ' font-family="var(--font)" fill="var(--map-ruler,var(--map-edge))" opacity=".9">' + (ry + 1) + '</text>';
     }
     s += '</svg>';
     return s;
@@ -979,7 +979,7 @@
       dirt.appendChild(ul);
       if (!t) dirt.appendChild(el('p', { class: 'note', style: 'margin-top:8px',
         text: 'Nothing opens until somebody stops Assane.' }));
-      wrap.appendChild(dirt);
+      wrap.insertBefore(dirt, wrap.firstChild);
     }
     return wrap;
   }

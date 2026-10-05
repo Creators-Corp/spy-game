@@ -12,7 +12,7 @@
 .tv__screen{
   position:relative;
   width:876px;height:506px;
-  background:var(--paper);
+  background:var(--paper) url('../art/ui-new/tv-background.png') center / cover no-repeat;
   border-radius:3px;
   overflow:hidden;
   display:flex;flex-direction:column;
@@ -306,7 +306,7 @@
     repeating-linear-gradient(90deg, rgba(233,228,216,.045) 0 1px, transparent 1px 32px);
 }
 
-.tv__screen{ background-color:var(--paper); background-image:var(--blueprint); }
+.tv__screen{ background-image:url('../art/ui-new/tv-background.png'); }
 
 /* views that are a flat field get the grid; the room and the night keep their
    own treatment so the map stays the most legible thing on screen */
@@ -363,28 +363,7 @@
 @keyframes vig{0%,100%{opacity:var(--lo)}50%{opacity:var(--hi)}}
 @keyframes flash{0%{opacity:1;background:rgba(193,55,46,.7)}100%{opacity:var(--lo)}}
 
-/* TV frame and panel dividers: 2px outside, 1px gap, 1px inside. */
-.tv__screen::after{
-  content:"";position:absolute;inset:0;z-index:20;pointer-events:none;
-  border:2px solid #778495;border-radius:3px;
-  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
-}
 .tvbar{position:relative;}
-.tvbar--top{border-bottom:2px solid #778495;}
-.tvbar--bottom{border-top:2px solid #778495;}
-.tvbar--top::after,
-.tvbar--bottom::before{
-  content:"";position:absolute;left:0;right:0;height:2px;pointer-events:none;
-  background:#0C1118;
-}
-/* The top panel's outside edge is below it; the bottom panel's is above it. */
-.tvbar--top::after{bottom:0;border-top:1px solid #778495;}
-.tvbar--bottom::before{top:0;border-bottom:1px solid #778495;}
-.plan__inner{border-right:2px solid #778495;}
-.plan__inner::after{
-  content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
-  background:#0C1118;border-left:1px solid #778495;pointer-events:none;
-}
 
 /* Consequences and end cards use the same framing as the phones. */
 .tvview--module,.tvview--tchatche{background-color:#0C1118;}
@@ -392,16 +371,11 @@
 .tv__screen :is(.modstate__line,.tch__line,.rankcard__stats,.rankcard__stats dt,.rankcard__foot,.room__dead__line){color:#FFEFCC;}
 .tv__screen :is(.rankcard,.tvcut__line,.jail__line,.room__dead__big){
   border:2px solid #778495;border-radius:0;background:#0C1118;
-  box-shadow:inset 0 0 0 1px #0C1118,inset 0 0 0 2px #778495;
 }
 .tvview--rank{background:#090C11;}
 .rankcard__grade{border-color:#778495;}
 .rankcard__title{background:#090C11;color:#FD6A1A;border:1px solid #4C93E4;}
 .tv__screen :is(.tch__figures .artslot,.tvcut .artslot,.jail__art){border:2px solid #778495;border-radius:0;}
-.tv__screen :is(.tch__figures .artslot,.tvcut .artslot,.jail__art):not(.is-empty)::after{
-  content:"";position:absolute;inset:1px;border:1px solid #778495;
-  box-shadow:0 0 0 1px #0C1118;pointer-events:none;
-}
 .tv__screen :is(.modstate__pips i,.tch__rounds i){border-color:#778495;background:#090C11;}
 .tv__screen :is(.modstate__pips i.is-set,.tch__rounds i.is-won){background:#FD6A1A;}
 .tv__screen :is(.modstate__pips i.is-bad,.tch__rounds i.is-lost){background:var(--red);}
@@ -411,6 +385,62 @@
 .tv__screen .room__toast.is-good{background:#090C11;color:#FD6A1A;border-color:#778495;}
 .tvbar__phase{background:#FD6A1A;color:#090C11;border-color:#778495;}
 .tvbar__phase.is-night{background:#090C11;color:#FD6A1A;}
+
+/* Let the screen's cover image show through the regular TV surfaces. */
+.tvbar,
+.tvview--plan,
+.plan__inner,
+.tvview--module:not(.is-night),
+.tvview--tchatche,
+.tvview--rank,
+.tvview--room:not(.is-night):not(.is-dead){background:transparent;}
+
+/* Painted TV chrome. Keep the existing bar heights so the center is unchanged. */
+.tvbar{padding:0;border:0;gap:0;color:#080808;letter-spacing:0;}
+.tvbar--top{background:url('../art/ui-new/tv-top-bar.png') center top / 100% auto no-repeat;}
+.tvbar--bottom{background:url('../art/ui-new/tv-bottom-bar.png') center bottom / 100% auto no-repeat;}
+.tvbar__phase,.tvbar__phase.is-night{
+  position:absolute;left:0;top:0;width:26.14%;height:34.22px;
+  display:flex;align-items:center;padding:0 15px;
+  background:url('../art/ui-new/tv-top-header.png') left top / 100% 100% no-repeat;
+  border:0;border-radius:0;color:#080808;font-size:17px;font-weight:700;letter-spacing:0;
+}
+.tvbar__venue{position:absolute;left:27.5%;right:12%;top:0;height:30.45px;
+  display:flex;align-items:center;color:#080808;font-size:12px;white-space:nowrap;overflow:hidden;}
+.tvbar__clock{
+  position:absolute;right:0;top:0;width:11.875%;height:35.59px;
+  display:flex;align-items:center;justify-content:center;
+  background:url('../art/ui-new/tv-top-timer.png') center / 100% 100% no-repeat;
+  color:#080808;font-family:var(--font);font-size:18px;font-weight:700;letter-spacing:0;
+}
+.tvbar__obj{position:absolute;left:3%;bottom:0;width:49%;height:30.45px;
+  display:flex;align-items:center;font-size:12px;letter-spacing:0;color:#080808;}
+.suspicion{position:absolute;inset:0;display:block;}
+.suspicion b,.suspicion b.is-alert{
+  position:absolute;left:54.7%;bottom:0;width:12%;height:30.45px;
+  display:flex;align-items:center;justify-content:center;
+  color:#080808;font-size:16px;font-weight:700;letter-spacing:0;line-height:1;
+}
+.suspicion b{overflow-wrap:anywhere;}
+.suspicion__track{
+  position:absolute;right:0;bottom:0;width:33.125%;height:auto;aspect-ratio:848 / 101;
+  background:url('../art/ui-new/fillbar-big-bg.png') center / contain no-repeat;
+  border:0;border-radius:0;overflow:hidden;
+}
+.suspicion__track i{
+  position:absolute;left:1.5%;top:9.4%;width:97.05%;height:81.2%;
+  background:url('../art/ui-new/fillbar-big-fill.png') center / 100% 100% no-repeat;
+  transition:none;mask-mode:alpha;mask-repeat:no-repeat;mask-size:100% 100%;
+  -webkit-mask-repeat:no-repeat;-webkit-mask-size:100% 100%;
+}
+.suspicion__tick{
+  top:2.5%;bottom:auto;width:10.02%;height:95%;transform:translateX(-50%);
+  background:url('../art/ui-new/fillbar-big-marker.png') center / contain no-repeat;
+  opacity:1;
+}
+.suspicion em{position:absolute;right:12px;bottom:0;height:30.45px;width:30px;
+  display:flex;align-items:center;justify-content:center;
+  color:#080808;font-family:var(--font);font-size:17px;font-weight:700;letter-spacing:0;z-index:1;}
 
 /* --- dev skip buttons (js/devtools.js): local copies only, never in the room.
        A chip in the chrome row with the rest of the presenter buttons. --- */

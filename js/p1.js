@@ -91,12 +91,11 @@
       head('LE PLAN'),
       body([
         el('div', { class: 'role' }, [
-          U.artSlot('p1-role-assane'),
-          el('h2', { class: 'role__name', text: 'ASSANE' }),
-          el('div', { class: 'role__job' }, [
-            el('img', { src: U.assetURL('art/ui/callout-frame.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }),
-            el('span', { text: 'THE HANDS' })
+          el('div', { class: 'role__identity' }, [
+            el('div', { class: 'role__job', text: 'THE HANDS' }),
+            el('h2', { class: 'role__name', text: 'ASSANE DIOP' })
           ]),
+          el('div', { class: 'role__portrait' }, [U.artSlot('p1-role-assane')]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are inside the building. You move, you touch, you talk your way out.' }),
             el('li', { text: 'You see close and you see narrow. You will not see the guard until he is on you.' }),
@@ -190,18 +189,10 @@
   function viewGrille() {
     var S = E.S, K = C.GRILLE;
 
-    /* THE PADLOCK, AS HE IS LOOKING AT IT — and that is the whole of it. The
-       mark is engraved on the body in the artwork, so a gold chip repeating it
-       beside the picture was the same symbol twice and made the screen look
-       like a diagram of a padlock rather than a padlock.
-
-       Which means the artwork is now the ONLY place this contract's mark
-       appears on Assane's phone. GRILLE.lock still decides which key opens the
-       gate; if it is ever changed, grille-padlock.png has to be redrawn with
-       it or the picture will be quietly lying. content.js says so where the
-       lock is set. */
-    var padlock = el('div', { class: 'padlock' }, [
-      U.artSlot('grille-padlock', 'padlock__plate')
+    /* The engraved mark is the clue: keep the gate artwork's trident in sync
+       with GRILLE.lock, without repeating it in a separate label. */
+    var padlock = el('div', { class: 'grille__gate' }, [
+      el('img', { src: U.assetURL('art/ui-new/Illustration_Gate.png'), alt: 'Gate secured by a padlock engraved with a trident' })
     ]);
 
     /* THREE KEYS ON ONE RING, and they are one picture because that is how
@@ -210,12 +201,14 @@
        lower half of the photograph, one per blade, and that is what he taps.
        Nothing is numbered and nothing is labelled: the only way in is for
        Benjamin to describe a shape and for Assane to recognise it. */
-    var ring = el('div', { class: 'keyring' }, [U.artSlot('grille-keys', 'keyring__art')]);
+    var ring = el('div', { class: 'keyring grille__keys' }, [
+      el('img', { class: 'grille__key-art', src: U.assetURL('art/ui-new/KeyRing.png'), alt: 'Three keys on a ring', draggable: 'false' })
+    ]);
     var hits = el('div', { class: 'keyring__hits' });
     K.board.slice().sort(function (x, y) { return (x.at || 0) - (y.at || 0); }).forEach(function (bd) {
       var btn = el('button', {
         class: 'keyring__hit' + (S.grille.tried[bd.key] ? ' is-tried' : ''),
-        style: 'left:' + (bd.at * 100) + '%;width:' + (bd.wide * 100) + '%',
+        style: 'left:' + ({ keyTeeth: 0, keyHoles: 0.39, keyWard: 0.75 }[bd.shape] * 100) + '%;width:' + ({ keyTeeth: 0.39, keyHoles: 0.36, keyWard: 0.25 }[bd.shape] * 100) + '%',
         'aria-label': 'key',
         onclick: function () {
           var ok = E.grilleTry(bd.key);
@@ -227,15 +220,16 @@
     });
     ring.appendChild(hits);
 
-    return screen([
+    var view = screen([
       head('LA GRILLE'),
       body([
+        el('p', { class: 'grille__instruction', text: 'TAP THE KEY HE DESCRIBES' }),
         padlock,
-        el('p', { class: 'lbl lbl--c', style: 'margin:10px 0 6px', text: 'TAP THE KEY HE DESCRIBES' }),
         ring
-      ]),
-      foot([ el('p', { class: 'note', text: 'The wrong key rattles the gate. Nothing worse.' }) ])
+      ])
     ]);
+    view.classList.add('pscreen--grille');
+    return view;
   }
 
   function viewPorte() {
@@ -275,12 +269,10 @@
       onclick: function () { E.porteClear(); U.emit('render'); } }));
     pad.appendChild(key('0'));
 
-    /* The plate. The zero carries a mark under it, drawn at the size a real
-       engraver would have put it: small enough to ignore, big enough to
-       describe. Everything Benjamin needs is in that one shape. */
+    /* The room name and zero's clue sit on the illustration's golden plaque. */
     var digits = K.sign.replace(/[^0-9]/g, '');
     var zeroAt = digits.indexOf('0');
-    var plate = el('div', { class: 'plate' }, [
+    var plaque = el('div', { class: 'porte__plaque' }, [
       el('span', { class: 'plate__word', text: K.sign.replace(/[0-9].*$/, '').trim() })
     ]);
     var row = el('span', { class: 'plate__digits' });
@@ -293,10 +285,14 @@
       }
       row.appendChild(cell);
     });
-    plate.appendChild(row);
+    plaque.appendChild(row);
+    var plate = el('div', { class: 'porte__illustration' }, [
+      el('img', { src: U.assetURL('art/ui-new/Illustration_DoorCode_Locked.png'), alt: '', 'aria-hidden': 'true' }),
+      plaque
+    ]);
 
     var left = (K.fails || 3) - S.porteFails;
-    return screen([
+    var view = screen([
       head('LA PORTE'),
       body([
         plate,
@@ -309,6 +305,8 @@
           : 'One try left. The next wrong code brings somebody to the door.' })
       ])
     ]);
+    view.classList.add('pscreen--porte');
+    return view;
   }
 
   /* ------------------------------------------------------------ LE DOSSIER */
@@ -348,27 +346,41 @@
   }
 
   function viewDeguisement() {
-    var S = E.S, F = L.figures;
-
-    var mirror = F.uniformStack(outfit, 'mirror');
+    var garmentArt = {
+      head: [[3, '512 504 760 1408', 1748, 2480], [2, '520 504 664 1224', 1748, 2480], [1, '456 504 840 1008', 1748, 2480]],
+      torso: [[3, '392 104 1032 1976', 1748, 2480], [2, '296 104 1248 1640', 1748, 1977], [1, '368 104 1080 1648', 1748, 1977]],
+      legs: [[1, '264 48 904 1880', 1377, 2201], [2, '280 48 888 2096', 1377, 2201], [3, '288 48 808 2080', 1377, 2201]]
+    };
+    function garment(slot, id) {
+      var index = C.RACK[slot].indexOf(id);
+      var box = el('div', { class: 'wardrobe__garment wardrobe__garment--' + slot });
+      if (index < 0) return box;
+      var art = garmentArt[slot][index];
+      var group = { head: 'Hats', torso: 'Shirt', legs: 'Pants' }[slot];
+      box.innerHTML = '<svg viewBox="' + art[1] + '" aria-hidden="true"><image href="' +
+        U.assetURL('art/wardrobe/Garments_' + group + '_0' + art[0] + '.png') +
+        '" width="' + art[2] + '" height="' + art[3] + '"/></svg>';
+      return box;
+    }
+    var mirror = el('div', { class: 'wardrobe__preview', 'aria-label': 'Chosen outfit' },
+      ['head', 'torso', 'legs'].map(function (slot) { return garment(slot, outfit[slot]); }));
 
     var racks = el('div', { class: 'disguise__racks' });
     [['head', 'HEAD'], ['torso', 'TORSO'], ['legs', 'LEGS']].forEach(function (pair) {
       var slot = pair[0];
-      var category = el('section', { class: 'disguise__category', 'aria-label': pair[1] }, [
-        el('h2', { class: 'h', text: pair[1] })
-      ]);
+      var category = el('section', { class: 'wardrobe__row wardrobe__row--' + slot, 'aria-label': pair[1] });
       var row = el('div', { class: 'rack' });
       C.RACK[slot].forEach(function (id) {
         var b = el('button', {
           class: outfit[slot] === id ? 'is-on' : '',
+          'aria-label': pair[1] + ' garment ' + (C.RACK[slot].indexOf(id) + 1),
           'aria-pressed': outfit[slot] === id ? 'true' : 'false',
           onclick: function () {
             outfit[slot] = outfit[slot] === id ? null : id;
             U.sfx.tap(); U.emit('render');
           }
         });
-        b.appendChild(L.figures.garmentTile(slot, id, 'gtile--rack'));
+        b.appendChild(garment(slot, id));
         row.appendChild(b);
       });
       category.appendChild(row);
@@ -376,20 +388,7 @@
     });
 
     var complete = outfit.head && outfit.torso && outfit.legs;
-    var view = screen([
-      head('LE DÉGUISEMENT'),
-      body([
-        el('div', { class: 'mirrorwrap' }, [
-          mirror,
-          /* who Assane is going in as. The name is read off the roster slot
-             rather than written here, because names are dealt into badge slots
-             per seed — it always matches the file Benjamin has to find. */
-          el('p', { class: 'note', style: 'margin:0', text:
-            'The staff cloakroom. You’re going in as ' + disguiseName() + '.' })
-        ]),
-        racks
-      ]),
-      foot([
+    var actions = el('div', { class: 'wardrobe__actions' }, [
         el('button', {
           class: 'btn disguise__confirm',
           text: complete ? 'GET DRESSED' : 'PICK THREE PIECES',
@@ -402,23 +401,14 @@
         }),
         /* where the disguise is required, walking away is only "later" */
         el('button', { class: 'btn disguise__confirm',
-          text: C.MODULES.some(function (m) { return m.id === 'deguisement' && m.optional; }) ? 'GO IN AS YOU ARE' : 'NOT YET',
+          text: C.MODULES.some(function (m) { return m.id === 'deguisement' && m.optional; }) ? 'GO AS YOU ARE' : 'NOT YET',
           onclick: function () { E.declineModule(); U.emit('render'); } })
-      ])
+      ]);
+    var view = screen([
+      head('LE DÉGUISEMENT'),
+      body([racks, el('div', { class: 'wardrobe__panel' }, [mirror, actions])])
     ]);
     view.classList.add('pscreen--disguise');
-    U.$$('.disguise__confirm', view).forEach(function (button) {
-      var label = button.textContent;
-      button.textContent = '';
-      button.appendChild(el('span', { text: label }));
-      ['light', 'dark'].forEach(function (state) {
-        button.appendChild(el('img', {
-          class: 'disguise__button-art disguise__button-art--' + state,
-          src: U.assetURL('art/ui/van-action-' + state + '.png'),
-          alt: '', 'aria-hidden': 'true', draggable: 'false'
-        }));
-      });
-    });
     return view;
   }
 
@@ -791,22 +781,13 @@
     pad.appendChild(el('button', { class: 'k-clear', text: 'CLR', onclick: function () { E.bureauClear(); U.emit('render'); } }));
     pad.appendChild(el('button', { text: '0', onclick: function () { E.bureauTap('0'); U.emit('render'); } }));
 
-    /* The desk. The photo, the note and the badge are set live over the art —
-       never generated inside it. No generated text, ever. */
+    /* Keep the badge and note live over the desk artwork. */
     var owner = C.PERSONNEL.filter(function (p) { return p.badge === C.BUREAU.badge; })[0];
-    var kidsHTML = (owner ? owner.kids.slice().sort(function (a, b) { return a.y - b.y; }) : [])
-      .map(function (k, i) { return '<div class="kid' + (i % 2 ? ' b' : '') + '" style="height:' + Math.max(26, 52 - i * 18) + 'px"></div>'; })
-      .join('');
     var desk = el('div', { class: 'desk' }, [
-      U.artSlot('bureau-desk'),
+      el('img', { class: 'desk__illustration', src: U.assetURL('art/ui-new/Illustration_Desk.png'), alt: 'Security desk', draggable: 'false' }),
       el('div', { class: 'desk__props' }, [
-        /* the badge and the photo read from the roster, so the desk can belong
-           to anyone. The children stand tallest-first, eldest on the left —
-           which is not the order the file lists them in. */
+        /* The badge reads from the roster, so the desk can belong to anyone. */
         el('div', { class: 'prop prop--badge', html: '<b>' + C.BUREAU.badge + '</b><span>post · ' + (owner ? owner.post.toLowerCase() : '') + '</span>' }),
-        el('div', { class: 'prop prop--photo', html:
-          '<div class="kids">' + kidsHTML + '</div>' +
-          '<span class="cap">' + (C.BUREAU.photo || 'the children') + '</span>' }),
         /* The note is the question, and the question is per-job data. Job 1
            asks for the eldest child's year, job 2 for the officer's plate —
            same desk, same screen, a different thing to work out. */
@@ -815,16 +796,18 @@
             var i = G.icon(C.BUREAU.mode === 'plate' ? 'car' : 'cake');
             i.style.color = 'var(--on-gold)'; return i;
           })(),
-          el('b', { text: C.BUREAU.mode === 'plate' ? 'his plate no.' : 'birthday — eldest' })
+          el('b', { text: C.BUREAU.mode === 'plate' ? 'his plate no.' : 'BIRTHDAY' })
         ])
       ])
     ]);
 
-    return screen([
+    var view = screen([
       head('LE BUREAU'),
       body([ desk, readout, pad ]),
       null
     ]);
+    view.classList.add('pscreen--bureau');
+    return view;
   }
 
   /* -------------------------------------------------------- LA TCHATCHE */
@@ -832,8 +815,16 @@
     var S = E.S, t = S.tchatche, tr = C.FACES[t.badge];
     var tutorial = t.tag === 'first-beam-g1';
     var max = tutorial ? 0 : E.maxStrikes();
-    var strikes = el('div', { class: 'strikes' });
-    for (var i = 0; i < max; i++) strikes.appendChild(el('i', { class: i < t.strikes ? 'is-lost' : '' }));
+    var mistakeRatio = max ? U.clamp(t.strikes / max, 0, 1) : 0;
+    var mistakeCut = -28 + 227 * mistakeRatio;
+    var mistakes = el('div', { class: 'tch__mistakes', role: 'meter',
+      'aria-label': 'Mistakes', 'aria-valuemin': '0', 'aria-valuemax': max,
+      'aria-valuenow': t.strikes }, [
+      el('i', { class: 'tch__mistakes-fill', 'aria-hidden': 'true',
+        style: 'clip-path:polygon(0 0,' + ((mistakeCut + 28) / 199 * 100) + '% 0,' +
+          (mistakeCut / 199 * 100) + '% 100%,0 100%)' }),
+      el('b', { text: 'MISTAKES' })
+    ]);
 
     var lines = el('div', { class: 'lines' });
     if (tutorial) {
@@ -849,29 +840,19 @@
 
     var face = L.face.portrait(tr, 'tchp1__face');
 
-    /* WHAT IS LEFT ON THIS PHONE IS THE MAN'S FACE. Describing the face, and
-       what Benjamin does with the description, is read off the television —
-       said once, to both of them, which is also the only way either player
-       learns that the other was told the same thing. The line beside the
-       portrait is the situation, not a step: it is the caption on the picture,
-       and the picture is the puzzle. The two dots stay labelled — unlabelled
-       they read as decoration until the first one turns red, which is exactly
-       too late. */
+    /* The portrait is the clue; Benjamin's files supply the conversation. */
     var view = screen([
       head('LA TCHATCHE'),
       body([
-        /* Portrait beside the situation rather than above it, and the count and
-           the strikes on one line, so the three answers stay above the fold. */
+        el('h2', { class: 'tchp1__spotted', text: "YOU'VE BEEN SPOTTED" }),
         el('div', { class: 'tchp1__top' }, [
           face,
-          el('div', { class: 'tchp1__desc', html: tutorial
-            ? '<b>A guard has stopped you</b>Only one answer works, and Benjamin has it in his files.'
-            : '<b>A guard has stopped you</b>You cannot run and you cannot fight. You have to be somebody he already knows.' })
-        ]),
-        el('div', { class: 'tch__meter' }, [
-          el('span', { class: 'lbl', text: 'EXCHANGE ' + (t.round + 1) + ' OF 3' }),
-          tutorial ? el('span', { class: 'lbl', text: 'You’re disguised for La Resèrve' })
-                   : el('span', { class: 'tch__meter__r' }, [el('span', { class: 'lbl', text: 'MISTAKES' }), strikes])
+          el('div', { class: 'tchp1__aside' }, [
+            el('div', { class: 'tchp1__desc', text: 'Describe the guard to Benjamin. He’ll help you get their guard down.' }),
+            el('div', { class: 'tch__meter' }, [
+              tutorial ? el('span', { class: 'lbl', text: 'You’re disguised for La Resèrve' }) : mistakes
+            ])
+          ])
         ]),
         t.last ? el('p', { class: 'tch__verdict' + (t.last === 'bad' ? ' is-bad' : ''), text:
           t.last === 'good' ? 'That landed. The guard is still talking.'
