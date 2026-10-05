@@ -1,3 +1,65 @@
+/* Phone connection panel: the same slate, cream panels, and orange controls. */
+.seat{
+  width:min(480px,calc(100vw - 32px));padding:16px 24px 22px;
+  background:#4A5168 url('../art/ui-new/background.png') center / cover;
+  border:2px solid #778495;border-radius:0;color:#FFEFCC;
+  box-shadow:0 24px 70px rgba(0,0,0,.7);
+}
+.seat__h{
+  margin:-16px -24px 14px;padding:52px 18px 18px;
+  background:url('../art/ui-new/header-phone.png') center / 100% 100% no-repeat;
+  color:#2B2238;font-size:17px;font-weight:700;letter-spacing:.04em;line-height:1.3;
+}
+.seat .seat__note{color:#FFEFCC;font-size:13px;}
+.seat__note:empty{display:none;}
+.seat__scan{
+  width:fit-content;max-width:100%;margin:14px auto;padding:16px;
+  background:url('../art/ui-new/panel-medium.png') center / 100% 100% no-repeat;
+}
+.seat__scan:has(.seat__qr[hidden]){display:none;}
+.seat .seat__qr{
+  box-sizing:content-box;width:200px;height:auto;max-width:calc(100% - 20px);
+  aspect-ratio:1;margin:0 auto;padding:10px;background:#fff;
+}
+.seat__link{gap:8px;}
+.seat__link input{
+  border:0;border-radius:0;color:#2B2238;padding:12px;
+  background:url('../art/ui-new/panel-keycode-short.png') center / 100% 100% no-repeat;
+}
+.seat__link button,.seat__players button,.seat__close{
+  border:0;border-radius:0;background:transparent url('../art/ui-new/bttn-medium.png') center / 100% 100% no-repeat;
+  color:#39291D;font-family:var(--font);font-size:12px;font-weight:700;
+  text-transform:uppercase;padding:10px 14px;min-height:44px;
+}
+.seat__link button{flex-shrink:0;}
+.seat__players>div{
+  padding:16px 10px 12px;border-radius:0;color:#2B2238;
+  background:url('../art/ui-new/panel-medium.png') center / 100% 100% no-repeat;
+}
+.seat__players b{color:#A33E0A;letter-spacing:.04em;}
+.seat__players span{font-size:12px;}
+.seat__players button{margin-top:auto;}
+.seat__link button:active,.seat__players button:active:not(:disabled){
+  background-image:url('../art/ui-new/bttn-medium-pressed.png');
+}
+.seat__players button:disabled{
+  background-image:url('../art/ui-new/bttn-medium-disabled.png');color:#5A4E44;opacity:.75;
+}
+.seat__close{
+  top:6px;right:8px;z-index:1;padding:0;font-size:20px;
+  background-image:url('../art/ui-new/bttn-small-square.png');
+}
+.seat__close:active{background-image:url('../art/ui-new/bttn-small-square-pressed.png');}
+.seat button:focus-visible,.seat input:focus-visible{outline:3px solid #f7b95c;outline-offset:2px;}
+@media(max-width:380px){
+  .seat{padding-left:16px;padding-right:16px;}
+  .seat__h{margin-left:-16px;margin-right:-16px;font-size:14px;}
+  .seat__players{grid-template-columns:1fr;}
+  .seat__link{flex-wrap:wrap;}
+  .seat__link input{flex-basis:100%;}
+  .seat__link button{width:100%;}
+}
+
 /* ===================== PAINTED SKIN =====================
    The phones wear the painted pass from Figma ("Draft 2" → painted):
    a slate canvas, a purple header band with an orange brush stroke for the
