@@ -342,6 +342,7 @@
     /* contract one's dial, a new serial. Three rows share it; the ring colour
        is the only thing that tells them apart. */
     COFFRE: {
+      guardId: 'g3', // The existing patrol responds; no extra face is needed.
       serial: 'AV-2231', ring: 'denim',
       dial: ['hook', 'trident', 'spiral', 'drop', 'ladder', 'bisect', 'crescent', 'backz'],
       code: ['trident', 'drop', 'hook', 'ladder'],
@@ -392,15 +393,15 @@
     },
     DEGUISEMENT: { answerBadge: '3308', targetPost: 'LA RÉSERVE', conePenalty: 1 },
     FACES: {
-      '4412': { art: 'face-4412', head: 'square', hair: 'short', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
-      '2071': { art: 'face-2071', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
-      '1184': { art: 'face-3308', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone)' },
-      /* the delivered portrait has no scar, so the trait row does not claim one.
-         5195 is still clearly separable from 2071 — both are bald, but 2071
-         wears glasses and is clean shaven while this one has the moustache. */
-      '5195': { art: 'face-5195', head: 'square', hair: 'bald',  moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--stone-dk)' },
-      '6620': { art: 'face-6620', head: 'round',  hair: 'short', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
-      '3308': { art: 'face-1184', head: 'long',   hair: 'cap',   moustache: false, beard: true,  glasses: false, scar: false, skin: '#8A5A3B' }
+      // One distinct image per badge, shared by P1's encounter and P2's files.
+      '4412': { art: 'ui-new/guard-3', head: 'square', hair: 'swept', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
+      '2071': { art: 'ui-new/guard-1', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
+      // Temporarily hide surplus faces until their new art arrives. Their
+      // personnel records and uniforms still supply desk/disguise clues.
+      '1184': { hidden: true, art: 'face-3308', head: 'round', hair: 'swept', moustache: false, beard: false, glasses: true, scar: false, skin: 'var(--stone)' },
+      '5195': { art: 'ui-new/guard-4', head: 'round', hair: 'swept', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--stone)' },
+      '6620': { art: 'ui-new/guard-2', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
+      '3308': { hidden: true, art: 'face-1184', head: 'long', hair: 'cap', moustache: false, beard: true, glasses: false, scar: false, skin: '#8A5A3B' }
     },
     DIRT: {
       '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },
@@ -549,7 +550,7 @@
      camera. A route measured against the floor stays measured; a pair who
      played last night cannot type last night's codes.
 
-     WHAT CANNOT ROLL, and why: BADGES. They key art/face-XXXX.png, the
+     WHAT CANNOT ROLL, and why: BADGES. They key the FACES artwork, the
      uniforms table and the gossip table, so a rolled badge is a missing
      portrait. They stay, and so does every post. */
   function makeRng(seed) {

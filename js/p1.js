@@ -55,12 +55,9 @@
      playable with an empty art folder, and so a missing file degrades quietly
      instead of leaving a labelled placeholder box where a face should be. */
   var portraitCache = {};
-  /* Every guard currently wears the same placeholder portrait while the faces
-     are redrawn. Each guard's own art stays named in content.js (FACES[..].art);
-     set this back to null to show them again. */
-  var GUARD_PLACEHOLDER = 'guard-placeholder';
+  /* Both phones resolve portraits from the same badge-keyed FACES record. */
   function facePortrait(traits, cls) {
-    var art = GUARD_PLACEHOLDER || traits.art;
+    var art = traits.art;
     /* keyed by the guard, not the image: the faces grid shows them side by side */
     var key = (traits.art || 'x') + '|' + (cls || '');
     if (portraitCache[key]) return portraitCache[key];

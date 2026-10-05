@@ -899,7 +899,7 @@
         class: 'file__hd',
         onclick: function () { openBadge = open ? null : p.badge; U.sfx.tap(); U.emit('render'); }
       }, [
-        C.FACES && C.FACES[p.badge] ? L.face.portrait(C.FACES[p.badge], 'file__face') : null,
+        C.FACES && C.FACES[p.badge] && !C.FACES[p.badge].hidden ? L.face.portrait(C.FACES[p.badge], 'file__face') : null,
         el('span', { class: 'file__badge', text: p.badge }),
         el('span', { class: 'file__name', text: p.name })
       ]));
@@ -938,6 +938,7 @@
     ]);
     var grid = el('div', { class: 'faces' });
     Object.keys(C.FACES).forEach(function (badge) {
+      if (C.FACES[badge].hidden) return;
       var b = el('button', {
         class: pickedFace === badge ? 'is-on' : '',
         'aria-pressed': pickedFace === badge ? 'true' : 'false',

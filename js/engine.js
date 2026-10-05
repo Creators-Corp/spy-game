@@ -31,7 +31,7 @@
     switch (transition.kind) {
       case 'close': closeModule(true); break;
       case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
-      case 'safe-caught': getSpotted('1184'); break;
+      case 'safe-caught': getSpotted(C.COFFRE.guardId || '1184'); break;
       case 'safe-clear': S.coffreEntry = []; break;
       case 'finish': S.moduleId = null; finish(); break;
       case 'door-caught': getSpotted('g1', true); break;
