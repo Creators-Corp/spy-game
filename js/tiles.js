@@ -74,6 +74,91 @@
       'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0037.png'
     ]
   };
+  var GUARD_IDLE_FRAMES = {
+    left: [
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0000.png',
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0014.png',
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0035.png',
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0035b.png',
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0036.png',
+      'art/chars/guard_idle_side/cropped_left/guard_05_idle_tt_1.0037.png'
+    ],
+    right: [
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0000.png',
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0014.png',
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0035.png',
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0035b.png',
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0036.png',
+      'art/chars/guard_idle_side/cropped/guard_05_idle_tt_1.0037.png'
+    ],
+    up: [
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0001.png',
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0014.png',
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0032.png',
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0032b.png',
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0033.png',
+      'art/chars/guard_idle_up/cropped/guard_05_idle_tt_1.0034.png'
+    ],
+    down: [
+      'art/chars/guard_idle_down/cropped/guard_05_walk_tt_1.0000.png',
+      'art/chars/guard_idle_down/cropped/guard_05_walk_tt_1.0035.png'
+    ]
+  };
+  var GUARD_WALK_FRAMES = {
+    left: [
+      [
+        'art/chars/guard_walk_left/cropped/guard_05_walk_tt_1.0001.png',
+        'art/chars/guard_walk_left/cropped/guard_05_walk_tt_1.0007.png',
+        'art/chars/guard_walk_left/cropped/guard_05_walk_tt_1.0013.png'
+      ],
+      [
+        'art/chars/guard_walk_left/Right_Foot/cropped/guard_05_walk_tt_1.0019.png',
+        'art/chars/guard_walk_left/Right_Foot/cropped/guard_05_walk_tt_1.0025.png',
+        'art/chars/guard_walk_left/Right_Foot/cropped/guard_05_walk_tt_1.0031.png'
+      ]
+    ],
+    right: [
+      [
+        'art/chars/guard_walk_right/cropped/guard_05_walk_tt_1.0001.png',
+        'art/chars/guard_walk_right/cropped/guard_05_walk_tt_1.0007.png',
+        'art/chars/guard_walk_right/cropped/guard_05_walk_tt_1.0013.png'
+      ],
+      [
+        'art/chars/guard_walk_right/Right_Foot/cropped/guard_05_walk_tt_1.0019.png',
+        'art/chars/guard_walk_right/Right_Foot/cropped/guard_05_walk_tt_1.0025.png',
+        'art/chars/guard_walk_right/Right_Foot/cropped/guard_05_walk_tt_1.0031.png'
+      ]
+    ],
+    up: [
+      [
+        'art/chars/guard_walk_up/cropped/guard_05_walk_tt_1.0001.png',
+        'art/chars/guard_walk_up/cropped/guard_05_walk_tt_1.0003.png',
+        'art/chars/guard_walk_up/cropped/guard_05_walk_tt_1.0011.png',
+        'art/chars/guard_walk_up/cropped/guard_05_walk_tt_1.0014.png'
+      ],
+      [
+        'art/chars/guard_walk_up/Left_Foot/cropped/guard_05_walk_tt_1.0019.png',
+        'art/chars/guard_walk_up/Left_Foot/cropped/guard_05_walk_tt_1.0025.png',
+        'art/chars/guard_walk_up/Left_Foot/cropped/guard_05_walk_tt_1.0031.png',
+        'art/chars/guard_walk_up/Left_Foot/cropped/guard_05_walk_tt_1.0032.png'
+      ]
+    ],
+    down: [
+      [
+        'art/chars/guard_walk_down/cropped/guard_05_walk_tt_1.0001.png',
+        'art/chars/guard_walk_down/cropped/guard_05_walk_tt_1.0003.png',
+        'art/chars/guard_walk_down/cropped/guard_05_walk_tt_1.0005.png',
+        'art/chars/guard_walk_down/cropped/guard_05_walk_tt_1.0015.png',
+        'art/chars/guard_walk_down/cropped/guard_05_walk_tt_1.0017.png'
+      ],
+      [
+        'art/chars/guard_walk_down/Left_Foot/cropped/guard_05_walk_tt_1.0018.png',
+        'art/chars/guard_walk_down/Left_Foot/cropped/guard_05_walk_tt_1.0024.png',
+        'art/chars/guard_walk_down/Left_Foot/cropped/guard_05_walk_tt_1.0032.png',
+        'art/chars/guard_walk_down/Left_Foot/cropped/guard_05_walk_tt_1.0035.png'
+      ]
+    ]
+  };
   var WALK_FRAMES = {
     /* Each direction holds a list of walk variations. The renderer advances
        one variation per step, so alternating foot cycles stay in sync with
@@ -128,6 +213,7 @@
     ]
   };
   var walkSerial = 0, walkFrame = 0, idleTimer = null, walkCycleIndex = {};
+  var guardAnimations = {}, guardCycleIndex = {};
 
   function href(name) { return U.assetURL(ART + name + '.png'); }
 
@@ -286,6 +372,81 @@
     }
     sprite.setAttribute('href', U.assetURL(frames[0]));
     if (frames.length > 1) idleTimer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
+    return true;
+  }
+
+  function guardActorId(index) { return 'tl-guard-actor-' + index; }
+  function guardSpriteId(index) { return 'tl-guard-sprite-' + index; }
+
+  function guardState(index) {
+    if (!guardAnimations[index]) guardAnimations[index] = { serial: 0, frame: 0, timer: null };
+    return guardAnimations[index];
+  }
+
+  function stopGuardAnimation(index) {
+    var state = guardAnimations[index];
+    if (!state) return;
+    state.serial++;
+    if (state.frame) window.cancelAnimationFrame(state.frame);
+    if (state.timer !== null) window.clearTimeout(state.timer);
+    state.frame = 0;
+    state.timer = null;
+    var actor = document.getElementById(guardActorId(index));
+    var sprite = document.getElementById(guardSpriteId(index));
+    if (actor) actor.removeAttribute('transform');
+    if (sprite) sprite.setAttribute('href', sprite.getAttribute('data-rest-href'));
+  }
+
+  function stopGuardAnimations() {
+    Object.keys(guardAnimations).forEach(stopGuardAnimation);
+  }
+
+  function startGuardIdle(index, direction) {
+    stopGuardAnimation(index);
+    var frames = GUARD_IDLE_FRAMES[direction];
+    var sprite = document.getElementById(guardSpriteId(index));
+    if (!sprite || !frames || !frames.length) return false;
+    var state = guardState(index), serial = state.serial, frameIndex = 0;
+    function advance() {
+      if (state.serial !== serial) return;
+      frameIndex = (frameIndex + 1) % frames.length;
+      sprite.setAttribute('href', U.assetURL(frames[frameIndex]));
+      state.timer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
+    }
+    sprite.setAttribute('href', U.assetURL(frames[0]));
+    if (frames.length > 1) state.timer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
+    return true;
+  }
+
+  function animateGuardWalk(index, direction, fromX, fromY, toX, toY) {
+    stopGuardAnimation(index);
+    var variations = GUARD_WALK_FRAMES[direction];
+    var actor = document.getElementById(guardActorId(index));
+    var sprite = document.getElementById(guardSpriteId(index));
+    if (!actor || !sprite || !variations || !variations.length) return false;
+    var cycle = guardCycleIndex[index] || 0;
+    var frames = variations[cycle % variations.length];
+    guardCycleIndex[index] = (cycle + 1) % variations.length;
+    if (!frames || !frames.length) return false;
+    var state = guardState(index), serial = state.serial;
+    var dx = (fromX - toX) * W, dy = (fromY - toY) * H;
+    var start = null;
+    actor.setAttribute('transform', 'translate(' + dx + ' ' + dy + ')');
+    function draw(now) {
+      if (state.serial !== serial) return;
+      if (start === null) start = now;
+      var progress = Math.min(1, (now - start) / WALK_WINDOW_MS);
+      var frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+      sprite.setAttribute('href', U.assetURL(frames[frameIndex]));
+      actor.setAttribute('transform', 'translate(' + (dx * (1 - progress)) + ' ' + (dy * (1 - progress)) + ')');
+      if (progress < 1) state.frame = window.requestAnimationFrame(draw);
+      else {
+        actor.removeAttribute('transform');
+        state.frame = 0;
+        startGuardIdle(index, direction);
+      }
+    }
+    draw(window.performance.now());
     return true;
   }
 
@@ -949,10 +1110,10 @@
        stands in front of one higher up. */
     if (on('actors')) {
       var actors = [];
-      S.guards.forEach(function (g) {
+      S.guards.forEach(function (g, gi) {
         var p = E.guardAt(g);
         if (view === 'assane' && !lit(p.x, p.y)) return;
-        actors.push({ who: 'guard', x: p.x, y: p.y, dir: g.facing });
+        actors.push({ who: 'guard', index: gi, x: p.x, y: p.y, dir: g.facing });
       });
       actors.push({ who: 'assane', x: S.assane.x, y: S.assane.y, dir: S.facing || 'S' });
       actors.sort(function (a2, b2) { return a2.y - b2.y || a2.x - b2.x; });
@@ -961,6 +1122,7 @@
         var dir = { N: 'up', S: 'down', E: 'right', W: 'left' }[a2.dir] || 'down';
         px = a2.x * W; py = a2.y * H;
         if (a2.who === 'assane') s += '<g id="tl-assane-actor">';
+        else s += '<g id="' + guardActorId(a2.index) + '">';
         s += '<ellipse cx="' + (px + W / 2) + '" cy="' + (py + H * 0.86) + '" rx="' + (W * 0.22) + '" ry="' + (H * 0.07) + '" fill="#000" opacity=".28"/>';
         var spriteExtra = { keep: true };
         var baseX = px + W * 0.1, baseY = py + H * 0.02;
@@ -975,9 +1137,14 @@
           spriteExtra.src = idleFrames && idleFrames.length ? idleFrames[0] : 'art/tiles/assane-' + dir + '.png';
           spriteExtra.restHref = U.assetURL(spriteExtra.src);
           spriteExtra.spriteBase = { x: baseX, y: baseY, width: baseW, height: baseH, restScale: restScale };
+        } else {
+          var guardFrames = GUARD_IDLE_FRAMES[dir];
+          spriteExtra.id = guardSpriteId(a2.index);
+          spriteExtra.src = guardFrames && guardFrames.length ? guardFrames[0] : 'art/tiles/guard-' + dir + '.png';
+          spriteExtra.restHref = U.assetURL(spriteExtra.src);
         }
         s += img(a2.who + '-' + dir, spriteX, spriteY, spriteW, spriteH, spriteExtra);
-        if (a2.who === 'assane') s += '</g>';
+        s += '</g>';
       });
       s += '</g>';
     }
@@ -1176,6 +1343,7 @@
     }
 
     s += '</svg>';
+    stopGuardAnimations();
     host.innerHTML = s;
     if (opts.scale) host.style.maxWidth = Math.round((cols + 2) * W * opts.scale) + 'px';
   }
@@ -1197,5 +1365,6 @@
 
   L.tiles = { render: render, ready: ready, W: W, H: H, wallPieces: wallPieces, dump: dump, cellName: cellName,
     animateWalk: animateWalk, startIdle: startIdle, stopWalk: stopWalk,
+    animateGuardWalk: animateGuardWalk, startGuardIdle: startGuardIdle, stopGuardAnimations: stopGuardAnimations,
     walkWindowMs: function () { return WALK_WINDOW_MS; } };
 })(window.DC);

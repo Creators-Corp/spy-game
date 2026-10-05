@@ -47,7 +47,7 @@
      something on it has moved. The clock ticks once a second and wants only
      the ring, which lives in the HUD above it. */
   var TW = 300, TH = 290;          /* the tile, in the art's own pixels */
-  var floorSig = null, tilesIn = false, lastRoomActor = null, lastRoomRun = null, roomActive = false;
+  var floorSig = null, tilesIn = false, lastRoomActor = null, lastRoomGuards = null, lastRoomRun = null, roomActive = false;
   L.tiles.ready(function () { tilesIn = true; });
 
   function signature() {
@@ -181,13 +181,19 @@
        from the bare rules and visibly corrects itself a moment later */
     if (S.dark || !tilesIn) {
       L.tiles.stopWalk();
-      roomActive = false; lastRoomActor = null; lastRoomRun = null;
+      L.tiles.stopGuardAnimations();
+      roomActive = false; lastRoomActor = null; lastRoomGuards = null; lastRoomRun = null;
       floor.innerHTML = ''; hud.innerHTML = ''; floorSig = null;
       roomToast();
       return;
     }
 
     var run = C.id + '|' + S.seed;
+    var previousGuards = lastRoomRun === run ? lastRoomGuards : null;
+    var currentGuards = S.guards.map(function (g) {
+      var p = E.guardAt(g);
+      return { x: p.x, y: p.y, facing: g.facing };
+    });
     var previous = lastRoomRun === run && lastRoomActor && S.turn > lastRoomActor.turn
       ? lastRoomActor : null;
     var moved = previous && (previous.x !== S.assane.x || previous.y !== S.assane.y);
@@ -195,6 +201,7 @@
     roomActive = true;
     lastRoomRun = run;
     lastRoomActor = { x: S.assane.x, y: S.assane.y, turn: S.turn };
+    lastRoomGuards = currentGuards;
 
     var sig = signature();
     var rebuilt = false;
@@ -208,6 +215,19 @@
       var direction = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
       L.tiles.animateWalk(direction, previous.x, previous.y, S.assane.x, S.assane.y);
     } else if (rebuilt || roomOpened) L.tiles.startIdle({ N: 'up', S: 'down', E: 'right', W: 'left' }[S.facing] || 'down');
+    if (rebuilt || roomOpened) {
+      var facingDirection = { N: 'up', S: 'down', E: 'right', W: 'left' };
+      currentGuards.forEach(function (g, index) {
+        var old = previousGuards && previousGuards[index];
+        if (old && (old.x !== g.x || old.y !== g.y)) {
+          var gx = g.x - old.x, gy = g.y - old.y;
+          var guardDirection = Math.abs(gx) >= Math.abs(gy) ? (gx > 0 ? 'right' : 'left') : (gy > 0 ? 'down' : 'up');
+          L.tiles.animateGuardWalk(index, guardDirection, old.x, old.y, g.x, g.y);
+        } else {
+          L.tiles.startGuardIdle(index, facingDirection[g.facing] || 'down');
+        }
+      });
+    }
     /* one viewBox for both, read off the floor rather than recomputed, so the
        HUD cannot drift out of register with the tiles if a map changes size */
     var svg = floor.querySelector('svg');
@@ -499,7 +519,8 @@
 
     if (S.phase !== 'play') {
       L.tiles.stopWalk();
-      roomActive = false; lastRoomActor = null; lastRoomRun = null;
+      L.tiles.stopGuardAnimations();
+      roomActive = false; lastRoomActor = null; lastRoomGuards = null; lastRoomRun = null;
     }
     if (S.phase === 'plan') { show('plan'); renderPlan(); }
     else if (S.phase === 'play') { show('room'); renderRoom(); }

@@ -251,7 +251,7 @@
          encounter: it does not count as being spotted. Talk him round and he
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
-      { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
+      { id: 'g1', badge: '4412', from: { x: 14, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1,
         stand: true, facing: 'W', hears: 'LA RÉSERVE' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
