@@ -182,9 +182,9 @@
       '##############.#...L.###',
       '##############.....L.###',
       '#.X..#########.#...L.###',
-      '#....###############.###',
-      '#...................+###',
-      '#...#................###',
+      '#....###############+###',
+      '#.....................##',
+      '#...#.................##',
       '#...#.#.#.#.##.###...###',
       '#...#.......##.......###',
       '#...#.#.#.#.##.###...###',
@@ -298,7 +298,7 @@
       dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
     },
     DOORS: [
-      { x: 20,  y: 5,  locked: true,  mark: 'trident',  to: 'LE COFFRE' },
+      { x: 20,  y: 4,  locked: true,  mark: 'trident',  to: 'LE COFFRE' },
       { x: 11, y: 12,  locked: true,  mark: 'chevrons', to: 'GALERIE BASSE' },
       { x: 8,  y: 16, locked: true,  mark: 'lock',     to: 'LE VESTIAIRE' },
     ],
