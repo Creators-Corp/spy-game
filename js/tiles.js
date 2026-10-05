@@ -321,6 +321,30 @@
            (extra && extra.opacity != null ? ' opacity="' + extra.opacity + '"' : '') + '/>';
   }
 
+  // Retain decoded frames. Never replace a visible sprite with an image still
+  // downloading/decoding (or a failed request), especially on hosted builds.
+  var decodedFrames = {};
+  function frameReady(url) {
+    if (typeof Image === 'undefined') return false;
+    if (!decodedFrames[url]) {
+      var entry = decodedFrames[url] = { image: new Image(), ready: false };
+      entry.image.onload = function () {
+        if (entry.image.decode) {
+          entry.image.decode().then(function () { entry.ready = true; }, function () {});
+        } else entry.ready = true;
+      };
+      entry.image.onerror = function () { entry.ready = false; };
+      entry.image.src = url;
+    }
+    return decodedFrames[url].ready;
+  }
+  function warmFrames(frames) {
+    frames.forEach(function (frame) { frameReady(U.assetURL(frame)); });
+  }
+  function showFrame(sprite, url) {
+    if (sprite.getAttribute('href') !== url && frameReady(url)) sprite.setAttribute('href', url);
+  }
+
   function animateWalk(direction, fromX, fromY, toX, toY) {
     stopWalk();
     var variations = WALK_FRAMES[direction];
@@ -332,6 +356,7 @@
     var frames = variations[cycle % variations.length];
     walkCycleIndex[direction] = (cycle + 1) % variations.length;
     if (!frames || !frames.length) { startIdle(direction); return false; }
+    warmFrames(frames);
 
     var serial = walkSerial;
     setAssaneScale(direction === 'up' ? UP_WALK_SCALE : 1);
@@ -344,7 +369,7 @@
       if (start === null) start = now;
       var progress = Math.min(1, (now - start) / WALK_WINDOW_MS);
       var index = Math.min(frames.length - 1, Math.floor(progress * frames.length));
-      sprite.setAttribute('href', U.assetURL(frames[index]));
+      showFrame(sprite, U.assetURL(frames[index]));
       walkOffset = { x: dx * (1 - progress), y: dy * (1 - progress) };
       actor.setAttribute('transform', 'translate(' + walkOffset.x + ' ' + walkOffset.y + ')');
       if (progress < 1) walkFrame = window.requestAnimationFrame(draw);
@@ -369,7 +394,7 @@
     var actor = document.getElementById('tl-assane-actor');
     var sprite = document.getElementById('tl-assane-sprite');
     if (actor) actor.removeAttribute('transform');
-    if (sprite) sprite.setAttribute('href', sprite.getAttribute('data-rest-href'));
+    if (sprite) showFrame(sprite, sprite.getAttribute('data-rest-href'));
     if (sprite) setAssaneScale(Number(sprite.getAttribute('data-rest-scale')) || 1);
   }
 
@@ -378,15 +403,17 @@
     var frames = IDLE_FRAMES[direction];
     var sprite = document.getElementById('tl-assane-sprite');
     if (!sprite || !frames || !frames.length) return false;
+    warmFrames(frames);
+    (WALK_FRAMES[direction] || []).forEach(warmFrames);
     setAssaneScale(direction === 'up' ? UP_IDLE_SCALE : 1);
     var serial = walkSerial, index = 0;
     function advance() {
       if (serial !== walkSerial) return;
       index = (index + 1) % frames.length;
-      sprite.setAttribute('href', U.assetURL(frames[index]));
+      showFrame(sprite, U.assetURL(frames[index]));
       idleTimer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
     }
-    sprite.setAttribute('href', U.assetURL(frames[0]));
+    showFrame(sprite, U.assetURL(frames[0]));
     if (frames.length > 1) idleTimer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
     return true;
   }
@@ -1155,7 +1182,8 @@
         if (a2.who === 'assane') {
           var idleFrames = IDLE_FRAMES[dir];
           spriteExtra.id = 'tl-assane-sprite';
-          spriteExtra.src = idleFrames && idleFrames.length ? idleFrames[0] : 'art/tiles/assane-' + dir + '.png';
+          spriteExtra.src = idleFrames && idleFrames.length && frameReady(U.assetURL(idleFrames[0]))
+            ? idleFrames[0] : 'art/tiles/assane-' + dir + '.png';
           spriteExtra.restHref = U.assetURL(spriteExtra.src);
           spriteExtra.spriteBase = { x: baseX, y: baseY, width: baseW, height: baseH, restScale: restScale };
         } else {
@@ -1366,7 +1394,18 @@
 
     s += '</svg>';
     stopGuardAnimations();
+    // Keep the browser's displayed/decoded Assane image alive across floor
+    // rebuilds. Update its geometry without creating a fresh image resource.
+    var oldSprite = host.querySelector && host.querySelector('#tl-assane-sprite');
     host.innerHTML = s;
+    var newSprite = host.querySelector && host.querySelector('#tl-assane-sprite');
+    if (oldSprite && newSprite) {
+      Array.prototype.forEach.call(newSprite.attributes, function (attr) {
+        if (attr.name === 'href') showFrame(oldSprite, attr.value);
+        else oldSprite.setAttribute(attr.name, attr.value);
+      });
+      newSprite.parentNode.replaceChild(oldSprite, newSprite);
+    }
     if (opts.scale) host.style.maxWidth = Math.round((cols + 2) * W * opts.scale) + 'px';
   }
 
