@@ -166,6 +166,7 @@
      ======================================================================= */
   var JOB1 = {
     id: 'veille',
+    HATCH: 'door',
     venue: 'HÔTEL DES VENTES · LA VEILLE',
     contract: 'CONTRAT No.1 — LA VEILLE DE VENTE',
     target: 'Lot 12 · manuscrit enluminé',
@@ -180,7 +181,7 @@
       '########################',
       '##############.#...L.###',
       '##############.....L.###',
-      '#X...#########.#...L.###',
+      '#.X..#########.#...L.###',
       '#....###############.###',
       '#...................+###',
       '#...#................###',
@@ -306,11 +307,11 @@
          the cloakroom is not optional on this contract */
       { id: 'grille',      x: 8,  y: 17, name: 'LA GRILLE',      icon: 'lock', needs: 'deguisement',
         refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
-      { id: 'deguisement', x: 5, y: 16, name: 'LE DÉGUISEMENT', icon: 'coat' },
+      { id: 'deguisement', x: 4, y: 15, name: 'LE DÉGUISEMENT', icon: 'coat' },
         /* LA PORTE, at the north end of La Réserve: the keypad follows the
            beam and the posted guard. */
       { id: 'porte',       x: 11, y: 13, name: 'LA PORTE',       icon: 'lock' },
-      { id: 'bureau',      x: 18, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
+      { id: 'bureau',      x: 19, y: 14,  name: 'LE BUREAU',      icon: 'desk' },
       { id: 'coffre',      x: 17,  y: 2,  name: 'LE COFFRE',      icon: 'safe' }
     ],
 
@@ -477,7 +478,7 @@
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
       { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, reversed:' },
-      { k: 'EVACUATION',   v: 'Service hatch, west wall of the upper gallery. Not on the public plans.' }
+      { k: 'EVACUATION',   v: 'Emergency exit at C4, north of the kitchens. Not on the public plans.' }
     ],
 
     BEATS: [

@@ -36,15 +36,63 @@ function pieces() {
 
 const level = dc.content.MAP;
 function assertMassSideContinuation(mirrored) {
-  const x = mirrored ? level[0].length - 1 - 3 : 3;
-  const name = mirrored ? 'wall-edge-right' : 'wall-edge-left';
+  const x = mirrored ? level[0].length - 1 - 4 : 4;
+  const name = mirrored ? 'wall-edge-left' : 'wall-edge-right';
   const all = pieces();
   for (const y of [6, 7]) {
     assert.equal(all.filter(p => p.x === x && p.y === y && p.name === name).length,
-      1, `${dc.tiles.cellName(x, y)} continues the floor-column side band`);
+      1, `${dc.tiles.cellName(x, y)} continues the block-column side band`);
   }
 }
 assertMassSideContinuation(false);
+function assertBlockSides(mirrored) {
+  const all = pieces();
+  const invert = side => mirrored ? (side === 'left' ? 'right' : 'left') : side;
+  for (const [column, top, last, sides] of [[4, 6, 9, ['left', 'right']], [12, 7, 9, ['left']], [13, 7, 9, ['right']]]) {
+    const x = mirrored ? level[0].length - 1 - column : column;
+    for (const originalSide of sides) {
+      const side = invert(originalSide);
+      const edge = `wall-edge-${side === 'left' ? 'right' : 'left'}`;
+      for (let y = top; y < last; y++) {
+        const expected = y === last - 1 ? `wall-corner-bottom-${side}` : edge;
+        assert.equal(all.filter(p => p.x === x && p.y === y && p.name === expected).length,
+          1, `${dc.tiles.cellName(x, y)} has one ${expected}`);
+        const floorX = x + (side === 'left' ? -1 : 1);
+        assert.ok(!all.some(p => p.sourceX === x && p.sourceY === y && p.x === floorX && sidePiece.test(p.name)),
+          `${dc.tiles.cellName(x, y)} does not put its band on floor`);
+      }
+      assert.ok(!all.some(p => p.x === x && p.y === last && sidePiece.test(p.name)),
+        `${dc.tiles.cellName(x, last)} leaves the lower face panel clear`);
+      assert.ok(all.some(p => p.x === x && p.y === top - 1 && p.name === `wall-corner-top-${side}`),
+        `${dc.tiles.cellName(x, top - 1)} connects the top cap`);
+    }
+  }
+  // Every automatically emitted block with adjacent floor has a separator
+  // on that side in its own cell, beyond just the named regression cells.
+  for (const p of all.filter(p => p.name === 'block-tile')) {
+    for (const dx of [-1, 1]) {
+      if (!'.ELX'.includes(dc.engine.charAt(p.x + dx, p.y))) continue;
+      const side = dx === -1 ? 'left' : 'right';
+      const edge = `wall-edge-${dx === -1 ? 'right' : 'left'}`;
+      assert.ok(all.some(q => q.x === p.x && q.y === p.y &&
+        (q.name === edge || q.name === `wall-corner-bottom-${side}`)),
+        `${dc.tiles.cellName(p.x, p.y)} separates block from adjacent floor`);
+    }
+  }
+}
+assertBlockSides(false);
+// The lower block cap is painted before the face top in the same cell.
+for (const [cell, cap, top, bottom] of [
+  ['M9', 'wall-corner-bottom-left', 'wall-molded-top-left', 'wall-molded-bottom-left'],
+  ['N9', 'wall-corner-bottom-right', 'wall-molded-top-right', 'wall-molded-bottom-right']
+]) {
+  const x = cell.charCodeAt(0) - 65;
+  const y = Number(cell.slice(1)) - 1;
+  const at = pieces().filter(p => p.x === x && p.y === y).map(p => p.name);
+  assert.ok(at.indexOf(cap) >= 0 && at.indexOf(top) > at.indexOf(cap), `${cell} places its cap underneath the face top`);
+  assert.deepEqual(pieces().filter(p => p.x === x && p.y === y + 1).map(p => p.name), [bottom],
+    `${dc.tiles.cellName(x, y + 1)} contains only its lower panel`);
+}
 function assertInnerJoin(mirrored) {
   const x = mirrored ? level[0].length - 1 - 19 : 19;
   const names = pieces().filter(p => p.x === x && p.y === 4).map(p => p.name);
@@ -123,6 +171,7 @@ function assertClearSpans(mirrored) {
 assertClearSpans(false);
 dc.content.MAP = level.map(row => [...row].reverse().join(''));
 assertMassSideContinuation(true);
+assertBlockSides(true);
 assertInnerJoin(true);
 assertNarrowFaceJoin(true);
 assertOuterJoins(true);
@@ -155,11 +204,12 @@ assert.ok(all.every(p => p.face && !sidePiece.test(p.name)));
 dc.content.MAP = ['.....', '.#.#.', '..#..', '.#.#.', '.....'];
 assert.ok(dc.tiles.wallPieces(2, 2).every(p => p.face && !/wall-(blank-corner|edge-)/.test(p.name)));
 
-// A larger mass in an open room retains side corners on both sides.
+// A larger mass in an open room keeps its side corners inside the block.
 dc.content.MAP = ['........', '........', '...##...', '...##...', '........', '........'];
 all = pieces();
-assert.ok(all.some(p => p.name === 'wall-inner-corner-bottom-left'));
-assert.ok(all.some(p => p.name === 'wall-inner-corner-bottom-right'));
+assert.ok(all.some(p => p.x === 3 && p.name === 'wall-corner-bottom-left'));
+assert.ok(all.some(p => p.x === 4 && p.name === 'wall-corner-bottom-right'));
+assert.ok(!all.some(p => /^wall-inner-corner-/.test(p.name)));
 
 // A narrow vertical passage clears both rows of its corners, even where the
 // upper row opens into a wider area. This is the geometry of F9/F10.

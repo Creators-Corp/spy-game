@@ -157,10 +157,9 @@ combined.
    bottom meets a face corner is drawn **inside the floor column** instead, so
    the band and the corner below it line up.
 
-   If that floor-column band continues below a mass's top row, the mass row
-   also emits the band beside itself, between its cap above and the side wall
-   below. For example, D7 carries `wall-edge-left` between D6's cap and D8's
-   band. This is a shared rule, including its mirrored case, not an override.
+   Side boundaries containing solid blocks follow rule 10 instead: their
+   complete side assembly stays in the block column. In particular, the
+   former D6–D10 floor-column assembly now runs in E6–E10.
 
    **The band is 80px wide, so it matters which of the two columns it is in.**
    Both answers above are legitimate and they occur on the same board. Where a
@@ -188,6 +187,20 @@ combined.
    above the passage, rather than leaving detached corner pieces. Side bands
    drawn within wall cells remain. This clears F6–F10, H7–H10, J7–J10 and
    L7–L10 on `veille` without per-cell overrides.
+
+10. **Separate blocks from adjacent floor inside the block column.** Every
+    solid block with floor to its left gets `wall-edge-right`; floor to its
+    right gets `wall-edge-left`. Follow the continuous wall/floor boundary
+    through the mass and its lower face. Put the top corner one row above the
+    run and replace the last band with the matching bottom corner, all in the
+    block's own column. When the run ends in a two-row face, stop one row
+    earlier: put the bottom corner underneath the face's upper tile, and leave
+    its lower panel free of side pieces. M9 therefore has a bottom-left corner
+    underneath its moulded top-left, while M10 has only its moulded bottom-left.
+    Remove the former floor-column side pieces for that run so the boundary
+    has one band, not two. This includes E7–E9, M8–M9 and N8–N9,
+    with top caps at E6, M7 and N7. Isolated 1 × 1
+    masses still follow rule 9; narrow floor cells stay free of side overlays.
 
 ---
 

@@ -211,6 +211,10 @@
   ]
  },
  "veille": {
+  "J16": [
+    "wall-outer-edge-center",
+    "wall-corner-top-left"
+  ],
   "P0": [
    "wall-corner-top-left"
   ],
@@ -218,9 +222,23 @@
    "wall-edge-right",
    "wall-blank-top"
   ],
+  "P3":
+  [
+    "wall-outer-edge-center",
+    "wall-corner-top-left"
+  ],
+  "P4": [
+    "block-tile",
+    "wall-edge-right",
+    "wall-molded-top-left"
+  ],
   "Q4": [
    "wall-corner-bottom-left",
    "wall-molded-top-right"
+  ],
+  "Q3":
+  [
+    "wall-corner-top-left"
   ],
   "R14": [
     "block-tile",
@@ -239,6 +257,10 @@
   ],
   "R17": [
     "block-tile"
-  ]
+  ],
+  "S7": [],
+  "S8": [],
+  "S9": [],
+  "S10": []
  }
 }

@@ -224,7 +224,51 @@
     return false;
   }
 
+  /* A side boundary containing visible solid block is one assembly. Keep
+     its bands and both caps in the block column, including the face at its
+     lower end, rather than moving part of the assembly onto adjacent floor. */
+  function blockSideRun(x, y, nx) {
+    function boundary(q) {
+      return q >= 0 && q < C.MAP.length && wallLike(x, q) && floorLike(nx, q);
+    }
+    if (!boundary(y)) return null;
+    var first = y, last = y, block = false;
+    while (boundary(first - 1)) first--;
+    while (boundary(last + 1)) last++;
+    for (var q = first; q <= last; q++) {
+      if (!floorLike(x, q + 1) && (floorLike(x, q - 1) || !outside(x, q))) block = true;
+    }
+    return block ? { first: first, last: last } : null;
+  }
+
   function wallPieces(x, y) {
+    var out = baseWallPieces(x, y);
+    if (!wallLike(x, y)) return out;
+    [-1, 1].forEach(function (dx) {
+      var run = blockSideRun(x, y, x + dx);
+      if (!run) return;
+      var side = dx === 1 ? 'right' : 'left';
+      var edge = dx === 1 ? 'wall-edge-left' : 'wall-edge-right';
+      /* A two-row face starts one row above its logical wall cell. End the
+         block band there, beneath the face top, not on the lower panel. */
+      var capY = run.last - (faceCell(x, run.last) ? 1 : 0);
+      out = out.filter(function (p) {
+        /* Replace the existing side assembly, not the horizontal face or
+           mass fill. The edge naming convention is reversed. */
+        if (p.dx === dx && /^wall-(edge-|corner-|inner-corner-)/.test(p.name || '')) return false;
+        if (p.dx === 0 && (p.name === edge ||
+            p.name === 'wall-corner-top-' + side ||
+            p.name === 'wall-corner-bottom-' + side ||
+            p.name === 'wall-corner-bottom-' + side + '-fill')) return false;
+        return true;
+      });
+      if (y <= capY) out.push({ name: y === capY ? 'wall-corner-bottom-' + side : edge, dx: 0, dy: 0, w: 1, h: 1 });
+      if (y === run.first) out.push({ name: 'wall-corner-top-' + side, dx: 0, dy: -1, w: 1, h: 1 });
+    });
+    return out;
+  }
+
+  function baseWallPieces(x, y) {
 
     var n = floorLike(x, y - 1), e = floorLike(x + 1, y), s = floorLike(x, y + 1), w = floorLike(x - 1, y);
     var singleMass = n && e && s && w;
@@ -781,6 +825,13 @@
          is p2.js's business. This is the room itself, so the way out is drawn
          wherever it exists; hiding it here just lost the window. */
       if (hx && known(hx.x, hx.y)) {
+        if (C.HATCH === 'door') {
+          /* Interact from the floor square; the door stands in the north
+             wall one row above it. It does not turn that wall into floor. */
+          s += img(S.solved.clavier ? 'goal-door-open' : 'goal-door-closed',
+                   hx.x * W + W * 0.02, (hx.y - 1) * H + H * 0.12,
+                   W * 0.96, H * 0.88, { keep: true });
+        } else {
         /* the way out is a window in the wall, stood against the side of the
            niche it sits in */
         /* the new art is a full 300x290 tile with the window already placed
@@ -796,6 +847,7 @@
         var wallEast = wallLike(hx.x + 1, hx.y);
         s += img(wallEast ? 'goal-window-side-right' : 'goal-window-side',
                  hx.x * W, hx.y * H, W + 1, H + 1);
+        }
       }
       s += '</g>';
     }
