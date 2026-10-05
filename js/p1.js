@@ -343,21 +343,9 @@
   }
 
   function viewDeguisement() {
-    var garmentArt = {
-      head: [[3, '512 504 760 1408', 1748, 2480], [2, '520 504 664 1224', 1748, 2480], [1, '456 504 840 1008', 1748, 2480]],
-      torso: [[3, '392 104 1032 1976', 1748, 2480], [2, '296 104 1248 1640', 1748, 1977], [1, '368 104 1080 1648', 1748, 1977]],
-      legs: [[1, '264 48 904 1880', 1377, 2201], [2, '280 48 888 2096', 1377, 2201], [3, '288 48 808 2080', 1377, 2201]]
-    };
     function garment(slot, id) {
-      var index = C.RACK[slot].indexOf(id);
-      var box = el('div', { class: 'wardrobe__garment wardrobe__garment--' + slot });
-      if (index < 0) return box;
-      var art = garmentArt[slot][index];
-      var group = { head: 'Hats', torso: 'Shirt', legs: 'Pants' }[slot];
-      box.innerHTML = '<svg viewBox="' + art[1] + '" aria-hidden="true"><image href="' +
-        U.assetURL('art/wardrobe/Garments_' + group + '_0' + art[0] + '.png') +
-        '" width="' + art[2] + '" height="' + art[3] + '"/></svg>';
-      return box;
+      if (!id) return el('div', { class: 'wardrobe__garment wardrobe__garment--' + slot });
+      return L.figures.garmentTile(slot, id, 'wardrobe__garment wardrobe__garment--' + slot);
     }
     var mirror = el('div', { class: 'wardrobe__preview', 'aria-label': 'Chosen outfit' },
       ['head', 'torso', 'legs'].map(function (slot) { return garment(slot, outfit[slot]); }));

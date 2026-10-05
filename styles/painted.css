@@ -347,7 +347,7 @@
 #p1 .pscreen--disguise .rack button:is(:hover,:active,.is-on){
   height:100%;min-width:0;padding:0;border:0;border-image:none;
   background:transparent !important;box-shadow:none;border-radius:6px;overflow:visible;
-  transform:scale(.6);transform-origin:center top;
+  transform:scale(1);transform-origin:center top;
 }
 #p1 .pscreen--disguise .rack button.is-on{outline:5px solid #FF8232;outline-offset:-5px;}
 #p1 .pscreen--disguise .wardrobe__row--head button{width:64%;justify-self:center;}
