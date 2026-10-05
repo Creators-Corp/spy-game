@@ -616,9 +616,10 @@
 .warn--alarm{background:var(--red);color:var(--on-color);border-color:var(--ink);
   animation:alarmpulse .9s ease-in-out infinite;}
 @keyframes alarmpulse{0%,100%{opacity:1}50%{opacity:.72}}
-/* a lever has just come online. Gold, tap to dismiss. */
-.warn--unlock{background:var(--gold);color:var(--on-gold);border-color:var(--ink);cursor:pointer;margin:0 0 12px;}
-.warn--unlock u{display:block;margin-top:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;}
+/* a lever has just come online. Blue, tap to dismiss. */
+#p2 .warn--unlock{background:#97b1ff;color:#2B2238;border-image:none;border-color:#2B2238;cursor:pointer;margin:0 0 12px;}
+#p2 .warn--unlock b{display:block;margin-bottom:3px;}
+#p2 .warn--unlock u{display:block;margin-top:4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-align:center;font-weight:700;color:#A33E0A;}
 /* the first conversation: the heading on its own line, over the instruction */
 .warn.warn--talk b{display:block;}
 

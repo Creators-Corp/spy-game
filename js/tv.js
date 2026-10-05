@@ -492,7 +492,7 @@
     var s = $('#tch-line');
     s.textContent = tutorial
       ? 'Assane has been stopped. Only one answer gets him through each exchange.\n' +
-        'Assane describes the guard’s face. Benjamin finds him in FACES and reads out the gold line.' +
+        'Assane describes the guard’s face. Benjamin finds him in STAFF and reads out the gold line.' +
         (t.hint ? '\nWrong subject — Assane, describe his face to Benjamin. Mistakes don’t count here.' : '')
       : 'Assane has been stopped. No running, no fighting. Blending in is the only way out.\n' +
         'Assane describes the guard’s face. Benjamin finds their file and gives personal ' +

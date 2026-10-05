@@ -412,7 +412,19 @@
   background-image:url('../art/ui-new/bttn-medium-disabled.png');color:#5A4E44;
 }
 
-/* Visages: portraits sit directly on their buttons, without cream backing. */
+/* Expanded staff files share the same badge-keyed portrait as Assane. */
+#p2 .file__portrait{
+  width:min(100%, 200px);aspect-ratio:1;margin:12px auto;
+  border:0;border-image:none;background:transparent;box-shadow:none;
+}
+#p2 .file__portrait img{width:100%;height:100%;object-fit:contain;display:block;}
+#p2 .file__info{flex:1;min-width:0;}
+#p2 .file__talk{padding:6px 0 0;}
+#p2 .file__talk ul{margin:6px 0 0;padding-left:18px;}
+#p2 .file__talk li{font-size:12px;line-height:1.55;margin-bottom:8px;}
+#p2 .file__talk .is-key{color:#2B2238;background:#f7b95c;font-weight:700;box-decoration-break:clone;-webkit-box-decoration-break:clone;}
+
+/* Legacy face-grid styles. */
 #p2 .dossier__faces .faces{
   border:0;border-image:none;background:transparent;box-shadow:none;padding:0;
 }

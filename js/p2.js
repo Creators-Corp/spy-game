@@ -11,8 +11,8 @@
 
   var tab = 'plan';
   var manualSeen = false;   /* has he opened MANUAL since the hatch locked? */
-  var facesSeen = false;    /* has he opened FACES during the posted guard's walk-over and talk? */
-  var openSerial = -1, openBadge = null, pickedFace = null;
+  var staffSeen = false;    /* has he opened STAFF during the posted guard's walk-over and talk? */
+  var openSerial = -1, openBadge = null;
   var unlockSeen = null;   /* the unlock notice he has already waved off */
   var unlockShown = null, unlockShownAt = 0;   /* when this phone first drew a lever just unlocked */
   var UNLOCK_MS = 1800;    /* the power-on animation, matched in phone.css */
@@ -66,8 +66,7 @@
     var S = E.S, u = S.unlocked || {}, list = [['plan', 'PLAN']];
     if (C.PORTE && u.porte) list.push(['porte', 'DOOR']);
     if (C.COFFRE && u.manuel) list.push(['manuel', 'MANUAL']);
-    if (u.personnel) list.push(['personnel', 'STAFF']);
-    if (u.visages) list.push(['visages', 'FACES']);
+    if (u.personnel || u.visages) list.push(['personnel', 'STAFF']);
     return list;
   }
   // Decorative image layers use document-relative asset URLs, like P1's controls.
@@ -89,21 +88,21 @@
        pulses until he opens it. */
     var S = E.S, hatch = S.phase === 'module' && S.moduleId === 'clavier';
     if (!hatch) manualSeen = false;
-    /* THE FIRST CONVERSATION POINTS AT THE FACES. From the moment the posted
-       guard is called over until he has been talked round, FACES glows until
+    /* THE FIRST CONVERSATION POINTS AT STAFF. From the moment the posted
+       guard is called over until he has been talked round, STAFF glows until
        Benjamin opens it. Once, for the run. */
     var talk = S.guards.some(function (g) {
       return g.stand && !g.stoodDown && (g.summoned || (S.tchatche && S.tchatche.guardId === g.id));
     });
     availableTabs().forEach(function (t) {
       var flash = (hatch && !manualSeen && t[0] === 'manuel') ||
-                  (talk && !facesSeen && t[0] === 'visages');
+                  (talk && !staffSeen && t[0] === 'personnel');
       bar.appendChild(buttonArt(el('button', {
         class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
         onclick: function () {
           tab = t[0];
           if (t[0] === 'manuel' && hatch) manualSeen = true;
-          if (t[0] === 'visages' && talk) facesSeen = true;
+          if (t[0] === 'personnel' && talk) staffSeen = true;
           U.sfx.tap(); U.emit('render');
         }
       }, [el('span', { text: t[1] })]), 'tab'));
@@ -491,7 +490,7 @@
       /* the first conversation: point him at the page that has his half */
       S.beamG1Pending || (S.tchatche && S.tchatche.tag === 'first-beam-g1')
         ? el('p', { class: 'warn warn--talk', html: '<b>ASSANE IS BEING STOPPED</b>' +
-            'Open FACES, match the face he describes, and read him the gold line.' }) : null,
+            'Open STAFF, match the face he describes, and read him the gold line.' }) : null,
       down ? deadLink()
            : el('div', { class: 'plan2' + (night ? ' plan2--night' : ''), html: planSVG() }),
       endgame ? linkStrip() : camCycles(),
@@ -914,7 +913,8 @@
         dl.appendChild(el('dd', { text: p.kids.length
           ? p.kids.map(function (k) { return k.n + ' (' + k.y + ')'; }).join(' · ')
           : '—' }));
-        var bd = el('div', { class: 'file__bd' + (C.UNIFORMS[p.badge] ? ' file__bd--uniform' : '') }, [dl]);
+        var info = el('div', { class: 'file__info' }, [dl, staffClues(p.badge)]);
+        var bd = el('div', { class: 'file__bd' + (C.UNIFORMS[p.badge] ? ' file__bd--uniform' : '') }, [info]);
         /* the uniform, drawn. Every one of them can be built from the rack, so
            Benjamin picks the person and Assane matches the pieces. */
         if (C.UNIFORMS[p.badge]) {
@@ -924,66 +924,32 @@
             el('span', { class: 'h', style: 'margin:0', text: 'UNIFORM' }), uni
           ]));
         }
-        file.appendChild(bd);
+        var details = el('div', { class: 'file__details' });
+        var face = C.FACES && C.FACES[p.badge];
+        if (face && !face.hidden) details.appendChild(L.face.portrait(face, 'file__portrait'));
+        details.appendChild(bd);
+        file.appendChild(details);
       }
       wrap.appendChild(file);
     });
     return wrap;
   }
 
-  /* ---------------------------------------------------------- LES VISAGES */
-  function viewVisages() {
-    var S = E.S, t = S.tchatche;
-    var wrap = el('div', { class: 'dossier__faces' }, [
-      el('p', { class: 'h', text: 'FACES · NIGHT SHIFT' })
-    ]);
-    var grid = el('div', { class: 'faces' });
-    Object.keys(C.FACES).forEach(function (badge) {
-      if (C.FACES[badge].hidden) return;
-      var b = el('button', {
-        class: pickedFace === badge ? 'is-on' : '',
-        'aria-pressed': pickedFace === badge ? 'true' : 'false',
-        onclick: function () { pickedFace = badge; U.sfx.tap(); U.emit('render'); }
-      });
-      b.appendChild(L.face.portrait(C.FACES[badge], 'faces__portrait'));
-      b.appendChild(el('span', { text: 'BADGE ' + badge }));
-      grid.appendChild(b);
+  function staffClues(badge) {
+    var t = E.S.tchatche;
+    var active = t && t.badge === badge;
+    var tutorial = active && t.tag === 'first-beam-g1' && C.FIRST_BEAM_TUTORIAL_CLUES;
+    var facts = tutorial ? tutorial.map(function (s) { return { s: s }; }) : (C.DIRT[badge] || []);
+    var section = el('div', { class: 'file__talk' });
+    var list = el('ul');
+    facts.forEach(function (fact, i) {
+      list.appendChild(el('li', {}, [el('span', {
+        class: active && i === t.round ? 'is-key' : '',
+        text: fact.s
+      })]));
     });
-    wrap.appendChild(grid);
-
-    if (pickedFace) {
-      var per = C.PERSONNEL.filter(function (p) { return p.badge === pickedFace; })[0];
-      var round = t ? t.round : 0;
-      var tutorialClues = t && t.tag === 'first-beam-g1' && pickedFace === t.badge
-        ? C.FIRST_BEAM_TUTORIAL_CLUES : null;
-      var dirt = el('div', { class: 'dirt' }, [
-        el('p', { class: 'h', style: 'margin-bottom:2px', text: per ? per.name : pickedFace })
-      ]);
-      var ul = el('ul');
-      /* Three facts arrived as three bare sentences in three silent styles, and
-         nothing said the gold one was the thing to read out loud — or that
-         reading it out was the move at all. The locked ones just said
-         "— sealed —", which explains nothing and looks like a bug. */
-      var facts = tutorialClues ? tutorialClues.map(function (s) { return { s: s }; }) : C.DIRT[pickedFace];
-      facts.forEach(function (d, i) {
-        var state = !t ? 'idle' : i < round ? 'used' : i === round ? 'key' : 'locked';
-        var tag = tutorialClues ? 'TUTORIAL CLUE'
-                : state === 'key'    ? 'TELL HIM THIS NOW'
-                : state === 'used'   ? 'ALREADY USED'
-                : state === 'locked' ? 'NOT YET' : null;
-        ul.appendChild(el('li', {
-          class: tutorialClues ? '' : state === 'key' ? 'is-key' : state === 'locked' ? 'is-locked' : ''
-        }, [
-          tag ? el('em', { class: 'dirt__tag', text: tag }) : null,
-          document.createTextNode(!tutorialClues && state === 'locked' ? 'Opens after the next exchange.' : d.s)
-        ]));
-      });
-      dirt.appendChild(ul);
-      if (!t) dirt.appendChild(el('p', { class: 'note', style: 'margin-top:8px',
-        text: 'Nothing opens until somebody stops Assane.' }));
-      wrap.insertBefore(dirt, wrap.firstChild);
-    }
-    return wrap;
+    section.appendChild(list);
+    return section;
   }
 
   /* --------------------------------------------------------------- ends */
@@ -1019,8 +985,7 @@
     var inner = tab === 'plan' ? viewPlanTab()
               : tab === 'porte' ? viewPorteTab()
               : tab === 'manuel' ? viewManuel()
-              : tab === 'personnel' ? viewPersonnel()
-              : viewVisages();
+              : viewPersonnel();
 
     if (tab === 'porte' || tab === 'manuel') U.polishScreen(inner);
 
@@ -1030,7 +995,7 @@
       ? askBoard(S.moduleId) : null;
 
     var view = screen([
-      head({ plan: 'FILES', porte: 'DOOR', manuel: 'MANUAL', personnel: 'STAFF', visages: 'FACES' }[tab]),
+      head({ plan: 'FILES', porte: 'DOOR', manuel: 'MANUAL', personnel: 'STAFF' }[tab]),
       tabBar(),
       body([unlockNotice(), asking, inner].filter(Boolean))
     ]);
@@ -1055,7 +1020,7 @@
      anybody reads here, so losing its place is the most expensive. */
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
-    tab = 'plan'; manualSeen = false; facesSeen = false; openSerial = -1; openBadge = null; pickedFace = null;
+    tab = 'plan'; manualSeen = false; staffSeen = false; openSerial = -1; openBadge = null;
     tapped = []; queryResult = null; unlockSeen = null; unlockShown = null;
   } };
 })(window.DC);
