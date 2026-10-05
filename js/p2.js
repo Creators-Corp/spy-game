@@ -10,7 +10,7 @@
   var el = U.el, $ = U.$;
 
   var tab = 'plan';
-  var manualSeen = false;   /* has he opened MANUAL since the hatch locked? */
+  var hintedModule = null, puzzleSeen = false; /* reset the hint for each puzzle */
   var staffSeen = false;    /* has he opened STAFF during the posted guard's walk-over and talk? */
   var openSerial = -1, openBadge = null;
   var unlockSeen = null;   /* the unlock notice he has already waved off */
@@ -63,7 +63,7 @@
      arrives the first time it is needed. Note that nothing here ever SWITCHES
      the tab for him — finding the right page is still his job. */
   function availableTabs() {
-    var S = E.S, u = S.unlocked || {}, list = [['plan', 'PLAN']];
+    var S = E.S, u = S.unlocked || {}, list = [['plan', 'MAP']];
     if (C.PORTE && u.porte) list.push(['porte', 'DOOR']);
     if (C.COFFRE && u.manuel) list.push(['manuel', 'MANUAL']);
     if (u.personnel || u.visages) list.push(['personnel', 'STAFF']);
@@ -83,11 +83,15 @@
   function tabBar() {
     if (availableTabs().length === 1) return null;
     var bar = el('div', { class: 'tabs' });
-    /* THE HATCH POINTS AT THE MANUAL. When the lights go and the keypad comes
-       up, the procedures he needs are under the safes on MANUAL — so that tab
-       pulses until he opens it. */
-    var S = E.S, hatch = S.phase === 'module' && S.moduleId === 'clavier';
-    if (!hatch) manualSeen = false;
+    /* Point at each puzzle's reference page until Benjamin opens it.
+       The escape keypad keeps its existing hint toward Manual's procedures. */
+    var S = E.S, moduleId = S.phase === 'module' ? S.moduleId : null;
+    if (moduleId !== hintedModule) { hintedModule = moduleId; puzzleSeen = false; }
+    var puzzleTab = {
+      deguisement: 'personnel', grille: 'plan', porte: 'porte',
+      bureau: 'personnel', coffre: 'manuel', clavier: 'manuel',
+      ecoute: 'manuel', faux: 'manuel'
+    }[moduleId];
     /* THE FIRST CONVERSATION POINTS AT STAFF. From the moment the posted
        guard is called over until he has been talked round, STAFF glows until
        Benjamin opens it. Once, for the run. */
@@ -95,13 +99,13 @@
       return g.stand && !g.stoodDown && (g.summoned || (S.tchatche && S.tchatche.guardId === g.id));
     });
     availableTabs().forEach(function (t) {
-      var flash = (hatch && !manualSeen && t[0] === 'manuel') ||
+      var flash = (puzzleTab && !puzzleSeen && t[0] === puzzleTab) ||
                   (talk && !staffSeen && t[0] === 'personnel');
       bar.appendChild(buttonArt(el('button', {
         class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
         onclick: function () {
           tab = t[0];
-          if (t[0] === 'manuel' && hatch) manualSeen = true;
+          if (t[0] === puzzleTab) puzzleSeen = true;
           if (t[0] === 'personnel' && talk) staffSeen = true;
           U.sfx.tap(); U.emit('render');
         }
@@ -112,6 +116,9 @@
 
   /* ---------------------------------------------------- the floor plan */
   var TT = 20;
+  function lasersRevealed() {
+    return E.S.guards.some(function (g) { return g.id === 'g1' && g.stoodDown; });
+  }
   function objectiveTargets() {
     var S = E.S;
     var step = (C.MAP_OBJECTIVES || []).filter(function (item) {
@@ -152,7 +159,6 @@
     function open(x, y) {
       var ch = E.charAt(x, y);
       if (ch === '#') return false;
-      if (ch === 'L' && E.beamLive(x, y)) return false;
       var d = E.doorAt(x, y);
       return !(d && d.locked);
     }
@@ -185,18 +191,16 @@
     }
     s += floors + cones + edges;
 
-    /* THE LASERS. Solid to anything that walks, and the only reason the middle
-       of this floor is not a shortcut — so they have to be the most obvious
-       thing on the plan after the guards. Benjamin sees all of them: he has the
-       building's procedures, and knowing where they are is not the puzzle. */
+    /* Lasers cross walkable floor. Keep the floor connections visible beneath
+       the red warning tile and vertical beam; disabled beams stay dashed. */
     for (var ly = 0; ly < C.MAP.length; ly++) {
       for (var lx = 0; lx < C.MAP[ly].length; lx++) {
-        if (C.MAP[ly][lx] !== 'L') continue;
+        if (C.MAP[ly][lx] !== 'L' || !lasersRevealed()) continue;
         var px2 = lx * TT, py2 = ly * TT, off = !E.beamLive(lx, ly);
         if (!off) s += '<rect x="' + px2 + '" y="' + py2 + '" width="' + TT + '" height="' + TT +
              '" fill="var(--red)" opacity=".22"/>';
-        s += '<line x1="' + px2 + '" y1="' + (py2 + TT / 2) + '" x2="' + (px2 + TT) +
-             '" y2="' + (py2 + TT / 2) + '" stroke="var(--red)" stroke-width="2.5"' +
+        s += '<line x1="' + (px2 + TT / 2) + '" y1="' + py2 + '" x2="' + (px2 + TT / 2) +
+             '" y2="' + (py2 + TT) + '" stroke="var(--red)" stroke-width="2.5"' +
              (off ? ' stroke-dasharray="3 4" opacity=".4"' : '') + '/>';
       }
     }
@@ -432,9 +436,9 @@
     }
     rows.push(keyRow('<rect width="20" height="20" fill="var(--map-floor)"/><rect width="20" height="20" fill="var(--red)" opacity=".55"/>',
                      '<b>Sightline</b> A guard or camera can see this square now.'));
-    if (hasChar('L')) {
-      rows.push(keyRow('<rect x="0" y="7" width="20" height="6" fill="var(--red)" opacity=".9"/>',
-                       '<b>Lasers</b> Sealed. Go around — unless you drop them from the van.'));
+    if (hasChar('L') && lasersRevealed()) {
+      rows.push(keyRow('<rect width="20" height="20" fill="var(--red)" opacity=".22"/><path d="M10 0 V20" stroke="var(--red)" stroke-width="2.5"/>',
+                       '<b>Lasers</b> Crossable, but crossing an active beam triggers a response. Drop them from the van.'));
     }
     if (night) {
       rows.push(keyRow('<rect width="20" height="20" fill="var(--night-2)"/>',
@@ -1020,7 +1024,7 @@
      anybody reads here, so losing its place is the most expensive. */
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
-    tab = 'plan'; manualSeen = false; staffSeen = false; openSerial = -1; openBadge = null;
+    tab = 'plan'; hintedModule = null; puzzleSeen = false; staffSeen = false; openSerial = -1; openBadge = null;
     tapped = []; queryResult = null; unlockSeen = null; unlockShown = null;
   } };
 })(window.DC);

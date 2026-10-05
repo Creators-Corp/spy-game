@@ -404,7 +404,7 @@
   background:url('../art/ui-new/tv-top-header.png') left top / 100% 100% no-repeat;
   border:0;border-radius:0;color:#080808;font-size:17px;font-weight:700;letter-spacing:0;
 }
-.tvbar__venue{position:absolute;left:27.5%;right:12%;top:0;height:30.45px;
+.tvbar__venue{position:absolute;left:27.5%;right:12%;top:-10%;height:30.45px;
   display:flex;align-items:center;color:#080808;font-size:12px;white-space:nowrap;overflow:hidden;}
 .tvbar__clock{
   position:absolute;right:0;top:0;width:11.875%;height:35.59px;
@@ -412,11 +412,11 @@
   background:url('../art/ui-new/tv-top-timer.png') center / 100% 100% no-repeat;
   color:#080808;font-family:var(--font);font-size:18px;font-weight:700;letter-spacing:0;
 }
-.tvbar__obj{position:absolute;left:3%;bottom:0;width:49%;height:30.45px;
+.tvbar__obj{position:absolute;left:3%;bottom:-10%;width:49%;height:30.45px;
   display:flex;align-items:center;font-size:12px;letter-spacing:0;color:#080808;}
 .suspicion{position:absolute;inset:0;display:block;}
 .suspicion b,.suspicion b.is-alert{
-  position:absolute;left:54.7%;bottom:0;width:12%;height:30.45px;
+  position:absolute;left:54.7%;bottom:-10%;width:12%;height:30.45px;
   display:flex;align-items:center;justify-content:center;
   color:#080808;font-size:16px;font-weight:700;letter-spacing:0;line-height:1;
 }

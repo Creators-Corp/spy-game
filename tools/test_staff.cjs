@@ -9,15 +9,15 @@ function el(tag, attrs = {}, children = []) {
     appendChild(child) { this.children.push(child); return child; } };
 }
 const L = {
-  util: { el, sfx: { tap() {} }, emit() {} },
-  engine: { S: { unlocked: { visages: true } } },
+  util: { el, assetURL: value => value, sfx: { tap() {} }, emit() {} },
+  engine: { S: { unlocked: { visages: true }, guards: [] } },
   glyphs: {}, face: { portrait: (data, cls) => el('portrait', { class: cls, art: data.art }) },
   figures: { uniformStack: data => el('uniform', { data }) }
 };
 const ctx = vm.createContext({ window: { DC: L } });
 vm.runInContext(source('content.js'), ctx);
 vm.runInContext(source('p2.js').replace('})(window.DC);',
-  'L.staffTest = { viewPersonnel: viewPersonnel, availableTabs: availableTabs }; })(window.DC);'), ctx);
+  'L.staffTest = { viewPersonnel: viewPersonnel, availableTabs: availableTabs, tabBar: tabBar }; })(window.DC);'), ctx);
 const walk = node => [node, ...node.children.flatMap(walk)];
 const matches = (node, cls) => walk(node).filter(n => n.class === cls);
 assert.equal(L.staffTest.availableTabs().some(t => t[0] === 'visages'), false);
@@ -46,4 +46,18 @@ L.engine.S.tchatche = { badge, round: 1, tag: 'first-beam-g1' };
 assert.equal(matches(L.staffTest.viewPersonnel(), 'is-key')[0].text, L.content.FIRST_BEAM_TUTORIAL_CLUES[1]);
 matches(L.staffTest.viewPersonnel(), 'file__hd')[0].onclick();
 assert.equal(matches(L.staffTest.viewPersonnel(), 'file__details').length, 0);
-console.log('Staff passed: collapsed layout, shared portraits, uniforms, three clues, round highlights, tutorial, and merged tab.');
+L.engine.S.unlocked = { personnel: true, porte: true, manuel: true };
+L.engine.S.tchatche = null;
+for (const [moduleId, label] of [['deguisement', 'STAFF'], ['grille', 'MAP'], ['porte', 'DOOR'], ['bureau', 'STAFF'], ['coffre', 'MANUAL'], ['clavier', 'MANUAL']]) {
+  L.engine.S.phase = 'module'; L.engine.S.moduleId = moduleId;
+  let bar = L.staffTest.tabBar();
+  const flashing = bar.children.filter(n => n.class.includes('is-flash'));
+  assert.equal(flashing.length, 1);
+  assert.equal(flashing[0].children[0].text, label);
+  flashing[0].onclick();
+  assert.equal(L.staffTest.tabBar().children.some(n => n.class.includes('is-flash')), false);
+  L.engine.S.phase = 'play'; L.staffTest.tabBar();
+  L.engine.S.phase = 'module';
+  assert.equal(L.staffTest.tabBar().children.filter(n => n.class.includes('is-flash')).length, 1);
+}
+console.log('Staff and puzzle hints passed: dropdown content, clue highlights, tutorial, tab targets, dismissal, and re-entry.');

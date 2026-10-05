@@ -251,14 +251,14 @@
          encounter: it does not count as being spotted. Talk him round and he
          walks back to this square and stands down for the night. Was a
          two-square beat at (15,14)-(14,14). */
-      { id: 'g1', badge: '4412', from: { x: 14, y: 14 }, to: { x: 14, y: 14 }, at: 0, dir: 1, depth: 1,
+      { id: 'g1', badge: '4412', from: { x: 15, y: 14 }, to: { x: 15, y: 14 }, at: 0, dir: 1, depth: 1,
         stand: true, facing: 'W', hears: 'STORAGE' },
       /* was: loop:true, waypoints [C6, C12, U12, U6] — the full perimeter */
       { id: 'g2', badge: '2071', from: { x: 19, y: 6 }, to: { x: 19, y: 10 }, at: 0, dir: 1, depth: 2 },
-      /* was: y:5, the door row */
-      /* investigate: a broken beam sends him straight to it, not after
-         Assane, and he stands there looking round for six moves */
-      { id: 'g3', badge: '5195', from: { x: 2, y: 3 }, to: { x: 2, y: 5 }, at: 6, dir: -1, depth: 1, investigate: 6 }
+      /* Idle at C5. A broken beam sends him straight to it, not after
+         Assane; he looks round for six moves, then returns to his post. */
+      { id: 'g3', badge: '5195', from: { x: 2, y: 4 }, to: { x: 2, y: 4 }, at: 0, dir: -1,
+        facing: 'N', depth: 1, investigate: 6 }
     ],
     /* CAM 1 over the safe never blinks. CAM 2 over the desk is on one beat in
        three — timeable, if Benjamin is counting, loopable if he is not. */

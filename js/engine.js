@@ -263,7 +263,7 @@
       toast: null,
       objective: 'Study the plan. Both players ready up.'
     };
-    S.guards.forEach(function (g) { if (!g.stand) g.facing = faceOf(g); });
+    S.guards.forEach(function (g) { if (!g.stand && !g.homeFacing) g.facing = faceOf(g); });
     markSeen();
     return S;
   }
@@ -738,8 +738,11 @@
         if (!back) { g.away = null; return; }
         g.facing = dirToward(g.away, back);
         g.away = (back.x === post.x && back.y === post.y) ? null : back;
+        if (!g.away && g.homeFacing) g.facing = g.homeFacing;
         return;
       }
+      // A single-tile beat is an idle post, but still answers laser probes.
+      if (g.path.length === 1) return;
       if (g.loop) {
         g.at = (g.at + 1) % g.path.length;   /* a circuit never turns back */
       } else {
