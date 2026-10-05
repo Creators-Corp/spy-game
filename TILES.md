@@ -28,6 +28,18 @@ bench draws at 50%, so a tile is 150 × 145 on screen — that is where the
 "150 by 145" figure came from, and it is not the source size. Work in tile
 units and let the SVG scale; never resample the art twice.
 
+Doors use `door-closed.png` and `door-open.png` at **300 × 580 px** (one
+tile wide, two tall). Align the image bottom with the bottom of the wall tile
+directly above the floor interaction. The escape interaction at C4 therefore
+draws its door across C2–C3, ending at C3's bottom edge.
+
+The desk uses `desk-sprite.png` at **900 × 290 px**, centered on its interaction
+tile. The bureau at T15 therefore spans S15–U15.
+
+The disguise objective uses `DressingRoomDoor.png` at **300 × 580 px**, with
+the same door alignment. Its E16 interaction draws the sprite across E14–E15.
+The sprite stays the same after the disguise is completed.
+
 Cells are named the way the grid names them: **column letter + 1-based row**.
 `A1` is the top-left cell. **Row 0** is the padding row above the map, where a
 two-tile face puts its top half.

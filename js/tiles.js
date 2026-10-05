@@ -108,6 +108,18 @@
            (extra && extra.opacity != null ? ' opacity="' + extra.opacity + '"' : '') + '/>';
   }
 
+  /* Door sprites are one tile wide and two tall. wallY is the tile directly
+     above the interaction; the image bottom lands on that tile's bottom. */
+  function doorImage(x, wallY, open) {
+    return img(open ? 'door-open' : 'door-closed', x * W, (wallY - 1) * H, W, H * 2, { keep: true });
+  }
+
+  function interactionIcon(x, y, icon, done) {
+    var px = x * W, py = y * H;
+    return '<circle cx="' + (px + W / 2) + '" cy="' + (py + H / 2) + '" r="' + (W * 0.22) + '" fill="' + (done ? GOLD : VOID) + '" fill-opacity=".9" stroke="' + GOLD + '" stroke-width="6"/>' +
+      '<g color="' + (done ? VOID : GOLD) + '" transform="translate(' + (px + W / 2 - W * 0.14) + ',' + (py + H / 2 - W * 0.14) + ') scale(' + (W * 0.28 / 100) + ')">' + G.iconMarkup(icon) + '</g>';
+  }
+
   /* ------------------------------------------------------------ the walls */
   /* Which piece goes in a wall cell is decided by where the floor is around
      it. A rules table, not a hand-placed map: any contract, including ones
@@ -768,37 +780,10 @@
       /* the beams are not drawn on this floor — they are Benjamin's to
          know, and on the illustrated plan they read as damage. */
 
-      /* DOORS: SHUT AND GOLD IS THE ONE TO OPEN, standing open is one that is
-         already dealt with. A door in a north face stands in the face; one in
-         a side wall swings.
-
-         THE BOX HAS TO LEAVE THE WALL'S TOP COURSE SHOWING, and that is the
-         whole of the change these two pieces of art needed. img() draws them
-         with `meet`, so the picture is fitted inside the box and never
-         stretched — which means the box's ASPECT decides which way it fits.
-         The old double doors were about square, so they fitted by width and
-         came up short, and the gap they left at the top of the box was the
-         wall band's own panels showing over the lintel. That gap read as
-         masonry above a doorway and it was an accident.
-
-         These are single doors at roughly one by two, so in the old box they
-         fitted by height instead, filled it, and swallowed the course above.
-         The box is shorter now — bottom in exactly the same place, top pushed
-         down to where the old art's picture actually started — so the blocks
-         sit above the door on purpose this time. Bottom edges: py + 298.7 on a
-         face, py + 290 on a partition, both unchanged from before. */
+      /* Door map cells are the wall tiles above their floor interactions. */
       S.doors.forEach(function (d) {
         if (!wallKnown(d.x, d.y)) return;
-        var horizontal = floorLike(d.x, d.y + 1) || floorLike(d.x, d.y - 1);
-        px = d.x * W; py = d.y * H;
-        if (horizontal) {
-          var name = d.locked ? 'goal-door-closed' : 'goal-door-open';
-          var onBlock = floorLike(d.x, d.y - 1);        /* a partition: the door sits on the grey */
-          if (onBlock) s += img(name, px + W * 0.06, py + H * 0.15, W * 0.88, H * 0.88, { keep: true });
-          else s += img(name, px + W * 0.02, py + H * 0.12, W * 0.96, H * 0.88, { keep: true });
-        } else {
-          s += img('goal-door-side', px + W * 0.2, py - H * 0.25, W * 0.6, H * 1.25, { keep: true, opacity: d.locked ? 1 : 0.85 });
-        }
+        s += doorImage(d.x, d.y, !d.locked);
       });
       s += '</g>';
     }
@@ -811,14 +796,12 @@
         px = m.x * W; py = m.y * H;
         var done = S.solved[m.id];
         if (m.id === 'bureau' || m.id === 'prize') {
-          /* the desk stands against the wall behind it; the painting climbs the face */
-          /* twice the size, and still standing on the same square: the box
-             grows around the old one and stays anchored at its foot. */
-          s += img('goal-bureau', px - W * 0.46, py - H * 2.22, W * 1.92, H * 3.2, { keep: true, opacity: done ? 0.7 : 1 });
-        } else {
-          s += '<circle cx="' + (px + W / 2) + '" cy="' + (py + H / 2) + '" r="' + (W * 0.22) + '" fill="' + (done ? GOLD : VOID) + '" fill-opacity=".9" stroke="' + GOLD + '" stroke-width="6"/>';
-          s += '<g color="' + (done ? VOID : GOLD) + '" transform="translate(' + (px + W / 2 - W * 0.14) + ',' + (py + H / 2 - W * 0.14) + ') scale(' + (W * 0.28 / 100) + ')">' + G.iconMarkup(m.icon) + '</g>';
+          /* The 900x290 desk spans three columns, centered on its interaction. */
+          s += img('desk-sprite', px - W, py, W * 3, H, { keep: true, opacity: done ? 0.7 : 1 });
+        } else if (m.id === 'deguisement') {
+          s += img('DressingRoomDoor', px, py - H * 2, W, H * 2, { keep: true });
         }
+        if (m.id !== 'bureau' && m.id !== 'prize') s += interactionIcon(m.x, m.y, m.icon, done);
       });
       var hx = E.hatchTile();
       /* PRIZE.hatchHidden keeps the hatch off Benjamin's dossier plan — that
@@ -828,9 +811,7 @@
         if (C.HATCH === 'door') {
           /* Interact from the floor square; the door stands in the north
              wall one row above it. It does not turn that wall into floor. */
-          s += img(S.solved.clavier ? 'goal-door-open' : 'goal-door-closed',
-                   hx.x * W + W * 0.02, (hx.y - 1) * H + H * 0.12,
-                   W * 0.96, H * 0.88, { keep: true });
+          s += doorImage(hx.x, hx.y - 1, S.solved.clavier);
         } else {
         /* the way out is a window in the wall, stood against the side of the
            niche it sits in */
@@ -848,6 +829,7 @@
         s += img(wallEast ? 'goal-window-side-right' : 'goal-window-side',
                  hx.x * W, hx.y * H, W + 1, H + 1);
         }
+        s += interactionIcon(hx.x, hx.y, 'hatch', S.solved.clavier);
       }
       s += '</g>';
     }
