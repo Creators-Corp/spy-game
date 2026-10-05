@@ -34,7 +34,116 @@
   var ART = 'art/tiles/';
   var RED = '#C1372E', GOLD = '#C9A24B', VOID = '#0C1118';
 
+  /* One shared visual window for the walk cycle and the TV's camera pan.
+     Change this once to retime every direction as more cycles are added. */
+  var WALK_WINDOW_MS = 340;
+  var IDLE_CYCLE_MS = 1200;
+  var UP_WALK_SCALE = 1.1;
+  var UP_IDLE_SCALE = 0.95;
+  var IDLE_FRAMES = {
+    up: [
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0000.png',
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0013.png',
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0035.png',
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0035b.png',
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0036.png',
+      'art/chars/lupin_idle_up/cropped/Lupin_07Render_Idle_tt_1.0037.png'
+    ],
+    down: [
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0000.png',
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0013.png',
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0035.png',
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0035b.png',
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0036.png',
+      'art/chars/lupin_idle_down/cropped/Lupin_07Render_Idle_tt_1.0037.png'
+    ],
+    left: [
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0000.png',
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0013.png',
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0035.png',
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0035b.png',
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0036.png',
+      'art/chars/lupin_idle_left/cropped/Lupin_07Render_Idle_tt_1.0037.png'
+    ],
+    right: [
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0000.png',
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0013.png',
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0035.png',
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0035b.png',
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0036.png',
+      'art/chars/lupin_idle_right/cropped/Lupin_07Render_Idle_tt_1.0037.png'
+    ]
+  };
+  var WALK_FRAMES = {
+    /* Each direction holds a list of walk variations. The renderer advances
+       one variation per step, so alternating foot cycles stay in sync with
+       the player's movement without extending the walk window. */
+    right: [
+      [
+        'art/chars/lupin_walk_side_right/cropped/Lupin_07Render_walk_1_light_tt_1.0001.png',
+        'art/chars/lupin_walk_side_right/cropped/Lupin_07Render_walk_1_light_tt_1.0006.png',
+        'art/chars/lupin_walk_side_right/cropped/Lupin_07Render_walk_1_light_tt_1.0012.png'
+      ],
+      [
+        'art/chars/lupin_walk_side_right/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0018.png',
+        'art/chars/lupin_walk_side_right/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0025.png',
+        'art/chars/lupin_walk_side_right/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0030.png'
+      ]
+    ],
+    left: [
+      [
+        'art/chars/lupin_walk_side_left/cropped/Lupin_07Render_walk_1_light_tt_1.0001.png',
+        'art/chars/lupin_walk_side_left/cropped/Lupin_07Render_walk_1_light_tt_1.0006.png',
+        'art/chars/lupin_walk_side_left/cropped/Lupin_07Render_walk_1_light_tt_1.0012.png'
+      ],
+      [
+        'art/chars/lupin_walk_side_left/Left_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0018.png',
+        'art/chars/lupin_walk_side_left/Left_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0025.png',
+        'art/chars/lupin_walk_side_left/Left_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0030.png'
+      ]
+    ],
+    up: [
+      [
+        'art/chars/lupin_walk_up/cropped/Lupin_07Render_walk_1_light_tt_1.0001.png',
+        'art/chars/lupin_walk_up/cropped/Lupin_07Render_walk_1_light_tt_1.0011.png',
+        'art/chars/lupin_walk_up/cropped/Lupin_07Render_walk_1_light_tt_1.0014.png'
+      ],
+      [
+        'art/chars/lupin_walk_up/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0017.png',
+        'art/chars/lupin_walk_up/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0029.png',
+        'art/chars/lupin_walk_up/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0031.png'
+      ]
+    ],
+    down: [
+      [
+        'art/chars/lupin_walk_down/cropped/Lupin_07Render_walk_1_light_tt_1.0001.png',
+        'art/chars/lupin_walk_down/cropped/Lupin_07Render_walk_1_light_tt_1.0007.png',
+        'art/chars/lupin_walk_down/cropped/Lupin_07Render_walk_1_light_tt_1.0013.png'
+      ],
+      [
+        'art/chars/lupin_walk_down/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0018.png',
+        'art/chars/lupin_walk_down/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0022.png',
+        'art/chars/lupin_walk_down/Right_Foot/cropped/Lupin_07Render_walk_1_light_tt_1.0032.png'
+      ]
+    ]
+  };
+  var walkSerial = 0, walkFrame = 0, idleTimer = null, walkCycleIndex = {};
+
   function href(name) { return U.assetURL(ART + name + '.png'); }
+
+  function setAssaneScale(scale) {
+    var sprite = document.getElementById('tl-assane-sprite');
+    if (!sprite) return;
+    var x = Number(sprite.getAttribute('data-base-x'));
+    var y = Number(sprite.getAttribute('data-base-y'));
+    var width = Number(sprite.getAttribute('data-base-width'));
+    var height = Number(sprite.getAttribute('data-base-height'));
+    if (![x, y, width, height].every(isFinite)) return;
+    sprite.setAttribute('x', x + (width - width * scale) / 2);
+    sprite.setAttribute('y', y + height - height * scale);
+    sprite.setAttribute('width', width * scale);
+    sprite.setAttribute('height', height * scale);
+  }
 
   /* THE OVERRIDE SHEET.
      art/tiles/overrides.json is the artist's own copy of the wall layer: a
@@ -103,9 +212,81 @@
   function wallLike(x, y) { return !floorLike(x, y); }
   function isDoor(x, y) { var c = ch(x, y); return c === '+' || c === '/'; }
   function img(name, x, y, w, h, extra) {
-    return '<image href="' + href(name) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+    var src = extra && extra.src ? U.assetURL(extra.src) : href(name);
+    return '<image href="' + src + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
            '" preserveAspectRatio="' + (extra && extra.keep ? 'xMidYMax meet' : 'none') + '"' +
+           (extra && extra.id ? ' id="' + extra.id + '"' : '') +
+           (extra && extra.restHref ? ' data-rest-href="' + extra.restHref + '"' : '') +
+           (extra && extra.spriteBase ? ' data-base-x="' + extra.spriteBase.x + '" data-base-y="' + extra.spriteBase.y +
+             '" data-base-width="' + extra.spriteBase.width + '" data-base-height="' + extra.spriteBase.height +
+             '" data-rest-scale="' + extra.spriteBase.restScale + '"' : '') +
            (extra && extra.opacity != null ? ' opacity="' + extra.opacity + '"' : '') + '/>';
+  }
+
+  function animateWalk(direction, fromX, fromY, toX, toY) {
+    stopWalk();
+    var variations = WALK_FRAMES[direction];
+    var actor = document.getElementById('tl-assane-actor');
+    var sprite = document.getElementById('tl-assane-sprite');
+    if (!actor || !sprite) return false;
+    if (!variations || !variations.length) { startIdle(direction); return false; }
+    var cycle = walkCycleIndex[direction] || 0;
+    var frames = variations[cycle % variations.length];
+    walkCycleIndex[direction] = (cycle + 1) % variations.length;
+    if (!frames || !frames.length) { startIdle(direction); return false; }
+
+    var serial = walkSerial;
+    setAssaneScale(direction === 'up' ? UP_WALK_SCALE : 1);
+    var dx = (fromX - toX) * W, dy = (fromY - toY) * H;
+    var start = null;
+    actor.setAttribute('transform', 'translate(' + dx + ' ' + dy + ')');
+    function draw(now) {
+      if (serial !== walkSerial) return;
+      if (start === null) start = now;
+      var progress = Math.min(1, (now - start) / WALK_WINDOW_MS);
+      var index = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+      sprite.setAttribute('href', U.assetURL(frames[index]));
+      actor.setAttribute('transform', 'translate(' + (dx * (1 - progress)) + ' ' + (dy * (1 - progress)) + ')');
+      if (progress < 1) walkFrame = window.requestAnimationFrame(draw);
+      else {
+        actor.removeAttribute('transform');
+        walkFrame = 0;
+        startIdle(direction);
+      }
+    }
+    draw(window.performance.now());
+    return true;
+  }
+
+  function stopWalk() {
+    walkSerial++;
+    if (walkFrame) window.cancelAnimationFrame(walkFrame);
+    if (idleTimer !== null) window.clearTimeout(idleTimer);
+    walkFrame = 0;
+    idleTimer = null;
+    var actor = document.getElementById('tl-assane-actor');
+    var sprite = document.getElementById('tl-assane-sprite');
+    if (actor) actor.removeAttribute('transform');
+    if (sprite) sprite.setAttribute('href', sprite.getAttribute('data-rest-href'));
+    if (sprite) setAssaneScale(Number(sprite.getAttribute('data-rest-scale')) || 1);
+  }
+
+  function startIdle(direction) {
+    stopWalk();
+    var frames = IDLE_FRAMES[direction];
+    var sprite = document.getElementById('tl-assane-sprite');
+    if (!sprite || !frames || !frames.length) return false;
+    setAssaneScale(direction === 'up' ? UP_IDLE_SCALE : 1);
+    var serial = walkSerial, index = 0;
+    function advance() {
+      if (serial !== walkSerial) return;
+      index = (index + 1) % frames.length;
+      sprite.setAttribute('href', U.assetURL(frames[index]));
+      idleTimer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
+    }
+    sprite.setAttribute('href', U.assetURL(frames[0]));
+    if (frames.length > 1) idleTimer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
+    return true;
   }
 
   /* Door sprites are one tile wide and two tall. wallY is the tile directly
@@ -779,8 +960,24 @@
       actors.forEach(function (a2) {
         var dir = { N: 'up', S: 'down', E: 'right', W: 'left' }[a2.dir] || 'down';
         px = a2.x * W; py = a2.y * H;
+        if (a2.who === 'assane') s += '<g id="tl-assane-actor">';
         s += '<ellipse cx="' + (px + W / 2) + '" cy="' + (py + H * 0.86) + '" rx="' + (W * 0.22) + '" ry="' + (H * 0.07) + '" fill="#000" opacity=".28"/>';
-        s += img(a2.who + '-' + dir, px + W * 0.1, py + H * 0.02, W * 0.8, H * 0.9, { keep: true });
+        var spriteExtra = { keep: true };
+        var baseX = px + W * 0.1, baseY = py + H * 0.02;
+        var baseW = W * 0.8, baseH = H * 0.9;
+        var restScale = a2.who === 'assane' && dir === 'up' ? UP_IDLE_SCALE : 1;
+        var spriteW = baseW * restScale, spriteH = baseH * restScale;
+        var spriteX = baseX + (baseW - spriteW) / 2;
+        var spriteY = baseY + baseH - spriteH;
+        if (a2.who === 'assane') {
+          var idleFrames = IDLE_FRAMES[dir];
+          spriteExtra.id = 'tl-assane-sprite';
+          spriteExtra.src = idleFrames && idleFrames.length ? idleFrames[0] : 'art/tiles/assane-' + dir + '.png';
+          spriteExtra.restHref = U.assetURL(spriteExtra.src);
+          spriteExtra.spriteBase = { x: baseX, y: baseY, width: baseW, height: baseH, restScale: restScale };
+        }
+        s += img(a2.who + '-' + dir, spriteX, spriteY, spriteW, spriteH, spriteExtra);
+        if (a2.who === 'assane') s += '</g>';
       });
       s += '</g>';
     }
@@ -998,5 +1195,7 @@
     return map;
   }
 
-  L.tiles = { render: render, ready: ready, W: W, H: H, wallPieces: wallPieces, dump: dump, cellName: cellName };
+  L.tiles = { render: render, ready: ready, W: W, H: H, wallPieces: wallPieces, dump: dump, cellName: cellName,
+    animateWalk: animateWalk, startIdle: startIdle, stopWalk: stopWalk,
+    walkWindowMs: function () { return WALK_WINDOW_MS; } };
 })(window.DC);
