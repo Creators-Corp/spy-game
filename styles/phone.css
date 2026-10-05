@@ -1,6 +1,9 @@
-.objective-ring{animation:objective-pulse 1.8s ease-in-out infinite;transform-origin:0 0;}
-@keyframes objective-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
-@media (prefers-reduced-motion:reduce){.objective-ring{animation:none;}}
+.objective-ring{animation:objective-pulse 1.2s ease-in-out infinite;transform-origin:0 0;stroke-width:2.5;}
+@keyframes objective-pulse{
+  0%,100%{transform:scale(1);stroke:#FD6A1A;stroke-width:2.5;}
+  50%{transform:scale(1.25);stroke:#f7b95c;stroke-width:3;}
+}
+@media (prefers-reduced-motion:reduce){.objective-ring{animation:none;stroke:#f7b95c;stroke-width:3;}}
 
 /* ===================== THE PHONES =====================
    P1 = "the hands"  - what Assane can see and touch, up close.

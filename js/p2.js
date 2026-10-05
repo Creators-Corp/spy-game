@@ -300,13 +300,13 @@
     }
     objectiveTargets().forEach(function (target) {
       s += '<g transform="translate(' + (target.x * TT + TT / 2) + ',' + (target.y * TT + TT / 2) + ')">' +
-           '<circle class="objective-ring" r="14" fill="none" stroke="#FD6A1A" stroke-width="1.5"' +
+           '<circle class="objective-ring" r="14" fill="none" stroke="#FD6A1A" stroke-width="2.5"' +
            ' pointer-events="none" aria-hidden="true"/></g>';
     });
     // Once the prize is taken, mark the escape destination.
     var exit = E.hatchTile();
     if (S.hasManuscript && exit) {
-      s += '<text x="' + (exit.x * TT + TT / 2) + '" y="' + (exit.y * TT - 9) +
+      s += '<text x="' + (exit.x * TT + TT / 2) + '" y="' + (exit.y * TT - 14) +
            '" text-anchor="middle" font-size="7" font-weight="600" letter-spacing="0.5"' +
            ' font-family="var(--font)" fill="var(--gold)" stroke="var(--map-void)"' +
            ' stroke-width="2" paint-order="stroke" pointer-events="none">EXIT</text>';
