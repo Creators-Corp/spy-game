@@ -47,7 +47,7 @@
         el('div', { class: 'role' }, [
           el('div', { class: 'role__identity' }, [
             el('div', { class: 'role__job', text: 'THE BRAIN' }),
-            el('h2', { class: 'role__name', text: 'BENJAMIN' })
+            el('h2', { class: 'role__name', text: 'BENJAMIN FÉREL' })
           ]),
           el('div', { class: 'role__portrait' }, [U.artSlot('ui-new/portrait-benjamin')]),
           el('ul', { class: 'role__list' }, [

@@ -36,12 +36,12 @@
   var LINES = {
     wife:      'Give my best to your wife — she still putting up with these hours?',
     kids:      'Kids must be getting big. How old is the eldest now?',
-    promotion: 'They passed you over again, did they. Unbelievable.',
-    football:  'Rough result at the weekend. I could not watch the second half.',
-    study:     'You are still doing the night classes? That is serious discipline.',
-    car:       'That is your car in the bay, no? They are ticketing it as we speak.',
+    promotion: 'They passed you over again, did they? Unbelievable.',
+    football:  'Rough result at the game this weekend. The second half was just unwatchable.',
+    study:     'Are you still doing the night classes? That takes serious discipline.',
+    car:       'The car in the bay is yours, no? They are ticketing it as we speak.',
     coffee:    'The machine on three is broken again, by the way. Thought you should know.',
-    boss:      'Between us — I do not know how you can stand the floor manager.'
+    boss:      'Between us — I don\'t know how you can stand the floor manager.'
   };
   var TOPICS = Object.keys(LINES);
 
@@ -49,11 +49,11 @@
      three fixed clues, three questions, three answer choices per question,
      and the correct answer's one-based number (1, 2, or 3). This data does
      not use LINES, DIRT, or the regular conversation topics. */
-  var FIRST_BEAM_TUTORIAL_CLUES = ['Very thoughtful toward newcomers.', 'Likes having their work noticed', 'Doesn\'t like dawdling on the job.'];
+  var FIRST_BEAM_TUTORIAL_CLUES = ['Very thoughtful toward newcomers.', 'Likes having his work noticed', 'Doesn\'t like dawdling on the job.'];
   var FIRST_BEAM_TUTORIAL = [
     { question: 'The laser! Every single day I say it: check the manual, watch your step!', answers: ['I am in a hurry.', 'Sorry, sir! It is my first day.', 'Ever heard of pressure points?'], correct: 2 },
-    { question: 'Oh! The new guy! Yes yes, sorry about that. Read the manual and we\'ll get along just fine!', answers: ['Not really the reading type. I learn by doing.', 'You\'ve got beautiful eyes!', 'Of course, sir! I\'ve heard great things about your leadership. I\'ll read everyday!'], correct: 3 },
-    { question: 'Now that\'s what I like to hear! Alright, get moving!', answers: ['You see that new show that dropped on Netflix?', 'Where\'s the safe?', 'Yes sir! Excuse me.'], correct: 3 }
+    { question: 'Oh! The new guy! Yes, yes. Read the manual and we\'ll get along just fine.', answers: ['I\'m not the reading type. I learn by doing.', 'You\'ve got beautiful eyes!', 'Of course, sir! I\'ve heard of your leadership. I\'ll read it every day!'], correct: 3 },
+    { question: 'Now that\'s what I like to hear! Alright, get moving.', answers: ['You see that new show that dropped on Netflix?', 'Where\'s the safe?', 'Yes, sir! Excuse me.'], correct: 3 }
   ];
 
   /* The opening laser/talk lesson is free. Lower A/B/C's suspicion limits by
@@ -78,8 +78,8 @@
      Past the second line La Tchatche allows one slip instead of two: a man
      who has been told to look for somebody is not in a chatting mood. */
   var ALERT = [
-    { at: 40, name: 'ATTENTIVE', line: 'A radio crackles somewhere. <em>They have been told to keep their eyes open.</em>' },
-    { at: 70, name: 'ALERT',     line: 'Doors, all over the building. <em>They are looking for somebody.</em>' }
+    { at: 40, name: 'ATTENTIVE', line: 'A radio crackles somewhere. <em>They\'ve been told to keep their eyes open.</em>' },
+    { at: 70, name: 'ALERT',     line: 'Doors lock, all over the building. <em>They\'re looking for someone.</em>' }
   ];
 
   /* WHAT BENJAMIN CAN DO FROM THE VAN.
@@ -92,20 +92,20 @@
      because nothing in this build happens between his inputs. */
   var LEVER = {
     lights: { id: 'lights', icon: 'bulb', name: 'CUT THE LIGHTS', cost: 8,  turns: 3, uses: 1,
-              blurb: 'For three moves, every guard sees only the squares beside him.' },
+              blurb: 'For three moves, every guard sees only adjacent squares.' },
     /* THE BEAMS ARE EARNED, AND THEN THEY ARE A RHYTHM.
        Locked until LE BUREAU is cracked (on a floor that has one), and then
        not a single pull but a lever on a cooldown: once the beams come back
        on, the van needs four of Assane's moves before it can drop them again. */
     laser:  { id: 'laser',  icon: 'beam', name: 'CUT THE LASERS ', cost: 10, turns: 8, uses: 1,
               cooldown: 4, needs: 'bureau',
-              blurb: 'The beams drop for eight moves. Assane can cross one without them, but it sets off the alarm.' },
+              blurb: 'The beams drop for eight moves. Assane can cross one without this, but it sets off the alarm.' },
     /* Never permanent. A looped camera shows an empty corridor for a few moves
        and then it is a camera again — so a camera that cannot be walked
        around is a camera the two of them have to time together. */
     camera: { id: 'camera', icon: 'eye',  name: 'LOOP A CAMERA',  cost: 4,  turns: 4, uses: 3,
               needs: 'bureau',
-              blurb: 'The box nearest Assane sees nothing for four moves, then it is back.' }
+              blurb: 'The camera nearest Assane sees nothing for four moves, then it\'s back.' }
   };
 
   /* THE PRESSURE.
@@ -165,10 +165,10 @@
     id: 'veille',
     HATCH: 'door',
     venue: 'HÔTEL DES VENTES · NIGHT BEFORE',
-    contract: 'CONTRACT No.1 — NIGHT BEFORE AUCTION',
+    contract: 'CONTRACT No.1',
     target: 'Lot 12 · illuminated manuscript',
     venueArt: 'venue-establishing',
-    blurb: 'You need a paper inside the vault. Its room is released from the officer security desk. Find a way out.',
+    blurb: 'You need a paper inside the vault. Its room lock is released from the security desk. The hard part is finding a way out.',
 
     /* THE FRAME. A wall column down the EAST edge and a wall row along the
        bottom that no route touches: the hatch sits in the east wall, so the
@@ -276,7 +276,7 @@
     /* THE FIRST BEAM ASKS BEFORE IT RINGS. The first step into a live beam on
        this contract does not happen: the television says what a beam is, and
        the same step again commits. Once a run. */
-    BEAM_CARD: { title: 'THE BEAMS', line: 'Cross one and the alarm goes — someone will come to see who did it. Step again to cross.' },
+    BEAM_CARD: { title: 'THE BEAMS', line: 'Cross a laser beam and the alarm goes off — someone will come looking. Step again to cross.' },
     /* A separate TV card shown when the Bureau is completed. Keep its copy
        independent from BEAM_CARD so the two messages can be edited separately. */
     BUREAU_CARD: { title: 'Security credentials acquired!', line: 'The van has unrestricted access to the security systems!' },
@@ -287,12 +287,12 @@
       { targets: ['exit'] }
     ],
     OBJ: {
-      cloak: 'The cloakroom is at the entrance. Get Assane into the right uniform before he crosses the staff gate.',
+      cloak: 'The cloakroom is at the entrance. Get Assane into uniform before he crosses the staff gate.',
       door:  'A padlocked gate between the cloakroom and the service passages. P1 has the keys; P2 knows which is which.',
       porte: 'A locked door beyond Storage. P1 has the keypad; P2 has the code.',
-      after: 'The manuscript is sealed in a vault beneath a live camera. Crack the safe, take the prize, and disappear through the unmarked exit.',
-      out:   'Assane has it and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
-      dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in them.'
+      after: 'The manuscript is sealed in a vault beneath a live camera. Crack the safe, take the prize, and disappear.',
+      out:   'Assane has the paper and the monitors are dead. The plan shows no way out. Benjamin’s procedures might.',
+      dark:  'The power is gone. Assane still has his phone; Benjamin has the procedures — the way out is in there.'
     },
     DOORS: [
       { x: 20,  y: 4,  locked: true,  mark: 'trident',  to: 'VAULT' },
@@ -303,7 +303,7 @@
       /* staff only: the padlock will not open for a man out of uniform, so
          the cloakroom is not optional on this contract */
       { id: 'grille',      x: 8,  y: 17, name: 'GATE',      icon: 'lock', needs: 'deguisement',
-        refuse: { title: 'STAFF ONLY', line: 'Assane isn’t in uniform. Someone would ask questions.' } },
+        refuse: { title: 'STAFF ONLY', line: 'Assane isn\'t in uniform. They\'d ask questions.' } },
       { id: 'deguisement', x: 4, y: 15, name: 'DISGUISE', icon: 'coat' },
         /* LA PORTE, at the north end of La Réserve: the keypad follows the
            beam and the posted guard. */
@@ -364,8 +364,8 @@
          be his alone for LE CLAVIER: the release code is the badge of the
          officer posted to the keypad's zone. */
       { badge: '2071', name: 'DELACROIX, Yann',   post: 'UPPER GALLERY', plate: '5530', kids: [] },
-      { badge: '1184', name: 'VIDAL, Nadia',      post: 'OFFICE',        plate: '1147', kids: [{ n: 'Théo', y: 2011 }] },
-      { badge: '5195', name: 'SANGLIER, Bruno',   post: 'KITCHENS',  plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
+      { badge: '1184', name: 'VIDAL, Nadia',      post: 'OFFICE',        plate: '1147', kids: [{ n: 'Théa', y: 2011 }] },
+      { badge: '5195', name: 'SANGLIER, Marie',   post: 'KITCHENS',  plate: '9088', kids: [{ n: 'Inès', y: 2007 }, { n: 'Hugo', y: 2007 }] },
       { badge: '6620', name: 'PARMENTIER, Odile', post: 'CLOAKROOM',  plate: '4472', kids: [{ n: 'Marc', y: 2003 }, { n: 'Julie', y: 2016 }] },
       { badge: '3308', name: 'KOFFI, Émile',      post: 'STORAGE',    plate: '3396', kids: [{ n: 'Awa', y: 2012 }, { n: 'Noé', y: 2005 }] }
     ],
@@ -400,17 +400,17 @@
     },
     DIRT: {
       '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },
-               { t: 'coffee', s: 'Fights with the machine on level three, daily.' },
-               { t: 'boss', s: 'Loathes the floor manager. Openly.' }],
+               { t: 'coffee', s: 'Fights with the machine on level three daily.' },
+               { t: 'boss', s: 'Loathes the floor manager.' }],
       '2071': [{ t: 'study', s: 'Night classes. Law. Second year.' },
                { t: 'car', s: 'Parks in the loading bay. Gets ticketed.' },
                { t: 'promotion', s: 'Applied for shift lead. Waiting to hear.' }],
       '3308': [{ t: 'football', s: 'Saint-Étienne football fan. Home and away.' },
                { t: 'boss', s: 'Covers for the floor manager. Constantly.' },
-               { t: 'coffee', s: 'Brings her own flask. Refuses the machine.' }],
+               { t: 'coffee', s: 'Entirely dependent on level three\'s coffee machine.' }],
       '5195': [{ t: 'wife', s: 'Married. Hélène. Twenty-two years.' },
                { t: 'promotion', s: 'Passed over for shift lead. Twice.' },
-               { t: 'football', s: 'Season ticket. Never misses.' }],
+               { t: 'football', s: 'Football season ticket. Never misses.' }],
       '6620': [{ t: 'car', s: 'New car. Will not stop mentioning it.' },
                { t: 'kids', s: 'A son at university, a daughter still small.' },
                { t: 'wife', s: 'Recently separated. Do not push it.' }],
@@ -472,14 +472,14 @@
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', steps: [
         'Cameras and lights drop, but laser beams stay armed. The <strong><u>service hatch in the kitchen</u></strong> (our escape route) also locks down.',
-        'Release code is the vehicle plate number of the guard posted there <strong><u>REVERSED</u></strong>.'
+        'Release code is the vehicle plate number of the guard posted there, <strong><u>REVERSED</u></strong>.'
       ] }
     ],
 
     BEATS: [
-      'Three floors, and each is worse than the one below.',
-      'The desk releases the vault that is under a camera.',
-      'The way out is not on the plan. Read the procedures.'
+      'A back door leads to storage leads to the gallery.',
+      'The desk releases the vault, but a camera is always watching.',
+      'The way out is not in the plan. Read the procedures.'
     ]
   };
 
