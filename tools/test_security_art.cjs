@@ -40,6 +40,22 @@ state.blackout = false;
 state.cutCameras = {};
 state.levers = { laser: 0, cams: {} };
 assert.deepEqual(render(), hardware);
+// The vault prop occupies exactly its objective tile and respects Assane's fog.
+const vault = content.MODULES.find(module => module.id === 'coffre');
+function vaultTag(view) {
+  const host = {};
+  tiles.render(host, { view, threat: {}, layers: { ground: false, vision: false, walls: false, actors: false, ui: false } });
+  return host.innerHTML.match(/<image href="art\/tiles\/vault-sprite\.png"[^>]*>/g) || [];
+}
+const vaultImages = vaultTag('benjamin');
+assert.equal(vaultImages.length, 1);
+assert.ok(vaultImages[0].includes(' x="' + vault.x * tiles.W + '"'));
+assert.ok(vaultImages[0].includes(' y="' + vault.y * tiles.H + '"'));
+assert.ok(vaultImages[0].includes(' width="' + tiles.W + '"'));
+assert.ok(vaultImages[0].includes(' height="' + tiles.H + '"'));
+assert.equal(vaultTag('assane').length, 0);
+state.seen[vault.x + ',' + vault.y] = 1;
+assert.equal(vaultTag('assane').length, 1);
 // Horizontal and single-cell horizontal beams hug both wall-adjacent ends.
 content.CAMERAS = [];
 content.MAP = ['#######', '#.....#', '#LLLLL#', '#.....#', '#######'];

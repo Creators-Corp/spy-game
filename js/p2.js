@@ -34,7 +34,7 @@
             el('div', { class: 'role__job', text: 'THE BRAIN' }),
             el('h2', { class: 'role__name', text: 'BENJAMIN' })
           ]),
-          el('div', { class: 'role__portrait' }, [U.artSlot('p2-role-benjamin')]),
+          el('div', { class: 'role__portrait' }, [U.artSlot('ui-new/portrait-benjamin')]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are in the van. You see the whole floor — guards, cameras, cones, doors.' }),
             el('li', { text: 'You touch nothing. Assane is your hands, and he cannot see what you can.' }),

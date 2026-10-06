@@ -625,3 +625,13 @@
 #p1 .pscreen--bureau .desk::after{content:none;}
 #p1 .pscreen--bureau .desk__illustration{display:block;width:100%;height:auto;}
 #p1 .pscreen--bureau :is(.readout,.keypad){margin-left:14px;margin-right:14px;}
+
+/* Vault controls use the artwork's own coordinate space, including its aspect. */
+#p1 .pscreen--vault .dial{max-width:290px;aspect-ratio:290 / 282;}
+#p1 .pscreen--vault .vault__background{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+#p1 .pscreen--vault .dial > svg{position:absolute;inset:0;width:100%;height:100%;}
+#p1 .pscreen--vault .vault-key--pressed{visibility:hidden;}
+#p1 .pscreen--vault .dial__cell:is(:active,.is-used) .vault-key--idle{visibility:hidden;}
+#p1 .pscreen--vault .dial__cell:is(:active,.is-used) .vault-key--pressed{visibility:visible;}
+#p1 .pscreen--vault .dial__cell:hover{filter:brightness(1.06);}
+#p1 .pscreen--vault .dial__cell:focus-visible{outline:2px solid #A33E0A;outline-offset:2px;}

@@ -92,7 +92,7 @@
             el('div', { class: 'role__job', text: 'THE HANDS' }),
             el('h2', { class: 'role__name', text: 'ASSANE DIOP' })
           ]),
-          el('div', { class: 'role__portrait' }, [U.artSlot('p1-role-assane')]),
+          el('div', { class: 'role__portrait' }, [U.artSlot('ui-new/portrait-assane')]),
           el('ul', { class: 'role__list' }, [
             el('li', { text: 'You are inside the building. You move, you touch, you talk your way out.' }),
             el('li', { text: 'You see close and you see narrow. You will not see the guard until he is on you.' }),
@@ -615,31 +615,15 @@
   }
 
   /* ---------------------------------------------------------- LE COFFRE */
-  /* Dial geometry is matched to art/coffre-door.png rather than to the square.
-     That artwork puts its empty recess at about (49%, 44%) of the frame with an
-     inner radius near 26%, so the working dial is built to sit INSIDE it — a
-     dial drawn to fill the whole tile would have sat on top of the rivets and
-     the handle and looked pasted on.
-
-     RING and DISC are also constrained against each other: eight discs around a
-     circle of radius R have their centres 0.765R apart, so DISC has to stay
-     under 0.383 * RING or neighbours overlap. At these values a disc lands at
-     about 42px on a phone, which is still a comfortable tap target.
-     If the safe door art is ever regenerated, these five numbers are the only
-     thing that needs revisiting. */
-  var DIAL = { vb: 200, cx: 98, cy: 89, ring: 38, disc: 12.8, hub: 16, seat: 51 };
+  /* Art-pixel coordinates match the eight recesses in the 290x282 vault-bg. */
+  var DIAL = { width: 290, height: 282, cx: 145, cy: 141, ring: 112, hub: 23,
+               buttonWidth: 66, buttonHeight: 61 };
 
   function viewCoffre() {
     var S = E.S, K = C.COFFRE, D = DIAL;
     var svgns = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(svgns, 'svg');
-    svg.setAttribute('viewBox', '0 0 ' + D.vb + ' ' + D.vb);
-
-    /* seats the dial into the recess and keeps the glyphs readable on steel */
-    var seat = document.createElementNS(svgns, 'circle');
-    seat.setAttribute('cx', D.cx); seat.setAttribute('cy', D.cy); seat.setAttribute('r', D.seat);
-    seat.setAttribute('fill', 'rgba(6,9,13,.38)');
-    svg.appendChild(seat);
+    svg.setAttribute('viewBox', '0 0 ' + D.width + ' ' + D.height);
 
     /* the ring colour is half the index into P2's manual — it has to be the
        most obvious thing on this screen after the plate */
@@ -655,19 +639,30 @@
       var g = document.createElementNS(svgns, 'g');
       g.setAttribute('class', 'dial__cell' + (S.coffreEntry.indexOf(gl) >= 0 ? ' is-used' : ''));
       g.setAttribute('style', 'cursor:pointer');
-      var d = document.createElementNS(svgns, 'circle');
-      d.setAttribute('class', 'dial__disc');
-      d.setAttribute('cx', gx); d.setAttribute('cy', gy); d.setAttribute('r', D.disc);
-      d.setAttribute('fill', 'var(--paper)');
-      d.setAttribute('stroke', 'var(--ink)'); d.setAttribute('stroke-width', '2');
-      g.appendChild(d);
+      g.setAttribute('role', 'button');
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('aria-label', 'Vault symbol ' + (i + 1));
+      ['idle', 'pressed'].forEach(function (state) {
+        var button = document.createElementNS(svgns, 'image');
+        button.setAttribute('class', 'vault-key vault-key--' + state);
+        button.setAttribute('href', U.assetURL('art/ui-new/bttn-small-square' + (state === 'pressed' ? '-pressed' : '') + '.png'));
+        button.setAttribute('x', gx - D.buttonWidth / 2);
+        button.setAttribute('y', gy - D.buttonHeight / 2);
+        button.setAttribute('width', D.buttonWidth);
+        button.setAttribute('height', D.buttonHeight);
+        g.appendChild(button);
+      });
       var use = document.createElementNS(svgns, 'use');
       use.setAttribute('href', '#g-' + gl);
       use.setAttribute('width', '100'); use.setAttribute('height', '100');
-      use.setAttribute('transform', 'translate(' + (gx - 9) + ',' + (gy - 9) + ') scale(0.18)');
+      use.setAttribute('transform', 'translate(' + (gx - 15) + ',' + (gy - 15) + ') scale(0.30)');
       use.setAttribute('color', 'var(--ink)');
       g.appendChild(use);
       g.addEventListener('click', function () { E.coffreTap(gl); U.emit('render'); });
+      g.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault(); E.coffreTap(gl); U.emit('render');
+      });
       svg.appendChild(g);
     });
 
@@ -687,7 +682,7 @@
     }
 
     var dial = el('div', { class: 'dial' });
-    dial.appendChild(U.artSlot('coffre-door', 'dial__plate'));
+    dial.appendChild(el('img', { class: 'vault__background', src: U.assetURL('art/ui-new/vault-bg.png'), alt: '', 'aria-hidden': 'true', draggable: 'false' }));
     dial.appendChild(svg);
 
     /* The old screen printed DR-1187 with no label beside a note that said
@@ -702,7 +697,7 @@
       onclick: function () { E.coffreUndo(); U.emit('render'); }
     });
 
-    return screen([
+    var view = screen([
       head('VAULT'),
       body([
         el('div', { class: 'safe__plate' }, [
@@ -729,6 +724,8 @@
         el('p', { class: 'note', style: 'margin-top:10px', text: 'A wrong four is loud. Twice and somebody comes.' })
       ])
     ]);
+    view.classList.add('pscreen--vault');
+    return view;
   }
 
   /* ---------------------------------------------------------- LE BUREAU */

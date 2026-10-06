@@ -1262,6 +1262,8 @@
           s += img('desk-sprite', px - W, py, W * 3, H, { keep: true, opacity: done ? 0.7 : 1 });
         } else if (m.id === 'deguisement') {
           s += img('DressingRoomDoor', px, py - H * 2, W, H * 2, { keep: true });
+        } else if (m.id === 'coffre') {
+          s += img('vault-sprite', px, py, W, H, { keep: true });
         }
         if (m.id !== 'bureau' && m.id !== 'prize') s += interactionIcon(m.x, m.y, m.icon, done);
       });

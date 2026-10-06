@@ -396,12 +396,10 @@
       // One distinct image per badge, shared by P1's encounter and P2's files.
       '4412': { art: 'ui-new/guard-3', head: 'square', hair: 'swept', moustache: true,  beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
       '2071': { art: 'ui-new/guard-1', head: 'long',   hair: 'bald',  moustache: false, beard: false, glasses: true,  scar: false, skin: 'var(--stone-dk)' },
-      // Temporarily hide surplus faces until their new art arrives. Their
-      // personnel records and uniforms still supply desk/disguise clues.
-      '1184': { hidden: true, art: 'face-3308', head: 'round', hair: 'swept', moustache: false, beard: false, glasses: true, scar: false, skin: 'var(--stone)' },
+      '1184': { art: 'ui-new/guard-5', head: 'round', hair: 'swept', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--stone)' },
       '5195': { art: 'ui-new/guard-4', head: 'round', hair: 'swept', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--stone)' },
       '6620': { art: 'ui-new/guard-2', head: 'round',  hair: 'swept', moustache: false, beard: false, glasses: false, scar: false, skin: 'var(--camel)' },
-      '3308': { hidden: true, art: 'face-1184', head: 'long', hair: 'cap', moustache: false, beard: true, glasses: false, scar: false, skin: '#8A5A3B' }
+      '3308': { art: 'ui-new/guard-6', head: 'long', hair: 'bald', moustache: true, beard: false, glasses: false, scar: false, skin: '#8A5A3B' }
     },
     DIRT: {
       '4412': [{ t: 'kids', s: 'Two daughters. Talks about them constantly.' },

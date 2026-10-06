@@ -127,8 +127,8 @@
     G.build();
     U.preloadArt(['ui/control-bttn-idle', 'ui/control-bttn-pressed', 'ui/control-bttn-disabled',
                   'ui/header-p1', 'ui/flourish-left', 'ui/flourish-right']);
-    U.preloadArt(['venue-establishing', 'p1-role-assane', 'p2-role-benjamin', 'bureau-desk',
-                  'assane-standing', 'guard-standing', 'jail-slam', 'blackout-cut', 'blackout-door']);
+    U.preloadArt(['venue-establishing', 'ui-new/portrait-assane', 'ui-new/portrait-benjamin', 'bureau-desk',
+                  'splash-assane', 'splash-guard', 'jail-slam', 'blackout-cut', 'blackout-door']);
     U.hydrateStaticSlots();
     E.reset();
     L.recovery.boot();
