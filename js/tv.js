@@ -82,14 +82,6 @@
        and took away the reason to ask. He still learns a beam the way the
        building teaches him: by the alarm, if he walks into it. */
 
-    /* the camera he is looking at, and never one across the building */
-    if (!night) S.cameras.forEach(function (c) {
-      if (!vis[c.x + ',' + c.y]) return;
-      var live = !!E.cameraDir(c);
-      s += '<circle cx="' + (c.x * TW + TW / 2) + '" cy="' + (c.y * TH + TH / 2) + '" r="' + (TW * 0.15) +
-           '" fill="' + (live ? 'var(--red)' : 'var(--map-void)') + '" stroke="' + EDGE + '" stroke-width="11"/>';
-    });
-
     var ax = S.assane.x * TW + TW / 2, ay = S.assane.y * TH + TH * 0.86;
 
     /* THE PRESSURE, drawn on him. A ring fills over the thirty seconds he is

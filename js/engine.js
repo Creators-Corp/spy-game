@@ -771,11 +771,12 @@
       if (g.linger) g.probe = { x: beam.x, y: beam.y, hold: g.linger };
     });
     /* the man posted to this room comes to have a word */
-    var room = roomAt(beam.x, beam.y), local = false;
+    var room = roomAt(beam.x, beam.y), local = false, tutorial = false;
     S.guards.forEach(function (g) {
       if (g.stand && g.hears && !g.stoodDown && room && room.name === g.hears) {
         g.summoned = true; local = true;
         if (g.id === 'g1' && !S.beamG1Done) {
+          tutorial = true;
           S.beamG1Pending = true;
           S.beamG1Done = true;
         }
@@ -789,7 +790,7 @@
        building-wide chase on top of it sent the beam-checker the length of
        the floor to meet Assane in the gallery a dozen moves later, as a real
        spot nobody had been warned about. So nobody else hears it: no chase,
-       no one sent to look. The suspicion is still paid. */
+       no one sent to look. Only the opening lesson waives the suspicion cost. */
     if (local) {
       /* THE RESERVE BEAMS GO DEAD ONCE TRIPPED. They have done their job —
          the lesson is the bell and the man it sends — and a second trip on
@@ -802,7 +803,7 @@
       /* ...and a chase already under way from somewhere else carries on */
       S.alarm = before.alarm;
       S.guards.forEach(function (g, i) { if (!g.stand) g.probe = before.probes[i]; });
-      raise((C.ALARM || {}).cost || 12);
+      if (!tutorial) raise((C.ALARM || {}).cost || 12);
       toast('ALARM · BEAM BROKEN', 'bad');
       S.alertNote = 'A bell in Storage, and the beams cut out. <em>Footsteps — one man, coming your way.</em>';
       S.flash = Date.now();
@@ -1096,7 +1097,7 @@
        where the tutorial encounter is explicitly tagged and clears the lock. */
     if (caught && S.grace === 0 && !opts.freeze && !S.beamG1Pending) { getSpotted(caught); return { ok: true, spotted: true }; }
     /* frozen, with the beam going straight over him. Not caught. Not nothing. */
-    if (caught && opts.freeze) raise(3);
+    if (caught && opts.freeze && !S.beamG1Pending) raise(3);
 
     /* Near miss: a cone passed within arm's reach. Orthogonal only, and only
        +1 — in a two-tile corridor a diagonal test fires nearly every turn, which
@@ -1106,7 +1107,7 @@
     var brush = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) {
       return !!t[(S.assane.x + v[0]) + ',' + (S.assane.y + v[1])];
     });
-    if (brush) { raise(1); S.lastBrush = S.turn; }
+    if (brush && !S.beamG1Pending) { raise(1); S.lastBrush = S.turn; }
 
     /* a step nobody saw earns back a point the clock added — never more */
     if (crossed.length && S.pressure > 0) {
@@ -1186,7 +1187,7 @@
      how long he has stood still, and whether the building has started to
      charge for it. Only during the infiltration. */
   function tick(now) {
-    if (!S.running || S.phase !== 'play') return null;
+    if (!S.running || S.phase !== 'play' || S.beamG1Pending) return null;
     var P = C.PRESSURE, idle = (now - S.lastActionAt) / 1000;
     if (idle < P.grace) return { idle: idle, grace: P.grace, ticking: false };
     var due = Math.floor((idle - P.grace) / P.every);
@@ -1217,6 +1218,7 @@
 
   function openModule(id) {
     if (MODULE_PAGE[id]) unlock(MODULE_PAGE[id]);
+    if (id === 'coffre' || id === 'ecoute' || id === 'faux') unlock('manual-' + id);
     S.moduleId = id;
     S.phase = 'module';
     U.buzz('p1');   /* something is in front of him */
@@ -1560,7 +1562,7 @@
        through him, so being stopped by him is the plan, not a mistake: no
        suspicion, and it is not one of the three. Getting the talk wrong
        still costs what it always costs. */
-    var scripted = !real && !!(g && g.stand && !g.stoodDown);
+    var scripted = tag === 'first-beam-g1' || (!real && !!(g && g.stand && !g.stoodDown));
     if (!scripted) {
       S.spotted++;
       raise(20);
@@ -1623,6 +1625,8 @@
 
   function finishTchatche(t) {
     S.phase = 'play';
+    unlock('manuel');
+    unlock('manual-lasers');
     // Only the guard who believed the story stands down. Other guards and
     // electronic traps remain dangerous, including on the very next move.
     S.guards.forEach(function (g) {

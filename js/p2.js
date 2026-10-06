@@ -17,6 +17,21 @@
   var unlockShown = null, unlockShownAt = 0;   /* when this phone first drew a lever just unlocked */
   var UNLOCK_MS = 1800;    /* the power-on animation, matched in phone.css */
   var tapped = [], queryResult = null;      /* the soundboard, L'Écoute */
+  var manualRead = {};                     /* notes acknowledged on this phone */
+
+  function manualEntries() {
+    var S = E.S, u = S.unlocked || {}, entries = [];
+    if (u['manual-lasers'] || (S.guards || []).some(function (g) { return g.id === 'g1' && g.stoodDown; })) entries.push('LASER LINES');
+    if (S.alert > 0) entries.push('ALERT LEVELS');
+    if ((C.LEVIERS || []).some(function (lever) {
+      return lever.id === 'camera' && (!lever.needs || S.solved[lever.needs]);
+    })) entries.push('CAMERAS');
+    if (S.blackout) entries.push('POWER FAILURE');
+    ['coffre', 'ecoute', 'faux'].forEach(function (id) {
+      if (u['manual-' + id] || S.solved[id] || (S.phase === 'module' && S.moduleId === id)) entries.push(id);
+    });
+    return entries;
+  }
 
   function head(now) { return U.phoneHeader('p2', now); }
   function screen(kids) { return el('div', { class: 'pscreen' }, kids); }
@@ -65,7 +80,7 @@
   function availableTabs() {
     var S = E.S, u = S.unlocked || {}, list = [['plan', 'MAP']];
     if (C.PORTE && u.porte) list.push(['porte', 'DOOR']);
-    if (C.COFFRE && u.manuel) list.push(['manuel', 'MANUAL']);
+    if (u.manuel || manualEntries().indexOf('LASER LINES') >= 0) list.push(['manuel', 'MANUAL']);
     if (u.personnel || u.visages) list.push(['personnel', 'STAFF']);
     return list;
   }
@@ -100,13 +115,15 @@
     });
     availableTabs().forEach(function (t) {
       var flash = (puzzleTab && !puzzleSeen && t[0] === puzzleTab) ||
-                  (talk && !staffSeen && t[0] === 'personnel');
+                  (talk && !staffSeen && t[0] === 'personnel') ||
+                  (t[0] === 'manuel' && manualEntries().some(function (key) { return !manualRead[key]; }));
       bar.appendChild(buttonArt(el('button', {
         class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
         onclick: function () {
           tab = t[0];
           if (t[0] === puzzleTab) puzzleSeen = true;
           if (t[0] === 'personnel' && talk) staffSeen = true;
+          if (t[0] === 'manuel') manualEntries().forEach(function (key) { manualRead[key] = true; });
           U.sfx.tap(); U.emit('render');
         }
       }, [el('span', { text: t[1] })]), 'tab'));
@@ -778,9 +795,10 @@
 
   /* ---------------------------------------------------------- LE MANUEL */
   function viewManuel() {
-    var wrap = el('div', {}, [
-      el('p', { class: 'h', text: 'SAFES · OPENING SEQUENCES' })
-    ]);
+    var entries = manualEntries();
+    var wrap = el('div');
+    if (entries.indexOf('coffre') >= 0) {
+    wrap.appendChild(el('p', { class: 'h', text: 'SAFES · OPENING SEQUENCES' }));
     C.COFFRE.manual.forEach(function (m, i) {
       var row = el('button', {
         class: 'manual__row' + (openSerial === i ? ' is-on' : ''),
@@ -806,8 +824,9 @@
         wrap.appendChild(seq);
       }
     });
+    }
 
-    if (C.ECOUTE) {
+    if (C.ECOUTE && entries.indexOf('ecoute') >= 0) {
     /* THE LINE CODES.
        The book has no browsable list of patterns on purpose. If the six
        rhythms were printed here, Benjamin could eyeball a match and the board
@@ -859,7 +878,7 @@
 
     }
 
-    if (C.FAUX) {
+    if (C.FAUX && entries.indexOf('faux') >= 0) {
     /* Benjamin's authentication notes. Note 1 is true of both canvases and
        settles nothing — a pair who stops reading after it can still pick the
        forgery. Nothing on screen says which note tells. */
@@ -871,15 +890,16 @@
 
     }
 
-    /* The emergency procedures live down here, under the safes, nowhere near
-       the roster they need. When the lights go out the MANUAL tab pulses
-       until he opens it — see tabBar(). */
-    wrap.appendChild(el('div', { class: 'rule' }));
-    wrap.appendChild(el('p', { class: 'h', text: 'EMERGENCY PROCEDURES' }));
+    wrap.appendChild(el('p', { class: 'h', text: 'BENJAMIN’S NOTES' }));
     var dl = el('dl', { class: 'proc' });
     C.PROCEDURES.forEach(function (r) {
+      if (entries.indexOf(r.k) < 0) return;
       dl.appendChild(el('dt', { text: r.k }));
-      dl.appendChild(el('dd', { text: r.v }));
+      if (r.steps) {
+        dl.appendChild(el('dd', {}, [el('ol', { class: 'proc__steps' }, r.steps.map(function (step) {
+          return el('li', { html: step });
+        }))]));
+      } else dl.appendChild(el('dd', { text: r.v }));
     });
     wrap.appendChild(dl);
     return wrap;
@@ -1025,6 +1045,6 @@
   L.p2 = { render: function () { U.keepScroll('#p2-screen', render); },
            reset: function () {
     tab = 'plan'; hintedModule = null; puzzleSeen = false; staffSeen = false; openSerial = -1; openBadge = null;
-    tapped = []; queryResult = null; unlockSeen = null; unlockShown = null;
+    tapped = []; queryResult = null; unlockSeen = null; unlockShown = null; manualRead = {};
   } };
 })(window.DC);

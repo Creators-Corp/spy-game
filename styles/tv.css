@@ -185,7 +185,7 @@
 .tvview--tchatche{align-items:center;justify-content:center;background:var(--stone);}
 .tch{text-align:center;}
 .tch__figures{display:flex;gap:26px;align-items:center;justify-content:center;}
-.tch__figures .artslot{height:180px;}
+.tch__splash{display:block;height:180px;width:auto;max-width:300px;object-fit:contain;}
 .tch__spark{
   width:60px;height:var(--stroke);background:var(--ink);position:relative;
 }
@@ -375,7 +375,7 @@
 .tvview--rank{background:#090C11;}
 .rankcard__grade{border-color:#778495;}
 .rankcard__title{background:#090C11;color:#FD6A1A;border:1px solid #4C93E4;}
-.tv__screen :is(.tch__figures .artslot,.tvcut .artslot,.jail__art){border:2px solid #778495;border-radius:0;}
+.tv__screen :is(.tvcut .artslot,.jail__art){border:2px solid #778495;border-radius:0;}
 .tv__screen :is(.modstate__pips i,.tch__rounds i){border-color:#778495;background:#090C11;}
 .tv__screen :is(.modstate__pips i.is-set,.tch__rounds i.is-won){background:#FD6A1A;}
 .tv__screen :is(.modstate__pips i.is-bad,.tch__rounds i.is-lost){background:var(--red);}

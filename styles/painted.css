@@ -635,3 +635,7 @@
 #p1 .pscreen--vault .dial__cell:is(:active,.is-used) .vault-key--pressed{visibility:visible;}
 #p1 .pscreen--vault .dial__cell:hover{filter:brightness(1.06);}
 #p1 .pscreen--vault .dial__cell:focus-visible{outline:2px solid #A33E0A;outline-offset:2px;}
+
+.phone__screen .proc__steps{margin:4px 0 0;padding-left:20px;}
+.phone__screen .proc__steps li{margin-bottom:10px;}
+.phone__screen .proc__steps strong{font-weight:700;}

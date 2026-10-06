@@ -56,18 +56,15 @@
     { question: 'Now that\'s what I like to hear! Alright, get moving!', answers: ['You see that new show that dropped on Netflix?', 'Where\'s the safe?', 'Yes sir! Excuse me.'], correct: 3 }
   ];
 
-  /* Thresholds are measured, not guessed. A solver was run over the live board
-     — every guard phase, every camera phase, and the blackout leg under torch
-     rules. On job 1 the lowest-suspicion clean route costs 11 and a
-     shortest-path clean route costs 17. S sits just above a perfect run, so a
-     pair has to route well AND not fumble a module: one wrong safe code (+15)
-     or keypad entry (+10) alone puts S out of reach.
-     Re-measure if you retune a map, the patrols or the cone depths. */
+  /* The opening laser/talk lesson is free. Lower A/B/C's suspicion limits by
+     its former 12-point cost; S keeps a small five-point near-miss allowance.
+     A wrong safe code (+15) or keypad entry (+10) still rules out S. Real
+     sightings retain their existing caps; the tutorial is never a sighting. */
   var RANKS = [
-    { g: 'S', t: 'GHOST',   test: function (s) { return s.spotted === 0 && s.suspicion <= 12; } },
-    { g: 'A', t: 'SHADOW',     test: function (s) { return s.spotted === 0 && s.suspicion <= 40; } },
-    { g: 'B', t: 'DISCREET',   test: function (s) { return s.spotted <= 1 && s.suspicion <= 65; } },
-    { g: 'C', t: 'NOTICED',  test: function (s) { return s.spotted <= 2 && s.suspicion < 85; } },
+    { g: 'S', t: 'GHOST',   test: function (s) { return s.spotted === 0 && s.suspicion <= 5; } },
+    { g: 'A', t: 'SHADOW',     test: function (s) { return s.spotted === 0 && s.suspicion <= 28; } },
+    { g: 'B', t: 'DISCREET',   test: function (s) { return s.spotted <= 1 && s.suspicion <= 53; } },
+    { g: 'C', t: 'NOTICED',  test: function (s) { return s.spotted <= 2 && s.suspicion < 73; } },
     { g: 'D', t: 'NOISY',   test: function () { return true; } }
   ];
 
@@ -470,14 +467,13 @@
     CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'UPPER GALLERY' },
 
     PROCEDURES: [
-      { k: 'KITCHEN GATE', v: 'Padlocked. Staff in uniform only. The key card pairs each tag with its key.' },
-      { k: 'LASER LINES',  v: 'The central corridor is beamed between rounds. Crossing one is not impossible, it is announced: every officer drops his round and converges for five minutes.' },
-      { k: 'PATROLS',      v: 'One officer on the east stair, one across the upper gallery, one in the kitchens. They do not keep step.' },
+      { k: 'LASER LINES',  v: 'Tripping a laser beam will bring a guard to the location. It could end a heist, or it could be a useful distraction.' },
       { k: 'CAMERAS',      v: 'CAM 1 covers the vault continuously.' },
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
-      { k: 'POWER FAILURE', v: 'Cameras and lighting drop. The beam lines stay armed. The service hatch locks itself.' },
-      { k: 'RELEASE CODE',  v: 'Vehicle plate of the officer posted to that zone, reversed:' },
-      { k: 'EVACUATION',   v: 'Emergency exit at C4, north of the kitchens. Not on the public plans.' }
+      { k: 'POWER FAILURE', steps: [
+        'Cameras and lights drop, but laser beams stay armed. The <strong><u>service hatch in the kitchen</u></strong> (our escape route) also locks down.',
+        'Release code is the vehicle plate number of the guard posted there <strong><u>REVERSED</u></strong>.'
+      ] }
     ],
 
     BEATS: [
@@ -743,11 +739,6 @@
         clav.worn = distinct(clav.code);
       }
       L.content.CLAVIER = clav;
-      /* Procedures report the vehicle plate as written. The keypad code is
-         that plate reversed, so Benjamin must still reverse it to get the PIN. */
-      if (job.PROCEDURES) L.content.PROCEDURES = job.PROCEDURES.map(function (r) {
-        return r.k === 'RELEASE CODE' ? { k: r.k, v: r.v + ' ' + (posted ? posted.plate : '') } : r;
-      });
     }
 
     if (job.BUREAU) {
