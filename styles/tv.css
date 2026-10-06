@@ -76,7 +76,8 @@
   padding:0 30px;
   display:flex;flex-direction:column;justify-content:center;
 }
-.plan__bg{position:relative;flex:1;overflow:hidden;background:var(--night);}
+/* Extend the opening illustration across the glass and behind both bars. */
+.plan__bg{position:absolute;inset:-44px 0 -50px;overflow:hidden;background:var(--night);}
 .plan__bg .artslot{position:absolute;inset:0;border:0;border-radius:0;background:var(--night);}
 /* the illustration is daylight and the frame is night — a light knock-back
    sits it in the room without dimming it into mud */
@@ -362,7 +363,7 @@
 @keyframes vig{0%,100%{opacity:var(--lo)}50%{opacity:var(--hi)}}
 @keyframes flash{0%{opacity:1;background:rgba(193,55,46,.7)}100%{opacity:var(--lo)}}
 
-.tvbar{position:relative;}
+.tvbar{position:relative;z-index:3;}
 
 /* Consequences and end cards use the same framing as the phones. */
 .tvview--module,.tvview--tchatche{background-color:#0C1118;}
