@@ -725,44 +725,55 @@
     var ring = C.PORTE.ring, n = ring.length;
     var ns = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('viewBox', '-24 -24 340 356');
     svg.setAttribute('class', 'ringdial');
-
-    var band = document.createElementNS(ns, 'circle');
-    band.setAttribute('cx', 100); band.setAttribute('cy', 100); band.setAttribute('r', 66);
-    band.setAttribute('fill', 'none');
-    band.setAttribute('stroke', 'var(--ink)');
-    band.setAttribute('stroke-width', '1.5');
-    band.setAttribute('stroke-dasharray', '2 5');
-    band.setAttribute('opacity', '.5');
-    svg.appendChild(band);
+    var background = document.createElementNS(ns, 'image');
+    background.setAttribute('href', U.assetURL('art/ui-new/door-ring-bg.png'));
+    background.setAttribute('width', 292); background.setAttribute('height', 308);
+    svg.appendChild(background);
+    /* Match the ten painted shadows; raise each button four art pixels. */
+    var seats = [[151, 30], [226, 55], [260, 121], [260, 190], [218, 257],
+                 [148, 278], [74, 257], [33, 190], [33, 121], [76, 55]];
 
     ring.forEach(function (sym, i) {
       var a = (i / n) * Math.PI * 2 - Math.PI / 2;
-      var x = 100 + Math.cos(a) * 66, y = 100 + Math.sin(a) * 66;
+      var seat = n === seats.length ? seats[i] : [146 + Math.cos(a) * 120, 154 + Math.sin(a) * 120];
+      var x = seat[0], y = seat[1] - 4;
       var d = porteDigit(sym);
 
       var g = document.createElementNS(ns, 'g');
       g.setAttribute('class', 'ringdial__cell' + (porteZero === sym ? ' is-zero' : ''));
-      var box = document.createElementNS(ns, 'rect');
-      box.setAttribute('x', x - 16); box.setAttribute('y', y - 16);
-      box.setAttribute('width', 32); box.setAttribute('height', 32); box.setAttribute('rx', 4);
-      g.appendChild(box);
+      g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0');
+      g.setAttribute('aria-label', 'Set ring zero to symbol ' + (i + 1));
+      g.setAttribute('aria-pressed', porteZero === sym ? 'true' : 'false');
+      ['idle', 'pressed'].forEach(function (state) {
+        var button = document.createElementNS(ns, 'image');
+        button.setAttribute('class', 'door-ring-key door-ring-key--' + state);
+        button.setAttribute('href', U.assetURL('art/ui-new/bttn-small-square' + (state === 'pressed' ? '-pressed' : '') + '.png'));
+        button.setAttribute('x', x - 33); button.setAttribute('y', y - 30.5);
+        button.setAttribute('width', 66); button.setAttribute('height', 61);
+        g.appendChild(button);
+      });
       var use = document.createElementNS(ns, 'use');
       use.setAttribute('href', '#g-' + sym);
       use.setAttribute('width', '100'); use.setAttribute('height', '100');
-      use.setAttribute('transform', 'translate(' + (x - 11) + ',' + (y - 11) + ') scale(0.22)');
+      use.setAttribute('transform', 'translate(' + (x - 15) + ',' + (y - 15) + ') scale(0.30)');
       g.appendChild(use);
-      g.addEventListener('click', function () {
+      function selectZero() {
         porteZero = (porteZero === sym) ? null : sym;
         U.sfx.tap(); U.emit('render');
+      }
+      g.addEventListener('click', selectZero);
+      g.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault(); selectZero();
       });
       svg.appendChild(g);
 
       if (d !== null) {
         var t = document.createElementNS(ns, 'text');
-        t.setAttribute('x', 100 + Math.cos(a) * 92);
-        t.setAttribute('y', 100 + Math.sin(a) * 92 + 4);
+        t.setAttribute('x', 146 + Math.cos(a) * 166);
+        t.setAttribute('y', 154 + Math.sin(a) * 166 + 4);
         t.setAttribute('text-anchor', 'middle');
         t.setAttribute('class', 'ringdial__n' + (d === 0 ? ' is-zero' : ''));
         t.textContent = d;

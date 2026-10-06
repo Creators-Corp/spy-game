@@ -18,6 +18,7 @@
 }
 .seat__scan:has(.seat__qr[hidden]){display:none;}
 .seat .seat__qr{
+  color:#39291D;
   box-sizing:content-box;width:200px;height:auto;max-width:calc(100% - 20px);
   aspect-ratio:1;margin:0 auto;padding:10px;background:#fff;
 }
@@ -562,7 +563,7 @@
 .phone__screen .pscreen--plan .role__portrait .artslot::after{content:none;}
 .phone__screen .pscreen--plan .role__portrait img{object-fit:cover;}
 .phone__screen .pscreen--plan .role__list{
-  width:100%;min-height:0;aspect-ratio:412 / 252;padding:16px 14px;
+  width:100%;min-height:0;padding:16px 14px;
   display:flex;flex-direction:column;justify-content:space-between;
   background:url('../art/ui-new/panel-medium.png') center / 100% 100% no-repeat;
   color:#39291D;
@@ -629,7 +630,7 @@
 /* Vault controls use the artwork's own coordinate space, including its aspect. */
 #p1 .pscreen--vault .dial{max-width:290px;aspect-ratio:290 / 282;}
 #p1 .pscreen--vault .vault__background{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
-#p1 .pscreen--vault .dial > svg{position:absolute;inset:0;width:100%;height:100%;}
+#p1 .pscreen--vault .dial > svg{position:absolute;width:100%;height:100%;bottom:5px;}
 #p1 .pscreen--vault .vault-key--pressed{visibility:hidden;}
 #p1 .pscreen--vault .dial__cell:is(:active,.is-used) .vault-key--idle{visibility:hidden;}
 #p1 .pscreen--vault .dial__cell:is(:active,.is-used) .vault-key--pressed{visibility:visible;}
@@ -639,3 +640,54 @@
 .phone__screen .proc__steps{margin:4px 0 0;padding-left:20px;}
 .phone__screen .proc__steps li{margin-bottom:10px;}
 .phone__screen .proc__steps strong{font-weight:700;}
+
+#p2 .ringdial{aspect-ratio:340 / 356;}
+#p2 .door-ring-key--pressed{visibility:hidden;}
+#p2 .ringdial__cell:is(:active,.is-zero) .door-ring-key--idle{visibility:hidden;}
+#p2 .ringdial__cell:is(:active,.is-zero) .door-ring-key--pressed{visibility:visible;}
+#p2 .ringdial__cell:hover{filter:brightness(1.06);}
+#p2 .ringdial__cell:focus-visible{outline:2px solid #A33E0A;outline-offset:2px;}
+#p2 .ringdial__n{fill:#FFEFCC;font-size:14px;}
+#p2 .ringdial__n.is-zero{fill:#FF8A38;font-size:16px;}
+
+/* Full-window introduction, outside the scaled three-screen stage. */
+.intro{
+  position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:auto;
+  background:#4A5168 url('../art/ui-new/background.png') center / cover no-repeat;
+}
+.intro[hidden],body.is-guest .intro{display:none;}
+.intro__canvas{
+  position:relative;width:min(100vw,calc(100dvh * 16 / 9));aspect-ratio:16 / 9;
+  container-type:inline-size;
+}
+.intro__canvas > img{position:absolute;object-fit:contain;pointer-events:none;}
+.intro__venue{width:69%;height:auto;left:19%;top:0;}
+.intro__assane{height:73%;width:auto;right:10%;bottom:4%;}
+.intro__benjamin{height:57%;width:auto;left:42%;bottom:0;}
+.intro__content{position:absolute;left:14.5%;top:27%;width:29.5%;}
+.intro__panel{
+  padding:7% 5%;background:url('../art/ui-new/panel-big.png') center / 100% 100% no-repeat;
+  color:#39291D;font-size:1.3cqw;line-height:1.4;
+}
+.intro__panel p{margin:0 0 1.5em;}
+.intro__panel p:last-child{margin-bottom:0;}
+.intro__panel strong{font-weight:700;}
+.intro__begin{
+  display:block;width:84%;aspect-ratio:380 / 81;margin:6% auto 0;padding:8px;
+  background:url('../art/ui-new/bttn-wide.png') center / 100% 100% no-repeat;
+  border:0;color:#39291D;font-size:2.3cqw;font-weight:800;letter-spacing:0;
+}
+.intro__begin:active{background-image:url('../art/ui-new/bttn-wide-pressed.png');}
+.intro__begin:hover{filter:brightness(1.06);}
+.intro__begin:focus-visible{outline:3px solid #FFEFCC;outline-offset:4px;}
+@media(max-width:700px){
+  .intro{display:block;}
+  .intro__canvas{width:100%;aspect-ratio:auto;min-height:100dvh;padding:1px 0 24px;}
+  .intro__venue{width:150%;max-width:none;left:-25%;top:0;}
+  .intro__assane{height:auto;width:47%;right:2%;top:8%;bottom:auto;opacity:.75;}
+  .intro__benjamin{height:auto;width:45%;left:4%;top:16%;bottom:auto;opacity:.75;}
+  .intro__content{position:relative;left:auto;top:auto;width:calc(100% - 32px);max-width:460px;margin:38vh auto 0;}
+  .intro__panel{font-size:clamp(14px,4cqw,18px);padding:24px 20px;}
+  .intro__panel p{margin-bottom:1.1em;}
+  .intro__begin{max-width:380px;font-size:clamp(20px,6cqw,28px);}
+}

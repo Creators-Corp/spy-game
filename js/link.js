@@ -404,6 +404,15 @@
       setJoin(r.join);
     });
   }
+  link.openPanel = function () {
+    if (ROLE !== 'host') return;
+    link.panel = true;
+    paintHostUI();
+    if (!link.join) document.getElementById('seat-join-status').textContent = 'Preparing your phone invitation…';
+    checkStatus().catch(function () {
+      if (!link.join) document.getElementById('seat-join-status').textContent = 'Phone invitations require the game’s relay service. Run python serve.py to connect phones.';
+    });
+  };
   function boot() {
     var reportURL = null;
     document.getElementById('report-close').addEventListener('click', function () {

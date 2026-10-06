@@ -616,7 +616,7 @@
 
   /* ---------------------------------------------------------- LE COFFRE */
   /* Art-pixel coordinates match the eight recesses in the 290x282 vault-bg. */
-  var DIAL = { width: 290, height: 282, cx: 145, cy: 141, ring: 112, hub: 23,
+  var DIAL = { width: 290, height: 282, cx: 145, cy: 141, ring: 112, hub: 30,
                buttonWidth: 66, buttonHeight: 61 };
 
   function viewCoffre() {
@@ -632,6 +632,14 @@
     hub.setAttribute('fill', C.RING_COLOUR[K.ring]);
     hub.setAttribute('stroke', 'var(--ink)'); hub.setAttribute('stroke-width', '2.5');
     svg.appendChild(hub);
+
+    /* The color fills the transparent opening beneath the painted center ring. */
+    var centerRing = document.createElementNS(svgns, 'image');
+    centerRing.setAttribute('href', U.assetURL('art/ui-new/vault-center-ring.png'));
+    centerRing.setAttribute('x', D.cx - 51); centerRing.setAttribute('y', D.cy - 50);
+    centerRing.setAttribute('width', 102); centerRing.setAttribute('height', 100);
+    centerRing.setAttribute('pointer-events', 'none');
+    svg.appendChild(centerRing);
 
     K.dial.forEach(function (gl, i) {
       var ang = (i / K.dial.length) * Math.PI * 2 - Math.PI / 2;
