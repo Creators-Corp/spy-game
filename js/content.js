@@ -463,8 +463,11 @@
        `zone` is the only part that matters here, and it has to be a post
        exactly one officer holds, or the question has two answers. Every plate
        carries exactly three distinct digits so the worn keys stay a real
-       check — see rollPlate(). */
-    CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'UPPER GALLERY' },
+       check — see rollPlate(). It must be the post of the man at the hatch
+       (g3, badge 5195, on the kitchen square in front of it), because that is
+       who the procedures send Benjamin to; 'UPPER GALLERY' here made the code
+       the wrong officer's plate on every roster. */
+    CLAVIER: { code: '8809', worn: ['0', '8', '9'], zone: 'KITCHENS' },
 
     PROCEDURES: [
       { k: 'LASER LINES',  v: 'Tripping a laser beam will bring a guard to the location. It could end a heist, or it could be a useful distraction.' },
