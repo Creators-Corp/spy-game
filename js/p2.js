@@ -113,10 +113,14 @@
     var talk = S.guards.some(function (g) {
       return g.stand && !g.stoodDown && (g.summoned || (S.tchatche && S.tchatche.guardId === g.id));
     });
+    var hatch = S.blackout && E.hatchTile();
+    var nearBlackoutExit = !!(hatch &&
+      Math.abs(S.assane.x - hatch.x) + Math.abs(S.assane.y - hatch.y) <= 8);
     availableTabs().forEach(function (t) {
       var flash = (puzzleTab && !puzzleSeen && t[0] === puzzleTab) ||
                   (talk && !staffSeen && t[0] === 'personnel') ||
-                  (t[0] === 'manuel' && manualEntries().some(function (key) { return !manualRead[key]; }));
+                  (t[0] === 'manuel' && ((nearBlackoutExit && !manualRead['BLACKOUT EXIT']) ||
+                    manualEntries().some(function (key) { return !manualRead[key]; })));
       bar.appendChild(buttonArt(el('button', {
         class: (tab === t[0] ? 'is-on' : '') + (flash ? ' is-flash' : ''),
         onclick: function () {
@@ -124,6 +128,7 @@
           if (t[0] === puzzleTab) puzzleSeen = true;
           if (t[0] === 'personnel' && talk) staffSeen = true;
           if (t[0] === 'manuel') manualEntries().forEach(function (key) { manualRead[key] = true; });
+          if (t[0] === 'manuel' && nearBlackoutExit) manualRead['BLACKOUT EXIT'] = true;
           U.sfx.tap(); U.emit('render');
         }
       }, [el('span', { text: t[1] })]), 'tab'));
@@ -138,12 +143,17 @@
   }
   function objectiveTargets() {
     var S = E.S;
+    /* When Assane reaches the Bureau's release panel, point Benjamin at the
+       exact vault-door square and suppress every other objective marker. */
+    if (S.phase === 'module' && S.moduleId === 'bureau' && S.bureauStep === 1) {
+      var vaultDoor = S.doors.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0];
+      return vaultDoor ? [vaultDoor] : [];
+    }
     var step = (C.MAP_OBJECTIVES || []).filter(function (item) {
       return !item.until || !S.solved[item.until];
     })[0];
     if (!step) return [];
-    var unlocking = S.phase === 'module' && S.moduleId === 'bureau' && S.bureauStep === 1;
-    var targets = unlocking && step.unlockTargets ? step.unlockTargets : step.targets;
+    var targets = step.targets;
     return targets.filter(function (id) { return !S.solved[id]; }).map(function (id) {
       if (id === 'exit') return S.hasManuscript ? E.hatchTile() : null;
       if (id === 'bureau-door') return S.doors.filter(function (d) { return d.mark === C.BUREAU.doorMark; })[0];
@@ -316,6 +326,12 @@
       });
     }
     objectiveTargets().forEach(function (target) {
+      if (S.phase === 'module' && S.moduleId === 'bureau' && S.bureauStep === 1) {
+        s += '<rect class="objective-square" x="' + (target.x * TT + 1) + '" y="' + (target.y * TT + 1) +
+             '" width="' + (TT - 2) + '" height="' + (TT - 2) + '" rx="2"' +
+             ' fill="#FD6A1A" fill-opacity=".3" stroke="#FD6A1A" stroke-width="2"' +
+             ' pointer-events="none" aria-hidden="true"/>';
+      }
       s += '<g transform="translate(' + (target.x * TT + TT / 2) + ',' + (target.y * TT + TT / 2) + ')">' +
            '<circle class="objective-ring" r="14" fill="none" stroke="#FD6A1A" stroke-width="2.5"' +
            ' pointer-events="none" aria-hidden="true"/></g>';
@@ -1008,6 +1024,9 @@
   function render() {
     var S = E.S, host = $('#p2-screen');
     U.clear(host);
+    /* The Bureau release buttons appear on Assane's phone at this step. Bring
+       Benjamin's phone to the map automatically so the door marker is visible. */
+    if (S.phase === 'module' && S.moduleId === 'bureau' && S.bureauStep === 1) tab = 'plan';
     /* the van's link degrades once the building has gone dark: scanlines
        and the odd jump. Cosmetic — the plan is still the plan. */
     host.classList.toggle('is-degraded', !!(S.dark || S.blackout) && (S.phase === 'play' || S.phase === 'module'));

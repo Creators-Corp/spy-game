@@ -472,7 +472,7 @@
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', steps: [
         'Cameras and lights drop, but laser beams stay armed. The <strong><u>service hatch in the kitchen</u></strong> (our escape route) also locks down.',
-        'There\s a guard protecting the exit, we need to lure him away somehow...',
+        'There\'s a guard protecting the exit, we need to lure him away somehow...',
         'Release code is the vehicle plate number of the guard posted there, <strong><u>REVERSED</u></strong>.'
       ] }
     ],
