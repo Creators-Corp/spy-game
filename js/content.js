@@ -725,7 +725,10 @@
 
     /* THE SAFE. Rolled whole — serial, colour, combination and the five decoy
        rows that make Benjamin read both halves. See rollCoffre(). */
-    if (job.COFFRE && seed) L.content.COFFRE = rollCoffre(job, rnd);
+    /* Seed 0 is the safe as authored. It has to be put back, not just left
+       alone: RESTART keeps the loaded job, so skipping it left the previous
+       roster's safe in place and the rehearsed walkthrough met a different one. */
+    if (job.COFFRE) L.content.COFFRE = seed ? rollCoffre(job, rnd) : job.COFFRE;
 
     /* THE RELEASE CODE, derived at every seed rather than authored at one.
        It used to be a badge reversed, which could not move because badges

@@ -878,7 +878,7 @@
       if (tapped.length < 5) { tapped.push('l'); U.sfx.pulse(true); queryResult = null; U.emit('render'); }
     } }));
     keys.appendChild(el('button', { class: 'board__clear', text: 'CLEAR', onclick: function () {
-      tapped = []; queryResult = null; porteZero = null; U.emit('render');
+      tapped = []; queryResult = null; U.emit('render');
     } }));
     wrap.appendChild(keys);
 
@@ -1076,5 +1076,6 @@
            reset: function () {
     tab = 'plan'; hintedModule = null; puzzleSeen = false; staffSeen = false; openSerial = -1; openBadge = null;
     tapped = []; queryResult = null; unlockSeen = null; unlockShown = null; manualRead = {};
+    porteZero = null;     /* the door ring's zero is this run's; a new run starts unmarked */
   } };
 })(window.DC);

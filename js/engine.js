@@ -31,10 +31,12 @@
     switch (transition.kind) {
       case 'close': closeModule(true); break;
       case 'safe-open': closeModule(true); if (C.PRIZE && C.PRIZE.dark) darken(); else startBlackout(); break;
-      case 'safe-caught': getSpotted(C.COFFRE.guardId || '1184'); break;
+      /* caught at a module closes it: the talk happens in the corridor, and
+         he comes back to a fresh attempt (see openModule) */
+      case 'safe-caught': S.moduleId = null; getSpotted(C.COFFRE.guardId || '1184'); break;
       case 'safe-clear': S.coffreEntry = []; break;
       case 'finish': S.moduleId = null; finish(); break;
-      case 'door-caught': getSpotted('g1', true); break;
+      case 'door-caught': S.moduleId = null; getSpotted('g1', true); break;
       case 'door-clear': S.porteEntry = ''; break;
       case 'clavier-clear': S.clavierEntry = ''; break;
       case 'bureau-open': S.bureauStep = 1; S.bureauEntry = ''; break;
@@ -1229,6 +1231,8 @@
        again on the next mistake. Grade, don't fail — the cost is in suspicion
        and the spotted count, which is what the rank card reads. */
     S.coffreFails = 0;
+    S.porteEntry = '';     /* the door gets the same fresh attempt */
+    S.porteFails = 0;
     S.objective = id === 'grille' ? 'P1 has a padlock and three keys. P2 knows which key is which.'
       : id === 'coffre' ? 'P1 has the dial. P2 has the manual.'
       : id === 'clavier' ? 'P1 can see the worn keys. P2 has the procedure.'
