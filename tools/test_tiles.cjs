@@ -93,13 +93,22 @@ for (const [cell, cap, top, bottom] of [
   assert.deepEqual(pieces().filter(p => p.x === x && p.y === y + 1).map(p => p.name), [bottom],
     `${dc.tiles.cellName(x, y + 1)} contains only its lower panel`);
 }
-function assertInnerJoin(mirrored) {
-  const x = mirrored ? level[0].length - 1 - 19 : 19;
-  const names = pieces().filter(p => p.x === x && p.y === 4).map(p => p.name);
-  assert.deepEqual(names, [mirrored ? 'wall-molded-bottom-left' : 'wall-blank-bottom', `wall-inner-corner-top-${mirrored ? 'left' : 'right'}`],
-    'T5 keeps its panel and inner turn without a straight edge');
+/* The vault door sits at U5, in the same face as T5 (moved there from U6 in
+   "Level Minor Update"). A door splits a face without turning it, so T5 is a
+   plain panel with no inner corner, and T4 carries one face top with no cap. */
+function assertDoorInFace(mirrored) {
+  const at = column => mirrored ? level[0].length - 1 - column : column;
+  const all = pieces();
+  assert.deepEqual(all.filter(p => p.x === at(19) && p.y === 4).map(p => p.name),
+    [mirrored ? 'wall-molded-bottom-left' : 'wall-blank-bottom'],
+    'T5 runs straight into the vault door, with no inner turn');
+  assert.deepEqual(all.filter(p => p.x === at(20) && p.y === 4).map(p => p.name), ['wall-blank-bottom'],
+    'the vault door at U5 keeps the face panel');
+  const top = all.filter(p => p.x === at(19) && p.y === 3);
+  assert.equal(top.filter(p => p.face && p.dy === -1).length, 1, 'T4 has one face top');
+  assert.ok(!top.some(p => /wall-blank-corner-top-/.test(p.name)), 'T4 has no corner cap beside a door');
 }
-assertInnerJoin(false);
+assertDoorInFace(false);
 function assertNarrowFaceJoin(mirrored) {
   const x = mirrored ? level[0].length - 1 - 14 : 14;
   const all = pieces();
@@ -138,9 +147,8 @@ assertOuterJoins(false);
 // Face endpoints against wall use the turning top pieces, including row 0.
 const cornerCells = {
   Q0: 'wall-blank-corner-top-left', D14: 'wall-blank-corner-top-left',
-  E2: 'wall-blank-corner-top-right',
-  T4: 'wall-blank-corner-top-right', F14: 'wall-blank-corner-top-right'
-};
+  E2: 'wall-blank-corner-top-right', F14: 'wall-blank-corner-top-right'
+};   /* T4 used to be one; the vault door made its face straight (assertDoorInFace) */
 for (const [cell, expected] of Object.entries(cornerCells)) {
   const at = pieces().filter(p => dc.tiles.cellName(p.x, p.y) === cell);
   assert.ok(at.some(p => p.name === expected), `${cell} needs ${expected}`);
@@ -172,12 +180,12 @@ assertClearSpans(false);
 dc.content.MAP = level.map(row => [...row].reverse().join(''));
 assertMassSideContinuation(true);
 assertBlockSides(true);
-assertInnerJoin(true);
+assertDoorInFace(true);
 assertNarrowFaceJoin(true);
 assertOuterJoins(true);
 assertClearSpans(true);
 // Multi-column face endpoints and their bands mirror together.
-for (const cell of ['Q0', 'D14', 'E2', 'T4', 'F14']) {
+for (const cell of Object.keys(cornerCells)) {
   const x = level[0].length - 1 - (cell.charCodeAt(0) - 65);
   const y = Number(cell.slice(1)) - 1;
   const left = cornerCells[cell].endsWith('left');

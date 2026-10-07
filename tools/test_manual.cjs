@@ -19,7 +19,9 @@ const source = fs.readFileSync(path.join(root, 'js/p2.js'), 'utf8');
 vm.runInContext(source.replace('  L.p2 = {',
   '  L.manualTest = { entries: manualEntries, tabs: tabBar, view: viewManuel };\n  L.p2 = {'), context);
 const { content, engine, manualTest, p2 } = context.window.DC;
-const state = { phase: 'play', unlocked: {}, solved: {}, guards: [], alert: 0, blackout: false };
+/* assane: the tab bar asks how far he is from the hatch once the lights go;
+   the far corner keeps that hint out of these checks */
+const state = { phase: 'play', assane: { x: 0, y: 0 }, unlocked: {}, solved: {}, guards: [], alert: 0, blackout: false };
 engine.adopt(state);
 const entries = () => Array.from(manualTest.entries());
 const manualButton = () => manualTest.tabs()?.children.find(button => button.children[0].attrs.text === 'MANUAL');

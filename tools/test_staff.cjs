@@ -10,7 +10,7 @@ function el(tag, attrs = {}, children = []) {
 }
 const L = {
   util: { el, assetURL: value => value, sfx: { tap() {} }, emit() {} },
-  engine: { S: { unlocked: { visages: true }, guards: [] } },
+  engine: { S: { unlocked: { visages: true }, solved: {}, guards: [] } },
   glyphs: {}, face: { portrait: (data, cls) => el('portrait', { class: cls, art: data.art }) },
   figures: { uniformStack: data => el('uniform', { data }) }
 };

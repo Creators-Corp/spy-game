@@ -614,7 +614,10 @@ function guardEncounter() {
   E.ready('p1'); E.ready('p2');
   E.S.phase = 'play'; E.S.moduleId = null;
   C.MODULES.forEach(m => { E.S.solved[m.id] = true; });
-  const guard = E.S.guards[0];
+  /* A patrol, not the posted man: talking to a posted guard is a scripted
+     encounter (not counted as spotted) and stands him down for the night,
+     which is a different rule from the one these tests are about. */
+  const guard = E.S.guards.find(g => !g.stand);
   E.S.guards = [guard]; E.S.cameras = [];
   guard.alert = 100; // Hold position while testing contact, not patrol timing.
   const tile = E.guardCone(guard)[0].split(',').map(Number);
@@ -804,7 +807,7 @@ test('door failure holds its entry for feedback, then accepts a fresh entry', as
 
 test('exit keypad clears a failed submission after feedback on the host', async () => {
   const p = recoveredGame(), E = p.L.engine;
-  p.L.content.loadJob(1); E.reset(1234);
+  p.L.content.loadJob(0); E.reset(1234);
   E.S.phase = 'module'; E.S.moduleId = 'clavier';
   E.clavierTap('1'); E.clavierClear(); E.clavierTap('2');
   assert.equal(E.S.clavierEntry, '2');
@@ -819,7 +822,7 @@ for (const module of ['porte', 'bureau', 'clavier', 'coffre']) {
   for (const correct of [true, false]) {
     test(`${module} auto-checks the final input and holds ${correct ? 'success' : 'failure'} feedback before continuing`, async () => {
       const p = recoveredGame(), E = p.L.engine, C = p.L.content;
-      if (module !== 'porte') { C.loadJob(1); E.reset(1234); }
+      if (module !== 'porte') { C.loadJob(0); E.reset(1234); }
       E.ready('p1'); E.ready('p2'); E.openModule(module);
       const answer = module === 'porte' ? C.PORTE.code : module === 'bureau' ? C.BUREAU.answer : module === 'clavier' ? C.CLAVIER.code : C.COFFRE.code;
       const values = Array.from(answer);
@@ -850,7 +853,7 @@ for (const module of ['porte', 'bureau', 'clavier', 'coffre']) {
 test('repeated wrong door and safe codes finish feedback before starting the guard conversation', async () => {
   for (const module of ['porte', 'coffre']) {
     const p = recoveredGame(), E = p.L.engine, C = p.L.content;
-    if (module === 'coffre') { C.loadJob(1); E.reset(1234); }
+    if (module === 'coffre') { C.loadJob(0); E.reset(1234); }
     E.ready('p1'); E.ready('p2'); E.openModule(module);
     const tries = module === 'porte' ? C.PORTE.fails || 3 : 2;
     for (let i = 0; i < tries; i++) {
@@ -867,7 +870,7 @@ test('repeated wrong door and safe codes finish feedback before starting the gua
 
 test('refresh resumes the contract, state, session and applied IDs without charging away time', async () => {
   const p = recoveredGame();
-  p.L.content.loadJob(1); p.L.engine.reset(42);
+  p.L.content.loadJob(0); p.L.engine.reset(42);
   p.L.engine.ready('p1'); p.L.engine.ready('p2');
   p.L.engine.S.turn = 17;
   p.L.recovery.sync(); p.L.recovery.meta.applied.push('applied-tap'); p.L.recovery.meta.seq = 31;
@@ -877,7 +880,7 @@ test('refresh resumes the contract, state, session and applied IDs without charg
   assert.equal(q.L.recovery.pending, true);
   await q.time.advance(60000);
   q.handlers['resume-game:click']();
-  assert.equal(q.L.content.jobIndex, 1); assert.equal(q.L.engine.S.turn, 17);
+  assert.equal(q.L.content.jobIndex, 0); assert.equal(q.L.engine.S.turn, 17);
   assert.equal(q.L.engine.S.lastActionAt, q.time.Date.now());
   assert.equal(q.L.recovery.meta.session, session);
   assert.equal(q.L.recovery.meta.seq, 31);
@@ -887,7 +890,7 @@ test('refresh resumes the contract, state, session and applied IDs without charg
 
 test('refresh during automatic desk feedback resumes the pending release screen once', async () => {
   const p = recoveredGame(), E = p.L.engine;
-  p.L.content.loadJob(1); E.reset(42);
+  p.L.content.loadJob(0); E.reset(42);
   E.ready('p1'); E.ready('p2'); E.openModule('bureau');
   p.L.content.BUREAU.answer.split('').forEach(E.bureauTap);
   await p.time.advance(300); p.L.recovery.save();
@@ -902,7 +905,7 @@ test('refresh during automatic desk feedback resumes the pending release screen 
 
 test('refresh during a puzzle transition resumes its remaining animation and completes once', async () => {
   const p = recoveredGame();
-  p.L.content.loadJob(1); p.L.engine.reset(42);
+  p.L.content.loadJob(0); p.L.engine.reset(42);
   const E = p.L.engine;
   E.ready('p1'); E.ready('p2'); E.openModule('bureau');
   E.bureauDoor(p.L.content.BUREAU.doorMark);
@@ -918,7 +921,7 @@ test('refresh during a puzzle transition resumes its remaining animation and com
 
 test('starting a new game discards the checkpoint session; old puzzle timers cannot change it', async () => {
   const p = recoveredGame();
-  p.L.content.loadJob(1); p.L.engine.reset(42);
+  p.L.content.loadJob(0); p.L.engine.reset(42);
   p.L.engine.openModule('bureau'); p.L.engine.bureauDoor(p.L.content.BUREAU.doorMark);
   p.L.recovery.save(); const old = p.L.recovery.meta.session;
   p.L.engine.reset(20); await p.time.advance(5000);
