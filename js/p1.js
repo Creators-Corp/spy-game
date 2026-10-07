@@ -756,7 +756,7 @@
       return screen([
         head('OFFICE'),
         body([
-          el('div', { class: 'mod__head' }, [ el('span', { class: 'tag tag--gold', text: 'ACCESS OPEN' }) ]),
+          el('div', { class: 'mod__head' }, [ el('span', { class: 'tag tag--gold', text: 'Open the vault room door' }) ]),
           grid
         ]),
         null

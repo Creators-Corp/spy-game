@@ -49,7 +49,7 @@
      three fixed clues, three questions, three answer choices per question,
      and the correct answer's one-based number (1, 2, or 3). This data does
      not use LINES, DIRT, or the regular conversation topics. */
-  var FIRST_BEAM_TUTORIAL_CLUES = ['Very thoughtful toward newcomers.', 'Likes having his work noticed', 'Doesn\'t like dawdling on the job.'];
+  var FIRST_BEAM_TUTORIAL_CLUES = ['Very thoughtful toward newcomers.', 'Likes having his work noticed', 'Doesn\'t like chit-chat on the job.'];
   var FIRST_BEAM_TUTORIAL = [
     { question: 'The laser! Every single day I say it: check the manual, watch your step!', answers: ['I am in a hurry.', 'Sorry, sir! It is my first day.', 'Ever heard of pressure points?'], correct: 2 },
     { question: 'Oh! The new guy! Yes, yes. Read the manual and we\'ll get along just fine.', answers: ['I\'m not the reading type. I learn by doing.', 'You\'ve got beautiful eyes!', 'Of course, sir! I\'ve heard of your leadership. I\'ll read it every day!'], correct: 3 },
@@ -472,6 +472,7 @@
       { k: 'ALERT LEVELS', v: 'Suspicion past 40: officers extend their rounds by one square. Past 70: by two, and anyone stopped is searched.' },
       { k: 'POWER FAILURE', steps: [
         'Cameras and lights drop, but laser beams stay armed. The <strong><u>service hatch in the kitchen</u></strong> (our escape route) also locks down.',
+        'There\s a guard protecting the exit, we need to lure him away somehow...',
         'Release code is the vehicle plate number of the guard posted there, <strong><u>REVERSED</u></strong>.'
       ] }
     ],
