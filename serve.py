@@ -24,6 +24,7 @@ import socket
 import sys
 import threading
 import time
+import traceback
 import uuid
 from collections import OrderedDict, deque
 from urllib.parse import parse_qs, urlsplit, urlencode
@@ -39,6 +40,18 @@ ROOMS = {}
 ROOMS_LOCK = threading.Lock()
 ROOM_IDLE_TTL = 30 * 60
 MAX_ROOMS = 100
+# Claiming a room needs no account, so these are what stop one visitor holding
+# every room. A room that never publishes a game is gone a minute after its
+# last claim (a screen on its resume prompt re-claims every second, and one
+# that loses its room claims it back), and each address may open only so many
+# new rooms in a window; returning to an existing room never counts.
+UNPUBLISHED_TTL = 60.0
+CREATE_LIMIT = 10
+CREATE_WINDOW = 10 * 60
+CREATED = {}             # address -> deque of creation times, under ROOMS_LOCK
+# The largest real request is the host's snapshot, a few KB. Anything bigger is
+# refused before it is read, so a stated length cannot make the relay allocate.
+MAX_BODY = 256 * 1024
 GUEST_GRACE = 30.0
 INTENT_TTL = 10.0
 HOST_GRACE = 30.0
@@ -62,7 +75,13 @@ class Room:
         self.host = {"client": None, "secret": None, "page": None, "lease": None, "join": None, "seen": 0.0}
         self.diag_lock = threading.Lock()
         self.diag = {"requests": {}, "errors": {}, "events": deque(maxlen=100)}
-        self.touched = time.monotonic()
+        self.touched = self.created = time.monotonic()
+
+    def unpublished_for(self, now):
+        """seconds since this room was last claimed, if it has never had a game"""
+        if self.state["updated"]:
+            return 0.0
+        return now - max(self.created, self.host["seen"])
 
     def record_event(self, kind):
         with self.diag_lock:
@@ -81,24 +100,45 @@ class Room:
                           for role in self.seats}, "epoch": self.epoch}
 
     def owns_seat(self, role, client, ticket):
-        seat = self.seats.get(role)
+        seat = self.seats.get(role) if isinstance(role, str) else None
         return bool(seat and client and ticket and seat["client"] == client and seat["ticket"] == ticket)
 
     def phone_join_url(self):
         return JOIN_URL + "&" + urlencode({"room": self.id, "t": self.host["join"]}) if JOIN_URL and self.host["join"] else None
 
 
-def find_room(room_id, create=False):
+def _stale(room, now):
+    return now - room.touched > ROOM_IDLE_TTL or room.unpublished_for(now) > UNPUBLISHED_TTL
+
+
+def _may_create(creator, now):
+    """record a new room for this address, unless it has opened its share"""
+    if creator is None:
+        return True
+    for address in list(CREATED):
+        times = CREATED[address]
+        while times and now - times[0] > CREATE_WINDOW:
+            times.popleft()
+        if not times:
+            del CREATED[address]
+    times = CREATED.setdefault(creator, deque())
+    if len(times) >= CREATE_LIMIT:
+        return False
+    times.append(now)
+    return True
+
+
+def find_room(room_id, create=False, creator=None):
     with ROOMS_LOCK:
         now = time.monotonic()
         for key, room in list(ROOMS.items()):
-            if now - room.touched > ROOM_IDLE_TTL and room.lock.acquire(blocking=False):
+            if _stale(room, now) and room.lock.acquire(blocking=False):
                 try:
-                    if now - room.touched > ROOM_IDLE_TTL:
+                    if _stale(room, now):
                         del ROOMS[key]
                 finally:
                     room.lock.release()
-        if room_id not in ROOMS and create and len(ROOMS) < MAX_ROOMS:
+        if room_id not in ROOMS and create and len(ROOMS) < MAX_ROOMS and _may_create(creator, now):
             ROOMS[room_id] = Room(room_id)
         room = ROOMS.get(room_id)
         if room:
@@ -182,14 +222,51 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _take_body(self):
+        """Read the request body, once, and only if its stated length is sane.
+
+        Content-Length used to be trusted as given: a huge value allocated it,
+        a negative or false one held the thread until the socket timed out,
+        and a non-number raised. Every POST reads its body here before any
+        early return, so an unread body cannot be mistaken for the next
+        request on a kept-alive connection."""
+        self._body = b""
+        if self.headers.get("Transfer-Encoding"):
+            self.send_error(411, "send a Content-Length")
+            return False
+        raw = self.headers.get("Content-Length") or "0"
+        n = int(raw) if raw.isdigit() else -1
+        if n < 0:
+            self.send_error(400, "invalid Content-Length")
+            return False
+        if n > MAX_BODY:
+            self.send_error(413, "request too large")
+            return False
+        self._body = self.rfile.read(n) if n else b""
+        if len(self._body) < n:
+            self.close_connection = True       # the client stopped short; nothing to answer
+            return False
+        return True
+
     def _read(self):
-        n = int(self.headers.get("Content-Length") or 0)
-        if not n:
+        if not self._body:
             return {}
         try:
-            return json.loads(self.rfile.read(n).decode("utf-8"))
-        except (ValueError, UnicodeDecodeError):
+            return json.loads(self._body.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, RecursionError):
             return {}
+
+    def _client_ip(self):
+        """Who is asking. On Render the connection comes from its proxy;
+        Cloudflare in front of it sets CF-Connecting-IP and overwrites any
+        copy the client sent. X-Forwarded-For is only appended to there, so
+        a client can put anything at its head, and it is not used."""
+        if HOSTED:
+            for header in ("CF-Connecting-IP", "True-Client-IP"):
+                value = (self.headers.get(header) or "").strip()
+                if value:
+                    return value
+        return self.client_address[0]
 
     def _query(self, key):
         return parse_qs(urlsplit(self.path).query).get(key, [""])[0]
@@ -206,17 +283,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if not re.fullmatch(r'[A-Za-z0-9_-]{16,80}', room_id):
             self.send_error(400, 'missing or invalid room; scan a new QR code')
             return False
-        self.room = find_room(room_id, create)
+        self.room = find_room(room_id, create, self._client_ip() if create else None)
         if create and not self.room:
-            self.send_error(503, 'all rooms are in use; try again later')
+            if len(ROOMS) >= MAX_ROOMS:
+                self.send_error(503, 'all rooms are in use; try again later')
+            else:
+                self.send_error(429, 'too many new games from this address; try again later')
             return False
         return True
 
     # ------------------------------------------------------------------- GET
     def do_GET(self):
-        result = self._get()
+        result = self._guarded(self._get)
         if isinstance(result, tuple):
             self._send_json(*result)
+
+    def _guarded(self, handle):
+        """An input nobody planned for costs its own request, not the
+        connection: it is logged and answered 500 instead of dropping the
+        socket with a traceback. A client that hangs up is simply let go."""
+        try:
+            return handle()
+        except (ConnectionError, TimeoutError):
+            self.close_connection = True
+        except Exception:
+            traceback.print_exc()
+            self.close_connection = True
+            try:
+                self.send_error(500, "relay error")
+            except Exception:
+                pass
+        return None
 
     def _get(self):
         path = self.path.split("?", 1)[0]
@@ -310,13 +407,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------------ POST
     def do_POST(self):
-        result = self._post()
+        result = self._guarded(self._post)
         if isinstance(result, tuple):
             self._send_json(*result)
 
     def _post(self):
         path = self.path.split("?", 1)[0]
         self.room = None
+        if not self._take_body():
+            return
         if not path.startswith('/link/'):
             return self.send_error(404, 'no such endpoint')
         msg = None
@@ -369,7 +468,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not isinstance(msg, dict):
                 return self._json({"error": "invalid claim"}, 400)
             role, client = msg.get("role"), msg.get("client")
-            if role not in self.room.seats or not isinstance(client, str) or not 1 <= len(client) <= 120:
+            if (not isinstance(role, str) or role not in self.room.seats
+                    or not isinstance(client, str) or not 1 <= len(client) <= 120):
                 return self._json({"error": "invalid role"}, 400)
             with self.room.lock:
                 if not self.room.state["updated"] or time.monotonic() - self.room.state["updated"] > 5:
@@ -391,7 +491,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not isinstance(msg, dict):
                 return self._json({"error": "invalid release"}, 400)
             role = msg.get("role")
-            if role not in self.room.seats:
+            if not isinstance(role, str) or role not in self.room.seats:
                 return self._json({"error": "invalid role"}, 400)
             with self.room.lock:
                 if not self._host() and not self.room.owns_seat(role, msg.get("client"), msg.get("ticket")):

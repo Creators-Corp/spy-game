@@ -41,6 +41,17 @@ GitHub Pages runs the three panes on one screen; it has no phone relay.
 
 Hosted mode serves `dist/` and refuses to start if it has not been built.
 Keep one service instance because the relay holds its state in memory.
+
+The relay needs no account, so it limits what one visitor can take
+(`serve.py`, top of file):
+
+- Each address may open 10 new games in 10 minutes. Returning to an existing
+  game (a refresh, a reconnect) never counts. On Render the address is read from
+  Cloudflare's `CF-Connecting-IP`; `X-Forwarded-For` can be forged there and is
+  ignored. A presenter who hits the limit sees HTTP 429 and can retry later.
+- A game that is claimed but never started is released after a minute.
+- Requests over 256 KB, or with a missing or invalid length, are refused before
+  they are read. The largest real request is a few KB.
 Existing deployments can remove the unused `PROTOTYPE_PASSWORD` environment
 variable when adopting the new build command.
 

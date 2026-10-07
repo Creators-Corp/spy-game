@@ -29,6 +29,7 @@ class RelayTests(unittest.TestCase):
 
     def setUp(self):
         serve.ROOMS.clear()
+        serve.CREATED.clear()
         self.room_id = 'test-room-123456789'
         self.room = serve.find_room(self.room_id, create=True)
         self.room.epoch = 'relay-a'
@@ -499,6 +500,81 @@ class RelayTests(unittest.TestCase):
         for secret in [self.host['secret'], self.lease, self.room.host['join'], self.tickets[('p1', 'phone')], 'run-a']:
             self.assertNotIn(secret, raw)
 
+
+    # ------------------------------------------------------------ abuse
+    def raw(self, head, body=b"", wait=5):
+        """send a hand-written request; the status line and how long it took"""
+        import socket
+        s = socket.create_connection(("127.0.0.1", self.server.server_port))
+        s.settimeout(wait)
+        started = time.monotonic()
+        try:
+            s.sendall(("\r\n".join(head) + "\r\n\r\n").encode() + body)
+            line = s.recv(256).split(b"\r\n")[0].decode()
+        except (socket.timeout, ConnectionError):
+            line = ""
+        finally:
+            s.close()
+        return line, time.monotonic() - started
+
+    def test_request_lengths_are_checked_before_anything_is_read(self):
+        path = "POST /link/host?" + urlencode({"room": "abuse-room-123456789"}) + " HTTP/1.1"
+        for length, expected in (("50000000", "413"), (str(serve.MAX_BODY + 1), "413"),
+                                 ("-1", "400"), ("abc", "400")):
+            line, took = self.raw([path, "Host: x", "Content-Length: " + length], b"{}")
+            self.assertIn(expected, line, length)
+            self.assertLess(took, 2, length + " must be answered at once, not after the socket timeout")
+        line, _ = self.raw([path, "Host: x", "Transfer-Encoding: chunked"], b"0\r\n\r\n")
+        self.assertIn("411", line)
+        self.assertNotIn("abuse-room-123456789", serve.ROOMS)
+
+    def test_malformed_bodies_are_answered_not_dropped(self):
+        nested = b"[" * 100000 + b"]" * 100000
+        path = "POST /link/host?" + urlencode({"room": "nested-room-123456789"}) + " HTTP/1.1"
+        line, _ = self.raw([path, "Host: x", "Content-Length: %d" % len(nested)], nested)
+        self.assertIn("400", line)
+        for route in ("/link/claim", "/link/release"):
+            status, _ = self.request(route, {"role": ["p1"], "client": "phone"})
+            self.assertEqual(status, 400, route)
+        self.state()
+        status, _ = self.request("/link/intent", {"id": "x:1", "session": "run-a", "call": "act", "args": [],
+                                                  "role": ["p1"], "client": "phone", "ticket": "t"})
+        self.assertEqual(status, 410)
+
+    def test_a_room_that_never_publishes_a_game_is_released(self):
+        published, _, _ = self.other_room()
+        status, _ = self.request('/link/host', dict(self.host, client='idle-presenter-1234'),
+                                 room_id='idle-room-123456789', lease=False, invitation=False)
+        self.assertEqual(status, 200)
+        idle = serve.ROOMS['idle-room-123456789']
+        idle.created -= serve.UNPUBLISHED_TTL + 1
+        idle.host['seen'] -= serve.UNPUBLISHED_TTL + 1
+        published.created -= serve.UNPUBLISHED_TTL + 1
+        published.host['seen'] -= serve.UNPUBLISHED_TTL + 1
+        serve.find_room('any-room-1234567890')
+        self.assertNotIn('idle-room-123456789', serve.ROOMS)
+        self.assertIn(published.id, serve.ROOMS, 'a room with a game keeps the ordinary idle timeout')
+
+    def test_each_address_may_open_only_so_many_new_rooms(self):
+        def claim(n, headers=None):
+            body = json.dumps(dict(self.host, client='presenter-%012d' % n)).encode()
+            path = "POST /link/host?" + urlencode({"room": "rate-room-%012d" % n}) + " HTTP/1.1"
+            head = [path, "Host: x", "Content-Type: application/json", "Content-Length: %d" % len(body)]
+            return self.raw(head + ["%s: %s" % kv for kv in (headers or {}).items()], body)[0]
+        serve.CREATED.clear()
+        for n in range(serve.CREATE_LIMIT):
+            self.assertIn("200", claim(n))
+        self.assertIn("429", claim(999))
+        self.assertIn("200", claim(0), 'claiming a room again is not a new room')
+        self.assertEqual(self.state()[0], 200, 'existing games are untouched')
+        # hosted: the address is Cloudflare's, and a forged X-Forwarded-For changes nothing
+        serve.CREATED.clear()
+        with patch.object(serve, 'HOSTED', True):
+            for n in range(serve.CREATE_LIMIT):
+                self.assertIn("200", claim(100 + n, {"CF-Connecting-IP": "203.0.113.7",
+                                                     "X-Forwarded-For": "198.51.100.%d" % n}))
+            self.assertIn("429", claim(200, {"CF-Connecting-IP": "203.0.113.7", "X-Forwarded-For": "198.51.100.99"}))
+            self.assertIn("200", claim(201, {"CF-Connecting-IP": "203.0.113.8"}))
 
 
 if __name__ == "__main__":
