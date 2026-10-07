@@ -344,6 +344,23 @@
   function showFrame(sprite, url) {
     if (sprite.getAttribute('href') !== url && frameReady(url)) sprite.setAttribute('href', url);
   }
+  /* Every walk and idle frame, for both men, once the first screen is in.
+     Warming them only when a man first moves meant his first steps played
+     frames that had not arrived: on a hosted build a guard walking into view
+     stood still, or flickered blank, until the cache caught up. All of them
+     together are about a megabyte. */
+  function warmAllFrames() {
+    [IDLE_FRAMES, GUARD_IDLE_FRAMES].forEach(function (set) {
+      Object.keys(set).forEach(function (d) { warmFrames(set[d]); });
+    });
+    [WALK_FRAMES, GUARD_WALK_FRAMES].forEach(function (set) {
+      Object.keys(set).forEach(function (d) { set[d].forEach(warmFrames); });
+    });
+  }
+  if (typeof document !== 'undefined' && typeof window.addEventListener === 'function') {
+    if (document.readyState === 'complete') warmAllFrames();
+    else window.addEventListener('load', warmAllFrames);
+  }
 
   function animateWalk(direction, fromX, fromY, toX, toY) {
     stopWalk();
@@ -437,7 +454,7 @@
     var actor = document.getElementById(guardActorId(index));
     var sprite = document.getElementById(guardSpriteId(index));
     if (actor) actor.removeAttribute('transform');
-    if (sprite) sprite.setAttribute('href', sprite.getAttribute('data-rest-href'));
+    if (sprite) showFrame(sprite, sprite.getAttribute('data-rest-href'));
     setGuardSpriteScale(index, 1);
   }
 
@@ -450,15 +467,17 @@
     var frames = GUARD_IDLE_FRAMES[direction];
     var sprite = document.getElementById(guardSpriteId(index));
     if (!sprite || !frames || !frames.length) return false;
+    warmFrames(frames);
+    (GUARD_WALK_FRAMES[direction] || []).forEach(warmFrames);
     setGuardSpriteScale(index, 1);
     var state = guardState(index), serial = state.serial, frameIndex = 0;
     function advance() {
       if (state.serial !== serial) return;
       frameIndex = (frameIndex + 1) % frames.length;
-      sprite.setAttribute('href', U.assetURL(frames[frameIndex]));
+      showFrame(sprite, U.assetURL(frames[frameIndex]));
       state.timer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
     }
-    sprite.setAttribute('href', U.assetURL(frames[0]));
+    showFrame(sprite, U.assetURL(frames[0]));
     if (frames.length > 1) state.timer = window.setTimeout(advance, IDLE_CYCLE_MS / frames.length);
     return true;
   }
@@ -473,6 +492,7 @@
     var frames = variations[cycle % variations.length];
     guardCycleIndex[index] = (cycle + 1) % variations.length;
     if (!frames || !frames.length) return false;
+    warmFrames(frames);
     var state = guardState(index), serial = state.serial;
     var guardWalkScale = direction === 'up' ? GUARD_UP_WALK_SCALE
       : direction === 'down' ? GUARD_DOWN_WALK_SCALE : 1;
@@ -485,7 +505,7 @@
       if (start === null) start = now;
       var progress = Math.min(1, (now - start) / WALK_WINDOW_MS);
       var frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
-      sprite.setAttribute('href', U.assetURL(frames[frameIndex]));
+      showFrame(sprite, U.assetURL(frames[frameIndex]));
       actor.setAttribute('transform', 'translate(' + (dx * (1 - progress)) + ' ' + (dy * (1 - progress)) + ')');
       if (progress < 1) state.frame = window.requestAnimationFrame(draw);
       else {
