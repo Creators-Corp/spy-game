@@ -107,6 +107,7 @@
           var map = {};
           frames[t].forEach(function (m) {
             E.cone(m.x, m.y, m.facing, m.depth + a + (d ? 0 : pen)).forEach(function (k) { map[k] = 1; });
+            map[m.x + ',' + m.y] = 1;   /* his own square: the engine catches a man who shares it */
           });
           C.CAMERAS.forEach(function (c) {
             if (off[c.id]) return;

@@ -1074,6 +1074,16 @@
     if (opts.run) makeNoise();
 
     var t = threat();
+    /* A MAN'S OWN SQUARE. cone() is his reach and leaves out the tile he
+       stands on, so walking head-on into a patrol put the two of them on one
+       square unseen, and the next step came out the other side of him, in
+       the dark and in full light alike. Sharing his square is being seen by
+       him, unless he is not looking at all (fooled, or stood down). */
+    S.guards.forEach(function (g) {
+      if (!guardCone(g).length) return;
+      var at = guardAt(g), k = at.x + ',' + at.y;
+      t[k] = [g.id].concat((t[k] || []).filter(function (id) { return id !== g.id; }));
+    });
 
     /* a run crosses two tiles, and both of them count — that is the risk */
     var caught = null;
