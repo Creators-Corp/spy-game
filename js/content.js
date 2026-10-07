@@ -742,6 +742,18 @@
       var clav = copyOf(job.CLAVIER);
       var posted = L.content.PERSONNEL.filter(function (x) { return x.post === clav.zone; })[0];
       if (posted && posted.plate) {
+        /* THE WORN KEYS NAME ONE CAR. Benjamin finds the code by looking for
+           the plate on file made of exactly the three worn digits. Plates are
+           rolled per person, so about one roster in 26 had a second officer
+           whose plate used the same three, and the keys pointed at two cars
+           with no way to choose. Re-roll anyone else's until the posted
+           officer's is the only one. Off the same rnd, so a pinned roster
+           still deals the same night. */
+        var wear = distinct(posted.plate).join('');
+        L.content.PERSONNEL.forEach(function (x) {
+          for (var tries = 0; x !== posted && x.plate && tries < 50 &&
+               distinct(x.plate).join('') === wear; tries++) x.plate = rollPlate(rnd);
+        });
         clav.code = posted.plate.split('').reverse().join('');
         clav.worn = distinct(clav.code);
       }
