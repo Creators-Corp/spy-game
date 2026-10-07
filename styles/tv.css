@@ -12,7 +12,7 @@
 .tv__screen{
   position:relative;
   width:876px;height:506px;
-  background:var(--paper) url('../art/ui-new/tv-background.png') center / cover no-repeat;
+  background:var(--paper) url('../art/ui-new/tv-background.jpg') center / cover no-repeat;
   border-radius:3px;
   overflow:hidden;
   display:flex;flex-direction:column;
@@ -306,7 +306,7 @@
     repeating-linear-gradient(90deg, rgba(233,228,216,.045) 0 1px, transparent 1px 32px);
 }
 
-.tv__screen{ background-image:url('../art/ui-new/tv-background.png'); }
+.tv__screen{ background-image:url('../art/ui-new/tv-background.jpg'); }
 
 /* views that are a flat field get the grid; the room and the night keep their
    own treatment so the map stays the most legible thing on screen */

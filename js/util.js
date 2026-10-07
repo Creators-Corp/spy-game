@@ -21,9 +21,12 @@ window.DC = window.DC || {};
     });
     return n;
   }
-  /* Assets use the same relative paths locally and in the published build. */
+  /* Assets use the same relative paths locally and in the published build.
+     A PNG with a WebP twin is fetched as the twin: tools/optimize_art.py
+     writes them and lists them in js/art-webp.js. The PNG stays beside it,
+     so a path that is not listed still loads, just heavier. */
   function assetURL(path) {
-    return path;
+    return L.webp && L.webp[path] === 1 ? path.slice(0, -4) + '.webp' : path;
   }
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }

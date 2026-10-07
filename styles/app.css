@@ -102,7 +102,7 @@
 html,body{height:100%;}
 body{
   margin:0;
-  background:#0A0D11 url('../art/ui-new/tv-background.png') center / cover no-repeat;
+  background:#0A0D11 url('../art/ui-new/tv-background.jpg') center / cover no-repeat;
   font-family:var(--font);
   color:var(--ink);
   overflow:hidden;

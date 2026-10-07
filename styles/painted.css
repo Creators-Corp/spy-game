@@ -1,7 +1,7 @@
 /* Phone connection panel: the same slate, cream panels, and orange controls. */
 .seat{
   width:min(480px,calc(100vw - 32px));padding:16px 24px 22px;
-  background:#4A5168 url('../art/ui-new/background.png') center / cover;
+  background:#4A5168 url('../art/ui-new/background.jpg') center / cover;
   border:2px solid #778495;border-radius:0;color:#FFEFCC;
   box-shadow:0 24px 70px rgba(0,0,0,.7);
 }
@@ -614,7 +614,7 @@
   --red:#C9433C;
 }
 #p2 .pscreen--dossier .plan2:not(.plan2--night){
-  background:#4A5168 url('../art/ui-new/background.png') center / cover no-repeat;
+  background:#4A5168 url('../art/ui-new/background.jpg') center / cover no-repeat;
 }
 
 /* Le Bureau's illustration fills the phone width without a panel frame. */
@@ -653,7 +653,7 @@
 /* Full-window introduction, outside the scaled three-screen stage. */
 .intro{
   position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:auto;
-  background:#4A5168 url('../art/ui-new/background.png') center / cover no-repeat;
+  background:#4A5168 url('../art/ui-new/background.jpg') center / cover no-repeat;
 }
 .intro[hidden],body.is-guest .intro{display:none;}
 .intro__canvas{

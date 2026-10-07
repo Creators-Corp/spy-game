@@ -127,8 +127,15 @@
     G.build();
     U.preloadArt(['ui/control-bttn-idle', 'ui/control-bttn-pressed', 'ui/control-bttn-disabled',
                   'ui/header-p1', 'ui/flourish-left', 'ui/flourish-right']);
-    U.preloadArt(['venue-establishing', 'ui-new/portrait-assane', 'ui-new/portrait-benjamin', 'bureau-desk',
-                  'splash-assane', 'splash-guard', 'jail-slam', 'blackout-cut', 'blackout-door']);
+    U.preloadArt(['venue-establishing', 'ui-new/portrait-assane', 'ui-new/portrait-benjamin', 'splash-assane']);
+    /* Art for later in the night waits until the first screen has finished
+       loading. Asked for at boot, it shared the line with the intro painting,
+       and on a hosted build the intro arrived last. */
+    function preloadLater() {
+      U.preloadArt(['bureau-desk', 'splash-guard', 'jail-slam', 'blackout-cut', 'blackout-door']);
+    }
+    if (document.readyState === 'complete') preloadLater();
+    else window.addEventListener('load', preloadLater);
     U.hydrateStaticSlots();
     E.reset();
     L.recovery.boot();

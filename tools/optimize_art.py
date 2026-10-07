@@ -1,0 +1,166 @@
+# -*- coding: utf-8 -*-
+"""Painted masters -> the size they are actually drawn at, in place.
+
+The art arrives at print resolution: guard frames 1300px tall that the
+television draws 46px tall, faces at 1254px for a 154px portrait, and two
+2560x1440 PNG backgrounds worth 16 MB between them. Locally that is invisible.
+On the hosted build it is the whole first load, and every phone that joins
+downloads it again; the guard frames are fetched on demand mid-walk, so a
+frame that has not arrived by the time it is due simply never shows and the
+guard looks frozen.
+
+Two passes over every PNG a rule below covers:
+
+1. RESIZE, in place. Each cap is the longest side, set from the size the
+   stage draws the image at (measured at 1680x1000) with room for a 4K
+   television and a 3x phone. Filenames do not change, so no code has to;
+   layout never reads an image's pixel size, only the box it is drawn into.
+
+2. A WEBP TWIN beside it, listed in js/art-webp.js. U.assetURL() asks for the
+   twin instead of the PNG, which is about a quarter of the bytes for these
+   paintings. The PNG stays: anything that names a file directly still gets
+   one, so a missing twin costs bytes, never a broken image. A 256-colour
+   PNG was tried first and rejected; it grains the skies and greys the roofs.
+
+The two full-stage backgrounds are opaque and only ever named from CSS, so
+they ship as JPEG instead (ui-new/background.jpg, ui-new/tv-background.jpg,
+2560 wide, quality 86). Do the same for any new opaque full-screen painting.
+
+Run it again whenever new art is dropped in: an image already at or under its
+cap is not resized again, and the twins and the manifest are rebuilt from
+whatever PNGs are there. The masters stay in git history; this rewrites what
+ships.
+
+Run: python tools/optimize_art.py            (writes)
+     python tools/optimize_art.py --dry-run  (reports only)
+"""
+from fnmatch import fnmatch
+from pathlib import Path
+import io
+import json
+import sys
+
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent.parent
+ART = ROOT / 'art'
+MANIFEST = ROOT / 'js' / 'art-webp.js'
+
+# First match wins. (pattern relative to art/, longest side in px, or None to skip)
+RULES = [
+    ('*Not_Used*',       None),   # not loaded by the game
+    ('tiles/*',          None),   # small already, and the bench measures them
+    ('ui-new/tv-*-bar*', None),   # full-width strips; small already
+    ('chars/*',          320),    # drawn ~46px tall on the stage
+    ('ui-new/guard-*',   512),    # La Tchatche portraits and map markers
+    ('garment-*',        384),    # drawn ~100px on the rack
+    ('wardrobe/*',       512),
+    ('face-*',           640),    # La Tchatche portrait and the staff file
+    ('*',                1280),   # splash, venue and module illustrations
+]
+
+WEBP_QUALITY = 86
+WEBP_MIN_BYTES = 24 * 1024    # below this a second request is not worth a twin
+WEBP_MIN_SAVING = 0.25        # and the twin has to be at least a quarter smaller
+
+
+def cap_for(rel):
+    for pattern, cap in RULES:
+        if fnmatch(rel, pattern):
+            return cap
+    return None
+
+
+def png_bytes(im):
+    out = io.BytesIO()
+    im.save(out, 'PNG', optimize=True)
+    return out.getvalue()
+
+
+def webp_bytes(im):
+    out = io.BytesIO()
+    im.save(out, 'WEBP', quality=WEBP_QUALITY, method=6)
+    return out.getvalue()
+
+
+def resize(path, rel, cap, dry, totals):
+    before = path.stat().st_size
+    with Image.open(path) as src:
+        src.load()
+        if max(src.size) <= cap:
+            return
+        im = src.copy()
+    size = im.size
+    im.thumbnail((cap, cap), Image.LANCZOS)
+    data = png_bytes(im)
+    if len(data) >= before:
+        return
+    totals['resized'] += 1
+    totals['png_before'] += before
+    totals['png_after'] += len(data)
+    print('resize %-66s %5d KB -> %4d KB  %dx%d -> %dx%d'
+          % (rel, before // 1024, len(data) // 1024, size[0], size[1], im.size[0], im.size[1]))
+    if not dry:
+        path.write_bytes(data)
+
+
+def twin(path, rel, dry, totals):
+    """write the .webp beside the PNG; True if the game should ask for it"""
+    target = path.with_suffix('.webp')
+    png = path.stat().st_size
+    if png >= WEBP_MIN_BYTES:
+        with Image.open(path) as src:
+            src.load()
+            data = webp_bytes(src)
+        if len(data) <= png * (1 - WEBP_MIN_SAVING):
+            totals['twins'] += 1
+            totals['twin_png'] += png
+            totals['twin_webp'] += len(data)
+            if not dry and (not target.exists() or target.read_bytes() != data):
+                target.write_bytes(data)
+            return True
+    # a twin left over from an earlier run would be served without being listed
+    if target.exists() and not dry:
+        target.unlink()
+    return False
+
+
+def write_manifest(paths):
+    body = ',\n'.join('  ' + json.dumps(p) + ': 1' for p in paths)
+    MANIFEST.write_text(
+        '/* art-webp.js — GENERATED by tools/optimize_art.py; do not edit by hand.\n'
+        '   Every PNG listed here has a smaller .webp beside it, and U.assetURL()\n'
+        '   fetches that instead. Re-run the tool after adding or changing art. */\n'
+        'window.DC = window.DC || {};\n'
+        'window.DC.webp = {\n' + body + '\n};\n', encoding='utf-8', newline='\n')
+
+
+def main(dry):
+    totals = dict(resized=0, png_before=0, png_after=0, twins=0, twin_png=0, twin_webp=0)
+    listed = []
+    for path in sorted(ART.rglob('*.png')):
+        rel = path.relative_to(ART).as_posix()
+        cap = cap_for(rel)
+        if cap is None:
+            continue
+        resize(path, rel, cap, dry, totals)
+        if dry:
+            continue      # the twin is measured off the resized PNG, which a dry run never writes
+        if twin(path, rel, dry, totals):
+            listed.append('art/' + rel)
+    print('---')
+    if totals['resized']:
+        print('%sresized %d PNGs  %.1f MB -> %.1f MB'
+              % ('[dry run] ' if dry else '', totals['resized'],
+                 totals['png_before'] / 1e6, totals['png_after'] / 1e6))
+    else:
+        print('nothing over its cap')
+    if not dry:
+        write_manifest(listed)
+        print('%d webp twins  %.1f MB of PNG served as %.1f MB  -> %s'
+              % (totals['twins'], totals['twin_png'] / 1e6, totals['twin_webp'] / 1e6,
+                 MANIFEST.relative_to(ROOT).as_posix()))
+
+
+if __name__ == '__main__':
+    main('--dry-run' in sys.argv)
