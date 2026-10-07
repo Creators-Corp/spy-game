@@ -884,6 +884,30 @@ body.is-guest .pscreen--infiltration .dpad button{
   width:100%;height:auto;aspect-ratio:6/5;min-width:0;
 }
 body.is-guest .pscreen--infiltration .dpad .dpad__art{width:100%;height:100%;}
+/* THE WORDS FIRST, THE PAD IN WHAT IS LEFT. The pad was a fixed 120px a
+   button whatever the screen's height, so on a shorter phone (or one with
+   the browser's bar showing) it pushed the last line of the hint under the
+   fold, where the edge fade made it look covered. Now the text block takes
+   its own height and the pad is sized from the space under it: never larger
+   than before, never smaller than a 52x43 button. 72px is everything in the
+   footer that is not a button row: the foot's and the frame's padding and
+   borders and the two gaps. */
+body.is-guest .pscreen--infiltration .pbody{flex:0 1 auto;}
+body.is-guest .pscreen--infiltration .pfoot{
+  flex:1 1 0;min-height:202px;container-type:size;
+  display:flex;flex-direction:column;justify-content:center;
+  --pad-key:min(120px,max(52px,calc((100cqh - 72px) * .4)));
+}
+body.is-guest .pscreen--infiltration .dpad{grid-template-columns:repeat(3,minmax(0,var(--pad-key)));}
+/* the round plate behind the pad shrinks with the keys (250px behind 120px keys) */
+body.is-guest .phone__screen .pscreen--infiltration .nav__controls::before{
+  width:min(72%,250px,calc(var(--pad-key) * 2.08));
+}
+/* the shortest phones, with both browser bars showing: close the gaps too */
+@media (max-height:660px){
+  body.is-guest .pscreen--infiltration .pbody{gap:8px;padding-bottom:8px;}
+  body.is-guest .pscreen--infiltration .nav__sense{min-height:0;padding:6px 10px;}
+}
 body.is-guest .pscreen--infiltration .dpad .dpad__wait{
   padding:0 8px;font-size:clamp(14px,4.5vw,22px);
 }
