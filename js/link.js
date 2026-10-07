@@ -66,10 +66,17 @@
       return link.session;
     }
     function hostError(error) {
-      if (error.status === 403 || error.status === 409) {
+      /* 404 is the relay no longer knowing this room: it restarted, was
+         redeployed, or let the room expire. The room is named after this
+         screen, so claiming again recreates it under the same QR, and the
+         phones re-seat themselves when they see the new relay's epoch.
+         Treating it as a passing network fault left the screen posting to a
+         room that was gone, and the phones waiting until somebody refreshed. */
+      if (error.status === 403 || error.status === 404 || error.status === 409) {
         owner = false; lease = '';
         R.block(error.status === 409 ? 'Another tab is hosting this room. Use that tab to continue this game, or start a separate game here. A refresh will reconnect automatically.' :
           'Reconnecting to the main screen session…');
+        if (error.status === 404) push.kick();   /* claim now, not after the error backoff */
       }
       paintHostUI();
     }

@@ -537,6 +537,35 @@ test('competing host never publishes state or reads inputs while ownership is re
   assert.equal(p.L.recovery.blocked, true);
 });
 
+test('host claims its room again when a restarted relay has forgotten it', async () => {
+  for (const failing of ['/link/state', '/link/intent']) {
+    const p = peer('host');
+    p.L.net.request = async () => ({ relay: true, protocol: 7 });
+    await p.loops[0].work();
+    let claims = 0, publishes = 0, relayUp = true;
+    p.L.net.request = async url => {
+      const route = url.split('?')[0];
+      if (route === '/link/host') { claims++; relayUp = true; return { lease: 'lease-' + claims }; }
+      if (!relayUp && route === failing) { const e = new Error('room not active'); e.status = 404; throw e; }
+      if (route === '/link/state') publishes++;
+      return { intents: [] };
+    };
+    await p.loops[1].work();
+    assert.equal(claims, 1);
+    relayUp = false;                                   // the relay restarts; its rooms are gone
+    const push = p.loops[1], intent = p.loops[2], kicks = push.kicks;
+    await (failing === '/link/state' ? push : intent).work()
+      .catch(failing === '/link/state' ? push.onError : intent.onError);
+    assert.equal(p.L.recovery.blocked, true, failing + ' 404 shows reconnecting');
+    assert.ok(push.kicks > kicks, failing + ' 404 retries the claim at once');
+    await intent.work();                               // no input reads without ownership
+    await push.work();
+    assert.equal(claims, 2, failing + ' 404 claims the room again');
+    assert.equal(p.L.recovery.blocked, false);
+    assert.ok(publishes >= 2, 'the game is published to the recreated room');
+  }
+});
+
 test('host receives a QR automatically even when public discovery requires a phone invitation', async () => {
   const p = peer('host');
   p.L.net.request = async () => ({ relay: true, protocol: 7, joinRequired: true });
