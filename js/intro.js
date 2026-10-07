@@ -27,6 +27,13 @@
     begin.addEventListener('click', function () {
       intro.hidden = true;
       behind.forEach(function (entry) { entry.node.inert = entry.prior; });
+      /* The stage's lock belongs to recovery, and the value saved at boot is
+         stale for it: link.js locks the stage while it looks for the relay,
+         which is exactly when this boots, and unlocks it a moment later. Put
+         back as saved, that lock returned on LET'S BEGIN with no notice
+         showing, and the whole stage ignored the pointer until a reload. So
+         recovery repaints it from what is true now. */
+      if (L.recovery && L.recovery.paint) L.recovery.paint();
       document.removeEventListener('focusin', keepFocus);
       document.removeEventListener('keydown', keys, true);
       if (L.link) L.link.openPanel();
