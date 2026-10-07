@@ -899,6 +899,10 @@ body.is-guest .pscreen--infiltration .pfoot{
   --pad-key:min(120px,max(52px,calc((100cqh - 72px) * .4)));
 }
 body.is-guest .pscreen--infiltration .dpad{grid-template-columns:repeat(3,minmax(0,var(--pad-key)));}
+/* HOLD STILL is sized from its own key, so a smaller pad cannot push the
+   label past the edge of the button (it overflowed at 72px keys) */
+body.is-guest .pscreen--infiltration .dpad .dpad__wait{container-type:inline-size;padding:0 4px;}
+body.is-guest .pscreen--infiltration .dpad .dpad__label{font-size:clamp(11px,25cqi,22px);line-height:1.15;}
 /* the round plate behind the pad shrinks with the keys (250px behind 120px keys) */
 body.is-guest .phone__screen .pscreen--infiltration .nav__controls::before{
   width:min(72%,250px,calc(var(--pad-key) * 2.08));
